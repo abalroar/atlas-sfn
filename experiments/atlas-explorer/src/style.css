@@ -1,0 +1,108 @@
+/* Identidade do site: estilos da landing publicada (web/src/atlas-landing.css), importados sem cópia. */
+@import '../../../web/src/atlas-landing.css';
+
+:root { --ink: #203f50; --muted: #496978; --line: #c2d2d5; --ice: #f3f6f4; --col: 340px; font-family: 'Hanken Grotesk Variable', 'Hanken Grotesk', Arial, sans-serif; color: var(--ink); background: var(--ice); font-synthesis: none; -webkit-font-smoothing: antialiased; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; background: transparent; border: 0; padding: 0; border-radius: 0; }
+a { color: inherit; text-underline-offset: 4px; }
+.search svg, .atlas-play svg, .map-zoom svg, .atlas-source svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+.atlas { position: fixed; inset: 0; display: flex; flex-direction: column; padding: 0 38px; min-height: 0; }
+.atlas.loading { display: grid; place-items: center; color: var(--muted); }
+.body { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--col) 1fr; gap: 28px; }
+
+/* Coluna */
+.column { overflow-y: auto; scrollbar-width: none; overscroll-behavior: contain; position: relative; }
+.column::-webkit-scrollbar { display: none; }
+.column-head { position: sticky; top: 0; z-index: 5; background: var(--ice); padding: 16px 0 10px; }
+.search { position: relative; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #829da9; }
+.search svg { width: 17px; height: 17px; color: var(--muted); flex-shrink: 0; }
+.search:focus-within { border-color: #ec7000; }
+.search input { border: 0; background: none; outline: none; width: 100%; min-height: 34px; font-size: 15px; caret-color: #ec7000; }
+.search input::placeholder { color: var(--muted); opacity: 1; }
+.results { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #bdcfd4; max-height: 50vh; overflow: auto; z-index: 10; }
+.results button { display: flex; flex-direction: column; align-items: start; width: 100%; padding: 11px 14px; gap: 3px; font-size: 14px; text-align: left; }
+.results button[aria-selected="true"] { background: #e6eef0; }
+.results small { font-size: 11px; color: var(--muted); }
+.results p { margin: 0; padding: 14px; font-size: 13px; color: var(--muted); }
+
+.story { padding-bottom: 8px; }
+.step { min-height: 72vh; padding-top: 14px; }
+.step:last-child { min-height: 64vh; }
+.step h2 { font-size: 27px; font-weight: 550; letter-spacing: -.025em; line-height: 1.15; margin: 0 0 10px; }
+.step p { font-size: 15px; line-height: 1.5; margin: 0 0 10px; max-width: 34ch; }
+.step b { font-weight: 650; }
+.step .atlas-person-switch { margin: 0 0 14px; }
+.atlas-product h1 { margin-bottom: 4px; }
+.atlas-reading { margin-top: 18px; }
+.atlas-reading.small { margin: 4px 0 18px; }
+.atlas-reading.small strong { font-size: 32px; }
+.atlas-location button { font-size: 18px; line-height: 1; color: var(--muted); padding: 0 4px; }
+.time { display: flex; align-items: center; gap: 18px; margin-top: 22px; }
+.atlas-play svg { width: 16px; height: 16px; }
+.atlas-play svg path { fill: currentColor; stroke-width: 1.2; }
+.atlas-play[aria-label="Pausar"] svg path { fill: none; stroke-width: 2.2; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; white-space: nowrap; font-size: 13px !important; color: var(--muted); }
+.legend i, .kicker i, .inst-chip i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+
+/* Exploração */
+.explore { min-height: 100%; padding: 16px 0 40px; border-top: 1px solid var(--line); }
+.place { display: flex; align-items: baseline; gap: 8px; }
+.place h2 { font-size: 27px; font-weight: 550; letter-spacing: -.025em; margin: 0; line-height: 1.15; }
+.place span { font-size: 14px; color: var(--muted); }
+.counts { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+.insts { list-style: none; padding: 0; margin: 14px 0 0; }
+.insts button { position: relative; display: flex; width: 100%; padding: 6px 0 9px; font-size: 14px; gap: 10px; text-align: left; }
+.insts .bar { position: absolute; left: 0; bottom: 3px; height: 2px; }
+.insts .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.insts .n { color: var(--muted); }
+@media (hover: hover) { .insts button:hover .name { text-decoration: underline; text-underline-offset: 3px; } }
+.inst-chip { display: flex; align-items: center; gap: 6px; margin-top: 14px; font-weight: 650; font-size: 15px; }
+.inst-chip button { font-size: 18px; color: var(--muted); padding: 0 4px; }
+.inst-chip .analyze { margin: 0 0 0 auto; }
+.credit-block { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line); }
+.credit-block h3 { font-size: 15px; font-weight: 650; margin: 0 0 8px; }
+.credit-block .atlas-person-switch { margin: 0 0 4px; }
+.analyze { color: var(--ink); font-weight: 650; font-size: 14px; text-decoration: underline; text-decoration-color: #ec7000; text-underline-offset: 5px; text-decoration-thickness: 1.5px; }
+.analyze:hover { color: #ec7000; }
+.unit { position: relative; padding-bottom: 18px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
+.unit .close { position: absolute; right: -4px; top: -6px; font-size: 22px; color: var(--muted); padding: 2px 6px; }
+.kicker { margin: 0; font-size: 12px; color: var(--muted); padding-right: 24px; }
+.unit h2 { font-size: 22px; font-weight: 550; letter-spacing: -.02em; margin: 6px 0 0; line-height: 1.2; }
+.address { font-size: 14px; line-height: 1.45; margin: 8px 0 0; }
+.balances { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 0; }
+.balances dt { font-size: 11px; color: var(--muted); }
+.balances dd { margin: 2px 0 0; font-size: 19px; font-weight: 550; font-variant-numeric: tabular-nums; }
+.note { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+.unit .analyze { display: inline-block; margin-top: 14px; }
+
+/* Palco: mapa vetorial, véu da cena do site e a cena SVG por cima */
+.stage { position: relative; min-height: 0; margin-bottom: 0; }
+.map { position: absolute; inset: 0 0 44px 0; }
+.veil { position: absolute; inset: 0 0 44px 0; background: var(--ice); pointer-events: none; }
+.scene-layer { position: absolute; inset: 0 0 44px 0; }
+.scene-layer > .atlas-scene { position: absolute; inset: 0; width: 100%; height: 100%; }
+.scene-layer .atlas-scene-camera { display: none; }
+.stage .map-zoom { position: absolute; right: 10px; bottom: 56px; display: flex; gap: 7px; z-index: 3; }
+.search input:focus-visible { outline: none; }
+.stage > .atlas-source { position: absolute; left: 0; right: 0; bottom: 0; height: 44px; padding: 0; border-top: 1px solid var(--line); }
+.stage > .atlas-source svg { width: 15px; height: 15px; }
+.stage > .atlas-data-info { bottom: 50px; }
+.stage > .atlas-data-info > button { font-size: 20px; line-height: 1; }
+
+@media (max-width: 1050px) { .atlas { padding: 0 28px; } :root { --col: 300px; } }
+@media (max-width: 760px) {
+  .atlas { padding: 0 18px; }
+  .atlas-site-header nav { display: none; }
+  .body { grid-template-columns: 1fr; grid-template-rows: 52% 1fr; gap: 0; }
+  .stage { grid-row: 1; }
+  .column { grid-row: 2; border-top: 1px solid var(--line); }
+  .step { min-height: 46vh; }
+  .column .atlas-reading { flex-direction: row; align-items: baseline; margin-top: 10px; }
+  .column .atlas-reading strong { font-size: 30px; }
+  .step h2, .place h2 { font-size: 22px; }
+  .map, .veil, .scene-layer { bottom: 34px; }
+  .stage > .atlas-source { height: 34px; }
+}

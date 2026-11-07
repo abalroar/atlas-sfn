@@ -1,0 +1,5 @@
+raw/
+data/work/
+# Copiados de web/public/data pelo build.mjs
+data/atlas-pf.json
+data/atlas-pj.json

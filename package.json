@@ -17,6 +17,7 @@
     "test:python": ".venv/bin/python -m pytest -q tests web/tests",
     "verify:migration": "node scripts/verify_migration.mjs",
     "experiment:build": "npm --prefix experiments/agency-map run build",
+    "experiment:explorer": "npm --prefix experiments/atlas-explorer run build",
     "preview:worker": "wrangler dev --local --port 8789",
     "deploy:cloudflare": "npm run build && wrangler deploy"
   },
