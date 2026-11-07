@@ -1,0 +1,26 @@
+{
+  "name": "atlas-sfn",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Atlas do Sistema Financeiro Brasileiro: site, dados públicos e atualização.",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "setup": "npm ci --prefix web && npm ci --prefix experiments/agency-map",
+    "dev": "npm --prefix web run dev -- --port 5178",
+    "build": "npm --prefix web run build",
+    "test": "npm run test:web && npm run test:worker",
+    "test:web": "npm --prefix web test",
+    "test:worker": "node --test tests/worker-routing.test.mjs",
+    "test:python": ".venv/bin/python -m pytest -q tests web/tests",
+    "verify:migration": "node scripts/verify_migration.mjs",
+    "experiment:build": "npm --prefix experiments/agency-map run build",
+    "preview:worker": "wrangler dev --local --port 8789",
+    "deploy:cloudflare": "npm run build && wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "4.149.0"
+  }
+}

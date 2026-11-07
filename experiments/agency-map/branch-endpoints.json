@@ -1,0 +1,194 @@
+[
+  {
+    "org": "SANTANDER CORRETORA DE CAMBIO E VALORES MOBILIARIOS S.A.",
+    "cnpj": "51014223000149",
+    "brand": "Santander Corretora PessoaFísica(Legado)",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://ccvm.api.santander.com.br/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "Santander CTVM S.A.",
+    "cnpj": "29162769000198",
+    "brand": "Santander Corretora",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://toro.api.santander.com.br/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "BANCO SANTANDER (BRASIL) S.A.",
+    "cnpj": "90400888000142",
+    "brand": "Banco Santander Pessoa Física",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://openbanking.api.santander.com.br/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "BANCO DO BRASIL S.A.",
+    "cnpj": "00000000000191",
+    "brand": "Banco do Brasil",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://opendata.api.bb.com.br/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "BANCO BRADESCO SA",
+    "cnpj": "60746948000112",
+    "brand": "Bradesco Pessoa Física",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://api.bradesco.com/bradesco/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "BANCO MERCANTIL DO BRASIL S.A.",
+    "cnpj": "17184037000110",
+    "brand": "Banco Mercantil",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://openfinance.mercantil.com.br/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "SISPRIME DO BRASIL - COOPERATIVA DE CREDITO",
+    "cnpj": "02398976000190",
+    "brand": "Sisprime do Brasil",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://ob-api.sisprimedobrasil.com.br/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "CAIXA ECONOMICA FEDERAL",
+    "cnpj": "00360305000104",
+    "brand": "CAIXA",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://api.openbanking.caixa.gov.br/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "BRB - BANCO DE BRASILIA S.A.",
+    "cnpj": "00000208000100",
+    "brand": "Banco BRB",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://obk.brb.com.br/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "ITAÚ UNIBANCO S.A.",
+    "cnpj": "60701190000104",
+    "brand": "Itaú",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://api.itau/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "ITAÚ UNIBANCO S.A.",
+    "cnpj": "60701190000104",
+    "brand": "Itaucard",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://api.itau/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "ITAÚ UNIBANCO S.A.",
+    "cnpj": "60701190000104",
+    "brand": "Itaú Empresas",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://api.itau/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "ITAÚ UNIBANCO S.A.",
+    "cnpj": "60701190000104",
+    "brand": "Íon",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://api.itau/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "ITAÚ UNIBANCO S.A.",
+    "cnpj": "60701190000104",
+    "brand": "Itaú Emps",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://api.itau/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "ITAÚ UNIBANCO S.A.",
+    "cnpj": "60701190000104",
+    "brand": "Porto Bank",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://api.itau/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "ITAÚ UNIBANCO S.A.",
+    "cnpj": "60701190000104",
+    "brand": "Hipercard",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://api.itau/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "ITAÚ UNIBANCO S.A.",
+    "cnpj": "60701190000104",
+    "brand": "Credicard",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://api.itau/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "ITAÚ UNIBANCO S.A.",
+    "cnpj": "60701190000104",
+    "brand": "Iti",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://api.itau/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "ITAÚ UNIBANCO S.A.",
+    "cnpj": "60701190000104",
+    "brand": "Cartão Luiza",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://api.itau/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "ITAÚ UNIBANCO S.A.",
+    "cnpj": "60701190000104",
+    "brand": "Rede",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://api.itau/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "ITAÚ UNIBANCO S.A.",
+    "cnpj": "60701190000104",
+    "brand": "Porto Bank PJ",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://api.itau/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "COOPERATIVA CENTRAL DE CREDITO UNICRED DO BRASIL - UNICRED DO BRASIL",
+    "cnpj": "00315557000111",
+    "brand": "Unicred",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://api.e-unicred.com.br/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "BANCO DO NORDESTE DO BRASIL S.A.",
+    "cnpj": "07237373000120",
+    "brand": "Banco do Nordeste do Brasil S.A.",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://api.openfinance.bnb.gov.br/open-banking/channels/v2/branches"
+  },
+  {
+    "org": "PLUGGY BRASIL INSTITUICAO DE PAGAMENTO LTDA",
+    "cnpj": "37943755000130",
+    "brand": "Pluggy",
+    "family": "channels_branches",
+    "version": "2.1.0",
+    "url": "https://api-of.pluggy.ai/open-banking/channels/v2/branches"
+  }
+]

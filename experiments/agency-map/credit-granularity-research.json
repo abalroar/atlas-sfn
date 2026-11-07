@@ -1,0 +1,229 @@
+{
+  "researchDate": "2026-11-07",
+  "officialSources": [
+    {
+      "title": "Estatística Bancária Mensal por município — ESTBAN",
+      "url": "https://www.bcb.gov.br/estatisticas/estatisticabancariamunicipios",
+      "verifiedVia": "BCB search-index text; canonical page is JavaScript shell",
+      "supports": [
+        "monthly municipality and municipality/agency reports",
+        "CNPJ institution and agency fields",
+        "IBGE municipality code",
+        "balances as bank accounting records",
+        "published amounts in current currency without cents"
+      ]
+    },
+    {
+      "title": "Documento 4500 — Instruções de preenchimento",
+      "url": "https://bcb.gov.br/content/estabilidadefinanceira/cosif_leiautes/4500V1.pdf",
+      "verifiedPages": [
+        3,
+        5,
+        7
+      ],
+      "supports": [
+        "commercial banks, multiple banks with commercial portfolio, Caixa",
+        "agency accounting balances",
+        "agency totalizer must be distinguished from individual agencies",
+        "submission balances in BRL with cents; public CSV rounds without cents"
+      ]
+    },
+    {
+      "title": "Metodologia SCR.data versão 2",
+      "url": "https://www.bcb.gov.br/pda/desig/metodologia_versao2.pdf",
+      "verifiedSections": [
+        "1",
+        "2c",
+        "3b"
+      ],
+      "supports": [
+        "UF rather than municipality",
+        "PF residence postal code and PJ headquarters postal code",
+        "over-90-day operation-balance numerator over active portfolio denominator"
+      ]
+    }
+  ],
+  "conclusions": {
+    "creditMunicipal": {
+      "availableInESTBAN": true,
+      "geography": "municipality of bank/agency accounting record; not proven borrower residence",
+      "perimeter": "commercial banks, multiple banks with commercial portfolio, Caixa; not the entire SCR universe",
+      "metricsSafeAfterHeaderValidation": [
+        "credit accounting balance",
+        "savings deposits",
+        "time deposits",
+        "demand deposits",
+        "reporting agency coverage"
+      ],
+      "candidateVerbeteCredit": 160,
+      "candidateCreditVerbeteStatus": "widely identified in studies, but current official dictionary/header was not retrieved in this pass; validate current CSV and COSIF mapping before using",
+      "doNotDoubleCount": "do not add verbete160 to its component accounts without documented mapping"
+    },
+    "municipalDelinquency": {
+      "publicSCRAvailable": false,
+      "ESTBANSame90DayMeasureConfirmed": false,
+      "doNotUseAsProxy": [
+        "créditos em liquidação / operações de crédito",
+        "provisions / operações de crédito"
+      ],
+      "statement": "No municipal over-90-day delinquency measure verified in these public sources. Preserve UF coverage for SCR delinquency."
+    },
+    "pointAccuracy": "ESTBAN supplies municipality/agency identities and accounting balances; it does not supply a location of every credit operation.",
+    "collectionStatus": "No ESTBAN numeric balance file collected. No monthly ZIP size or latest period confirmed. Canonical page/API discovery did not yield a usable official file catalog in this pass; do not construct guessed file names."
+  },
+  "pilot": {
+    "selection": "20 municipalities with largest branch counts in the already delivered bank-network dataset; take one real ESTBAN month before expanding history",
+    "branchDatasetPosition": "2026-11-05",
+    "branchDatasetSHA256": "73f707c9f84769ef7023c31fd9afef99a385acd203654b7c584b8433fb2f7171",
+    "municipalities": [
+      {
+        "ibge": "3550308",
+        "name": "São Paulo",
+        "uf": "SP",
+        "agencies": 1022,
+        "bankCNPJRoots": 102
+      },
+      {
+        "ibge": "3304557",
+        "name": "Rio de Janeiro",
+        "uf": "RJ",
+        "agencies": 476,
+        "bankCNPJRoots": 29
+      },
+      {
+        "ibge": "5300108",
+        "name": "Brasília",
+        "uf": "DF",
+        "agencies": 196,
+        "bankCNPJRoots": 16
+      },
+      {
+        "ibge": "3106200",
+        "name": "Belo Horizonte",
+        "uf": "MG",
+        "agencies": 193,
+        "bankCNPJRoots": 20
+      },
+      {
+        "ibge": "4314902",
+        "name": "Porto Alegre",
+        "uf": "RS",
+        "agencies": 191,
+        "bankCNPJRoots": 17
+      },
+      {
+        "ibge": "4106902",
+        "name": "Curitiba",
+        "uf": "PR",
+        "agencies": 172,
+        "bankCNPJRoots": 26
+      },
+      {
+        "ibge": "2927408",
+        "name": "Salvador",
+        "uf": "BA",
+        "agencies": 158,
+        "bankCNPJRoots": 17
+      },
+      {
+        "ibge": "2304400",
+        "name": "Fortaleza",
+        "uf": "CE",
+        "agencies": 120,
+        "bankCNPJRoots": 13
+      },
+      {
+        "ibge": "2611606",
+        "name": "Recife",
+        "uf": "PE",
+        "agencies": 105,
+        "bankCNPJRoots": 14
+      },
+      {
+        "ibge": "3509502",
+        "name": "Campinas",
+        "uf": "SP",
+        "agencies": 105,
+        "bankCNPJRoots": 15
+      },
+      {
+        "ibge": "3534401",
+        "name": "Osasco",
+        "uf": "SP",
+        "agencies": 105,
+        "bankCNPJRoots": 10
+      },
+      {
+        "ibge": "5208707",
+        "name": "Goiânia",
+        "uf": "GO",
+        "agencies": 105,
+        "bankCNPJRoots": 13
+      },
+      {
+        "ibge": "1302603",
+        "name": "Manaus",
+        "uf": "AM",
+        "agencies": 86,
+        "bankCNPJRoots": 11
+      },
+      {
+        "ibge": "1501402",
+        "name": "Belém",
+        "uf": "PA",
+        "agencies": 76,
+        "bankCNPJRoots": 11
+      },
+      {
+        "ibge": "3543402",
+        "name": "Ribeirão Preto",
+        "uf": "SP",
+        "agencies": 73,
+        "bankCNPJRoots": 15
+      },
+      {
+        "ibge": "2111300",
+        "name": "São Luís",
+        "uf": "MA",
+        "agencies": 65,
+        "bankCNPJRoots": 10
+      },
+      {
+        "ibge": "2800308",
+        "name": "Aracaju",
+        "uf": "SE",
+        "agencies": 60,
+        "bankCNPJRoots": 10
+      },
+      {
+        "ibge": "4205407",
+        "name": "Florianópolis",
+        "uf": "SC",
+        "agencies": 60,
+        "bankCNPJRoots": 11
+      },
+      {
+        "ibge": "2507507",
+        "name": "João Pessoa",
+        "uf": "PB",
+        "agencies": 59,
+        "bankCNPJRoots": 10
+      },
+      {
+        "ibge": "3518800",
+        "name": "Guarulhos",
+        "uf": "SP",
+        "agencies": 58,
+        "bankCNPJRoots": 10
+      }
+    ],
+    "procedure": [
+      "Discover one monthly official CSV ZIP from BCB file listing; record URL, hash and competence.",
+      "Read actual headers and current verbete mapping; retain original values and separate non-report, observed zero and unavailable values.",
+      "Filter CODMUN_IBGE to selected20 and retain CNPJ-root. Never sum an agency totalizer with individual-agency rows.",
+      "Show municipality circles for accounting credit and deposits; benchmark missing/reporting agencies before ranking.",
+      "Keep SCR delinquency in its existing UF layer. Do not copy a UF rate onto its municipalities or branches."
+    ],
+    "noCreditValuesCollected": true
+  }
+}

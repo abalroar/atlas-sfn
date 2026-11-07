@@ -1,0 +1,62 @@
+{
+  "finding": "Genuine bank-provided branch coordinates exist in public Open Finance channels data; BCB Olinda branch registry contains addresses but no geographic coordinate fields.",
+  "sources": [
+    {
+      "title": "BCB Cadastro de agências",
+      "url": "https://dadosabertos.bcb.gov.br/dataset/agencias",
+      "endpoint": "https://olinda.bcb.gov.br/olinda/servico/Informes_Agencias/versao/v1/odata/Agencias",
+      "allRows": 13574,
+      "retailRows": 12818,
+      "position": "05/11/2026",
+      "coordinates": false,
+      "coverage": {
+        "address": 12818,
+        "separateNumberField": 1533,
+        "district": 12778,
+        "postalCode": 12818,
+        "municipalityIbge": 12818
+      },
+      "important": "Numero may be embedded in Endereco. Separate Numero field absence does not establish absence of street number."
+    },
+    {
+      "title": "Open Finance Brasil public participant directory",
+      "url": "https://data.directory.openbankingbrasil.org.br/participants",
+      "purpose": "Discovers participant-published branches endpoints without guessed hosts."
+    },
+    {
+      "title": "Banco do Brasil public Open Finance branches",
+      "url": "https://opendata.api.bb.com.br/open-banking/channels/v2/branches",
+      "parameters": {
+        "page": 1,
+        "page-size": 100
+      },
+      "coordinateField": "postalAddress.geographicCoordinates",
+      "identifier": "identification.code plus BB CnpjBase; participant.cnpjNumber is matrix, not each branch CNPJ",
+      "pilotGeojson": "bb-agencies.geojson",
+      "receipt": "bb-agencies-receipt.json",
+      "validExactMatchBranchPoints": 771,
+      "fullBcbBankBranchUniverse": 3909,
+      "partialNonRandomSample": true
+    }
+  ],
+  "otherParticipantsSampled": {
+    "Itau": {
+      "http": 200,
+      "rows": 989,
+      "agencyRows": 575,
+      "coordinateRows": 0
+    },
+    "Santander": {
+      "http": 200,
+      "rows": 100,
+      "agencyRows": 86,
+      "coordinateRows": 0
+    },
+    "Bradesco": "TLS certificate validation failed; not bypassed",
+    "Caixa": "TLS certificate validation failed; not bypassed"
+  },
+  "recommendation": "Use BB pilot points to test genuine street-level exploration. Keep municipal aggregation for comprehensive bank coverage until branch coordinate coverage is expanded. Show sample/coverage near source details; do not fabricate or jitter missing or collocated points.",
+  "geosampa": "No dedicated official bank branch point layer confirmed in this research.",
+  "googleMaps": "Not used.",
+  "repositoryEdits": false
+}

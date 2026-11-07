@@ -1,0 +1,56 @@
+{
+  "checkedAt": "2026-11-07T18:12:27.782395+00:00",
+  "scope": "local-repository-extraction",
+  "sourceCommit": "3fa25eaa68b3ffa79c7d365606b2a86e241c1e1e",
+  "tests": {
+    "web": 150,
+    "workerRouting": 11,
+    "python": 236,
+    "pythonSubtests": 16
+  },
+  "builds": {
+    "web": true,
+    "agencyMapExperiment": true
+  },
+  "ui": {
+    "url": "http://127.0.0.1:8789/atlas-sfn/",
+    "entity": "prudential-C0080099",
+    "periods": [
+      "202512",
+      "202606"
+    ],
+    "balanceLoaded": true,
+    "dreLoaded": true,
+    "browserDownloads": true
+  },
+  "downloads": {
+    "xlsx": {
+      "bytes": 638753,
+      "sha256": "336f1c38b7f7a148560b3adba965d83981a54c285b14db3721fd379e9da7829e",
+      "sheets": [
+        "Comitê",
+        "Balanço",
+        "DRE",
+        "Carteira 4.966",
+        "Mapa COSIF",
+        "Dados COSIF",
+        "Dados IFData",
+        "Validações"
+      ],
+      "formulas": 13120
+    },
+    "pptx": {
+      "bytes": 54317,
+      "sha256": "f542e7e48c0a4630f9613d855a81ed63ebaf7d761fed9aeccd2910a37624244e",
+      "slides": 3,
+      "nativeTables": 4
+    }
+  },
+  "cachedBalanceMillionBRL": {
+    "C26": 2739215.10893335,
+    "E26": 2846417.63266847,
+    "C39": 227761.73214346,
+    "E39": 249766.16937891
+  },
+  "remoteChanges": false
+}

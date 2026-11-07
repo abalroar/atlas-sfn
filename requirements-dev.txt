@@ -1,0 +1,3 @@
+-r requirements.txt
+-r web/tools/requirements-network.txt
+pytest==9.0.2

@@ -1,0 +1,2508 @@
+"""Modelo de apresentacao da classificacao de carteira da Resolucao 4.966.
+
+O modulo e intencionalmente independente de Streamlit. A mesma especificacao
+de linhas alimenta HTML, auditoria e Excel, evitando diferencas de formula,
+ordem ou unidade entre os tres artefatos.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from io import BytesIO
+import html
+import math
+import re
+import unicodedata
+from typing import Mapping, Optional, Sequence
+
+import pandas as pd
+
+from utils.comparison_table_style import (
+    HEADER_BACKGROUND, SECTION_BACKGROUND, LINE_COLOR, FONT_FAMILY,
+    VARIATION_COLORS, credit_variation_tone,
+)
+from utils.formatting import formatar_delta_br
+from utils.snapshot_delta import compute_delta
+
+
+TITLE = "Classificação da Carteira de Crédito Modelo 4966"
+
+CLASSIFICATION_COLUMNS = ("C1", "C2", "C3", "C4", "C5")
+
+# A solicitacao e literal: somente as colunas chamadas Perda Esperada na
+# tabela Ativo. Hedge de Valor Justo e Ajuste a Valor Justo nao integram esta
+# metrica, embora outra metrica canonica do produto os inclua.
+EXPECTED_LOSS_COLUMNS = (
+    "Perda Esperada (e2)",
+    "Perda Esperada (f2)",
+    "Perda Esperada (g2)",
+    "Perda Esperada (h2)",
+)
+
+# Limites de sanidade para o cruzamento entre Relatório 2 e Relatório 16.
+# A tolerância evita classificar como erro diferenças residuais de arredondamento
+# quando PDD e carteira são praticamente iguais.
+PDD_ATTENTION_RATIO = 0.55
+PDD_UNRELIABLE_RELATIVE_TOLERANCE = 0.001
+PDD_UNRELIABLE_ABSOLUTE_TOLERANCE = 1.0
+
+
+@dataclass(frozen=True)
+class RowSpec:
+    key: str
+    label: str
+    group: str
+    layout: str
+    value_key: str
+    denominator_key: Optional[str] = None
+    denominator_label: str = ""
+    emphasis: bool = False
+    percent_decimals: int = 2
+    help_text: str = ""
+
+
+@dataclass(frozen=True)
+class GroupSpec:
+    key: str
+    label: Optional[str]
+
+
+@dataclass(frozen=True)
+class MetricCell:
+    primary: Optional[float]
+    secondary: Optional[float] = None
+
+
+@dataclass(frozen=True)
+class CellDelta:
+    value: Optional[float]
+    unit: str
+    display: str
+    direction: Optional[str]
+    tone: str
+    reference_period: Optional[str]
+    current: Optional[float]
+    reference: Optional[float]
+    method: str
+    reason: str = ""
+
+
+@dataclass(frozen=True)
+class QualityIssue:
+    period: str
+    severity: str
+    code: str
+    pdd_value: Optional[float]
+    portfolio_value: Optional[float]
+    ratio: Optional[float]
+    row_key: str = "provision_over_portfolio"
+    affected_row_keys: tuple[str, ...] = ()
+    denominator_label: str = "Carteira Total"
+    details: tuple[str, ...] = ()
+
+    def applies_to(self, row_key: str) -> bool:
+        return row_key == self.row_key or row_key in self.affected_row_keys
+
+
+@dataclass(frozen=True)
+class _SourceFinding:
+    code: str
+    details: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class _ExpectedLossResult:
+    value: Optional[float]
+    findings: tuple[_SourceFinding, ...] = ()
+
+
+@dataclass
+class Carteira4966Model:
+    periods: tuple[str, ...]
+    period_labels: Mapping[str, str]
+    base_period: Optional[str]
+    base_value: Optional[float]
+    qoq: Mapping[str, Optional[float]]
+    cells: Mapping[str, Mapping[str, MetricCell]]
+    quality_issues: tuple[QualityIssue, ...] = ()
+    reference_cells: Mapping[str, Mapping[str, MetricCell]] = field(default_factory=dict)
+    reference_quality_issues: tuple[QualityIssue, ...] = ()
+
+    @property
+    def missing_provision_periods(self) -> tuple[str, ...]:
+        provision = self.cells.get("provision", {})
+        return tuple(
+            period
+            for period in self.periods
+            if provision.get(period) is None or provision[period].primary is None
+        )
+
+    def pdd_quality_issue(self, period: str) -> Optional[QualityIssue]:
+        return self.cell_quality_issue("provision_over_portfolio", period)
+
+    def cell_quality_issues(self, row_key: str, period: str) -> tuple[QualityIssue, ...]:
+        return tuple(
+            issue
+            for issue in (*self.quality_issues, *self.reference_quality_issues)
+            if issue.period == period and issue.applies_to(row_key)
+        )
+
+    def cell_quality_issue(self, row_key: str, period: str) -> Optional[QualityIssue]:
+        issues = list(self.cell_quality_issues(row_key, period))
+        if not issues:
+            return None
+        return sorted(
+            issues,
+            key=lambda issue: 0 if issue.severity == "critical" else 1,
+        )[0]
+
+
+GROUP_SPECS = (
+    GroupSpec("classification", "Em R$mm"),
+    GroupSpec("delinquency", "Carteira por dias em atraso em R$mm"),
+    GroupSpec("provision", "Provisão e cobertura (PDD)"),
+)
+
+ROW_SPECS = (
+    RowSpec(
+        "total_portfolio",
+        "Carteira total",
+        "classification",
+        "paired",
+        "total_general",
+        "base_total",
+        "Carteira total do período-base",
+        emphasis=True,
+        help_text=(
+            "Total Geral do Relatório 16. O percentual usa uma base comum para permitir "
+            "a leitura empilhada da composição e do crescimento da carteira."
+        ),
+    ),
+    *(
+        RowSpec(
+            column.lower(),
+            column,
+            "classification",
+            "paired",
+            column.lower(),
+            "base_total",
+            "Carteira total do período-base",
+            help_text=f"Carteira {column} do Relatório 16, classificada por tipo de instrumento e garantia. C1 a C5 são categorias distintas dos estágios contábeis. O percentual usa a carteira total do período-base comum. Fonte: IFData trimestral, visão prudencial.",
+        )
+        for column in CLASSIFICATION_COLUMNS
+    ),
+    RowSpec(
+        "total_not_individualized",
+        "Total não individualizado",
+        "classification",
+        "paired",
+        "total_not_individualized",
+        "base_total",
+        "Carteira total do período-base",
+        help_text="Total não individualizado do Relatório 16.",
+    ),
+    RowSpec(
+        "not_informed",
+        "Carteira não informada ou não se aplica",
+        "classification",
+        "paired",
+        "not_informed",
+        "base_total",
+        "Carteira total do período-base",
+        help_text="Carteira não informada ou não aplicável no Relatório 16.",
+    ),
+    RowSpec(
+        "delinquency",
+        "Vencidos acima de 90 dias (conceito de arrasto)",
+        "delinquency",
+        "paired",
+        "delinquency",
+        "total_general",
+        "Carteira total do mesmo período",
+        emphasis=True,
+        percent_decimals=2,
+        help_text=(
+            "Inadimplência do Relatório 16: operações a vencer e vencidas que "
+            "possuem alguma parcela vencida há mais de 90 dias."
+        ),
+    ),
+    RowSpec(
+        "provision",
+        "PDD (Perda Esperada)",
+        "provision",
+        "currency_span",
+        "provision",
+        emphasis=True,
+        help_text=(
+            "Saldo de provisão para perdas estimadas: soma das parcelas de Perda Esperada "
+            "e2, f2, g2 e h2, exibida sem o sinal contábil. Usa somente essas parcelas; "
+            "hedge e ajustes de valor justo ficam fora. Fonte: IFData Rel. 2, trimestral, visão prudencial."
+        ),
+    ),
+    RowSpec(
+        "provision_over_portfolio",
+        "PDD / Carteira Total (%)",
+        "provision",
+        "percent_span",
+        "provision",
+        "total_general",
+        "Carteira total do mesmo período",
+        emphasis=True,
+        percent_decimals=2,
+        help_text="PDD do Relatório 2 dividida pelo Total Geral do Relatório 16, no mesmo trimestre e perímetro prudencial. O denominador difere da carteira contábil usada em outras abas; confira os alertas do cruzamento.",
+    ),
+    RowSpec(
+        "provision_over_c5",
+        "PDD / C5 (%)",
+        "provision",
+        "percent_span",
+        "provision",
+        "c5",
+        "C5 do mesmo período",
+        help_text="PDD total dividida pela carteira C5 do mesmo trimestre. A PDD também cobre ativos de outras categorias; o percentual é uma aproximação de cobertura e depende da composição.",
+    ),
+    RowSpec(
+        "provision_over_delinquency",
+        "PDD / Créditos vencidos acima de 90 dias (%)",
+        "provision",
+        "percent_span",
+        "provision",
+        "delinquency",
+        "Vencidos acima de 90 dias do mesmo período",
+        help_text="PDD total dividida pelo saldo integral das operações com alguma parcela vencida há mais de 90 dias (arrasto), no mesmo trimestre. A provisão também pode cobrir ativos fora desse denominador.",
+    ),
+)
+
+ROW_BY_KEY = {spec.key: spec for spec in ROW_SPECS}
+
+PDD_DEPENDENT_ROW_KEYS = (
+    "provision",
+    "provision_over_portfolio",
+    "provision_over_c5",
+    "provision_over_delinquency",
+)
+
+GLOSSARY_ROWS = (
+    {
+        "Variável": "Carteira total",
+        "Definição": (
+            "Total Geral do Relatório 16: C1 a C5, carteira não informada, "
+            "Total Exterior e total não individualizado."
+        ),
+        "Fonte": "BCB IFData, Relatório 16, Conglomerado Prudencial",
+    },
+    {
+        "Variável": "% da base comum",
+        "Definição": (
+            "Valor dividido pela carteira total do último quarto trimestre exibido; "
+            "na ausência de quarto trimestre, usa o período exibido mais recente."
+        ),
+        "Fonte": "Cálculo do modelo 4966",
+    },
+    {
+        "Variável": "Vencidos acima de 90 dias (conceito de arrasto)",
+        "Definição": (
+            "Operações a vencer e vencidas que possuem alguma parcela vencida há mais de 90 dias. "
+            "O percentual usa a carteira total do mesmo período."
+        ),
+        "Fonte": "BCB IFData, Relatório 16, coluna Inadimplência",
+    },
+    {
+        "Variável": "PDD (Perda Esperada)",
+        "Definição": (
+            "Valor sem o sinal contábil da soma de Perda Esperada (e2), (f2), (g2) e (h2). "
+            "Não inclui Hedge de Valor Justo nem Ajuste a Valor Justo."
+        ),
+        "Fonte": "BCB IFData, Relatório 2 Ativo, Conglomerado Prudencial",
+    },
+    {
+        "Variável": "PDD / Carteira Total (%)",
+        "Definição": (
+            "PDD dividida pelo Total Geral do Relatório 16 no mesmo período. "
+            "Razões acima de 55% recebem atenção. A PDD que superar a carteira além "
+            "da tolerância equivalente ao maior entre R$ 1 e 0,1% da Carteira Total "
+            "é sinalizada como não confiável."
+        ),
+        "Fonte": "Cruzamento BCB IFData, Relatórios 2 e 16",
+    },
+    {
+        "Variável": "* (validação requerida)",
+        "Definição": (
+            "A célula permanece visível, mas requer validação quando a fonte está ausente ou "
+            "incompleta, algum componente tem sinal atípico, o denominador é inválido ou uma "
+            "regra de sanidade é acionada. O diagnóstico acompanha a célula e a aba de alertas."
+        ),
+        "Fonte": "Cross-check automático do modelo 4966",
+    },
+    {
+        "Variável": "Total Geral do Relatório 16",
+        "Definição": (
+            "Reconcilia C1 a C5, carteira não informada, Total Exterior e total não individualizado. "
+            "Total Exterior não é mostrado nesta visão por seguir o escopo solicitado."
+        ),
+        "Fonte": "BCB IFData, Relatório 16",
+    },
+    {
+        "Variável": "Variações QoQ",
+        "Definição": (
+            "Trimestre atual comparado ao trimestre imediatamente anterior. Saldos: crescimento relativo em %. "
+            "Vencidos/carteira: subtração em bps inteiros. PDD/carteira, coberturas e percentuais da base comum: "
+            "subtração em p.p., com duas casas. O denominador comum é mantido nas duas datas. "
+            "Os cálculos usam insumos sem arredondamento; a transição anterior a mar/2025 fica bloqueada."
+        ),
+        "Fonte": "Cálculo sobre BCB IFData, Relatórios 2 e 16, trimestral, visão prudencial",
+    },
+    {
+        "Variável": "Cores das variações",
+        "Definição": (
+            "Alta de vencidos, em volume ou percentual, recebe vermelho; queda recebe verde. Alta de cobertura recebe verde; "
+            "queda recebe vermelho. Os volumes também dependem do tamanho da carteira. Demais saldos, classificação e PDD/carteira ficam neutros. "
+            "A cobertura usa PDD total e é uma aproximação. Alertas no atual ou na referência neutralizam a cor "
+            "e mantêm a marca de validação. As setas indicam somente alta ou queda."
+        ),
+        "Fonte": "Leitura de crédito do modelo; consulte também os componentes e o diagnóstico",
+    },
+)
+
+
+def _normalize_label(value: object) -> str:
+    text = unicodedata.normalize("NFKD", str(value or ""))
+    text = "".join(char for char in text if not unicodedata.combining(char))
+    return re.sub(r"[^a-z0-9]+", " ", text.casefold()).strip()
+
+
+def _resolve_column(frame: Optional[pd.DataFrame], candidates: Sequence[str]) -> Optional[str]:
+    if frame is None:
+        return None
+    normalized = {_normalize_label(column): str(column) for column in frame.columns}
+    for candidate in candidates:
+        resolved = normalized.get(_normalize_label(candidate))
+        if resolved:
+            return resolved
+    return None
+
+
+def _finite_number(value: object) -> Optional[float]:
+    if value is None:
+        return None
+    try:
+        number = float(pd.to_numeric(value, errors="coerce"))
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(number):
+        return None
+    return number
+
+
+def _numeric(value: object) -> Optional[float]:
+    number = _finite_number(value)
+    if number is None:
+        return None
+    return 0.0 if abs(number) < 0.005 else number
+
+
+def _sum_available(values: Sequence[object]) -> Optional[float]:
+    numbers = [number for value in values if (number := _numeric(value)) is not None]
+    return float(sum(numbers)) if numbers else None
+
+
+def _safe_ratio(numerator: object, denominator: object) -> Optional[float]:
+    num = _numeric(numerator)
+    den = _numeric(denominator)
+    if num is None or den is None or den <= 0:
+        return None
+    ratio = num / den
+    return ratio if math.isfinite(ratio) else None
+
+
+def _period_sort_key(period: str) -> tuple[int, int, str]:
+    match = re.fullmatch(r"\s*(\d{1,2})\s*/\s*(\d{4})\s*", str(period or ""))
+    if not match:
+        return (0, 0, str(period))
+    quarter, year = int(match.group(1)), int(match.group(2))
+    return (year, quarter, str(period))
+
+
+def format_period_label(period: str) -> str:
+    match = re.fullmatch(r"\s*(\d{1,2})\s*/\s*(\d{4})\s*", str(period or ""))
+    if not match:
+        return str(period)
+    quarter, year = int(match.group(1)), int(match.group(2))
+    month = {1: "Mar", 2: "Jun", 3: "Set", 4: "Dez"}.get(quarter, f"T{quarter}")
+    return f"{month}/{str(year)[-2:]}"
+
+
+def _previous_period(period: str) -> Optional[str]:
+    match = re.fullmatch(r"\s*(\d{1,2})\s*/\s*(\d{4})\s*", str(period or ""))
+    if not match:
+        return None
+    quarter, year = int(match.group(1)), int(match.group(2))
+    return f"{quarter - 1}/{year}" if quarter > 1 else f"4/{year - 1}"
+
+
+def comparison_source_periods(periods: Sequence[str]) -> tuple[str, ...]:
+    """Inclui o trimestre anterior exato, mesmo quando ele não é exibido."""
+    return tuple(sorted({str(p) for p in periods} | {
+        previous for p in periods if (previous := _previous_period(str(p)))
+    }, key=_period_sort_key))
+
+
+VARIATION_NOTE = (
+    "QoQ compara cada valor com o trimestre imediatamente anterior indicado no cabeçalho. "
+    "Saldos: crescimento em %. Vencidos/carteira: subtração em bps inteiros. "
+    "PDD/carteira, coberturas e percentuais da base comum: subtração em p.p., com duas casas. "
+    "Cálculos usam os valores sem arredondamento."
+)
+COLOR_NOTE = (
+    "Verde: direção usualmente favorável; vermelho: direção de atenção. "
+    "Alta de vencidos recebe vermelho; queda recebe verde, em volume e percentual. "
+    "Volumes de risco também dependem do tamanho da carteira. Demais saldos, classificação C1–C5 e PDD/carteira ficam neutros. "
+    "As coberturas são aproximações; leia também PDD e vencidos."
+)
+
+
+def cell_delta(model: Carteira4966Model, spec: RowSpec, period: str, *, secondary=False) -> CellDelta:
+    """Única política de cálculo e leitura para tela, Excel e auditoria."""
+    percent = secondary or spec.layout == "percent_span"
+    kind = ("bps" if spec.key == "delinquency" else "pp") if percent else "pct"
+    unit = {"bps": "bps", "pp": "p.p.", "pct": "%"}[kind]
+    method = {
+        "bps": "(razão decimal atual − razão decimal de referência) × 10.000",
+        "pp": "(razão decimal atual − razão decimal de referência) × 100",
+        "pct": "(saldo atual − saldo de referência) ÷ saldo de referência × 100; base positiva",
+    }[kind]
+    previous = _previous_period(period)
+    current_cell = model.cells.get(spec.key, {}).get(period, MetricCell(None))
+    reference_cell = model.cells.get(spec.key, {}).get(previous) or model.reference_cells.get(spec.key, {}).get(previous, MetricCell(None))
+    current = current_cell.secondary if secondary else current_cell.primary
+    reference = reference_cell.secondary if secondary else reference_cell.primary
+    reason = ""
+    if previous and _period_sort_key(previous)[0] < 2025 <= _period_sort_key(period)[0]:
+        reason = "Quebra em 2025"
+    elif current is None:
+        reason = "Dado N/D"
+    elif reference is None:
+        reason = "Base N/D"
+    value = None if reason else compute_delta(current, reference, kind, escala="dec")
+    if value is None and not reason:
+        reason = "Base ≤ 0"
+    direction = None if value is None else "up" if value > 0 else "down" if value < 0 else "flat"
+    reliable = not model.cell_quality_issues(spec.key, period) and not model.cell_quality_issues(spec.key, previous)
+    favorable = "down" if spec.key == "delinquency" else "up" if spec.key in {"provision_over_c5", "provision_over_delinquency"} else None
+    tone = credit_variation_tone(direction, favorable, reliable=reliable)
+    display = reason if value is None else formatar_delta_br(value, unit, 0 if kind == "bps" else 2, com_seta=True).replace(" %", "%")
+    if not reliable and value is not None:
+        diagnostics = [
+            _cell_quality_message(model, spec.key, p)
+            for p in (period, previous) if model.cell_quality_issues(spec.key, p)
+        ]
+        reason = "Atual ou referência com alerta de qualidade; validar na fonte. " + " ".join(diagnostics)
+        display += "*"
+    return CellDelta(value, unit, display, direction, tone, previous, current, reference, method, reason)
+
+
+def variation_dataframe(model: Carteira4966Model) -> pd.DataFrame:
+    rows = []
+    for spec in ROW_SPECS:
+        for period in model.periods:
+            for secondary in ([False, True] if spec.layout == "paired" else [False]):
+                delta = cell_delta(model, spec, period, secondary=secondary)
+                percent = secondary or spec.layout == "percent_span"
+                rows.append({
+                    "Indicador": spec.label, "Componente": "%" if percent else "R$",
+                    "Período": format_period_label(period), "Referência": format_period_label(delta.reference_period) if delta.reference_period else "N/D",
+                    "Atual (R$ ou decimal)": delta.current, "Base (R$ ou decimal)": delta.reference,
+                    "Delta numérico": delta.value, "Unidade delta": delta.unit,
+                    "Variação": delta.display, "Leitura": delta.tone,
+                    "Cálculo": delta.method, "Status": delta.reason or "Disponível",
+                })
+    return pd.DataFrame(rows)
+
+
+def _best_row_for_period(
+    frame: Optional[pd.DataFrame],
+    period: str,
+    relevant_columns: Sequence[str],
+) -> Optional[pd.Series]:
+    if frame is None or frame.empty:
+        return None
+    period_column = _resolve_column(frame, ("Período", "Periodo"))
+    if not period_column:
+        return None
+    matches = frame[frame[period_column].astype(str).str.strip().eq(str(period).strip())].copy()
+    if matches.empty:
+        return None
+    usable = [column for column in relevant_columns if column in matches.columns]
+    if len(matches) > 1 and usable:
+        scores = matches[usable].notna().sum(axis=1)
+        matches = matches.assign(_completeness=scores).sort_values("_completeness", kind="stable")
+    return matches.iloc[-1]
+
+
+def _conflicting_columns_for_period(
+    frame: Optional[pd.DataFrame],
+    period: str,
+    relevant_columns: Sequence[str],
+) -> tuple[str, ...]:
+    if frame is None or frame.empty:
+        return ()
+    period_column = _resolve_column(frame, ("Período", "Periodo"))
+    if not period_column:
+        return ()
+    matches = frame[
+        frame[period_column].astype(str).str.strip().eq(str(period).strip())
+    ]
+    if len(matches.index) <= 1:
+        return ()
+
+    conflicts: list[str] = []
+    for column in relevant_columns:
+        if column not in matches.columns:
+            continue
+        values = [
+            number
+            for value in matches[column].tolist()
+            if (number := _finite_number(value)) is not None
+        ]
+        if len(values) <= 1:
+            continue
+        reference = values[0]
+        if any(
+            not math.isclose(reference, value, rel_tol=1e-9, abs_tol=0.005)
+            for value in values[1:]
+        ):
+            conflicts.append(str(column))
+    return tuple(conflicts)
+
+
+def _expected_loss_from_row(
+    row: Optional[pd.Series],
+    frame: Optional[pd.DataFrame],
+) -> _ExpectedLossResult:
+    if frame is None or frame.empty:
+        return _ExpectedLossResult(
+            None,
+            (_SourceFinding("pdd_source_unavailable"),),
+        )
+    if row is None:
+        return _ExpectedLossResult(
+            None,
+            (_SourceFinding("pdd_period_unmatched"),),
+        )
+
+    values: list[float] = []
+    missing_columns: list[str] = []
+    missing_values: list[str] = []
+    for candidate in EXPECTED_LOSS_COLUMNS:
+        column = _resolve_column(frame, (candidate,))
+        if column is None:
+            missing_columns.append(candidate)
+            continue
+        value = _numeric(row.get(column))
+        if value is None:
+            missing_values.append(candidate)
+            continue
+        values.append(value)
+
+    if missing_columns:
+        return _ExpectedLossResult(
+            None,
+            (
+                _SourceFinding(
+                    "pdd_components_missing",
+                    tuple(missing_columns),
+                ),
+            ),
+        )
+    if missing_values:
+        return _ExpectedLossResult(
+            None,
+            (
+                _SourceFinding(
+                    "pdd_component_values_missing",
+                    tuple(missing_values),
+                ),
+            ),
+        )
+
+    signed_total = float(sum(values))
+    positive_components = tuple(
+        candidate
+        for candidate, value in zip(EXPECTED_LOSS_COLUMNS, values)
+        if value > 0
+    )
+    if positive_components:
+        return _ExpectedLossResult(
+            abs(signed_total),
+            (
+                _SourceFinding(
+                    "pdd_unexpected_sign",
+                    positive_components,
+                ),
+            ),
+        )
+    return _ExpectedLossResult(abs(signed_total))
+
+
+def _metrics_for_row(row: Optional[pd.Series], frame: Optional[pd.DataFrame]) -> dict[str, Optional[float]]:
+    def get(*candidates: str) -> Optional[float]:
+        column = _resolve_column(frame, candidates)
+        return _numeric(row.get(column)) if row is not None and column else None
+
+    components = {key.lower(): get(key) for key in CLASSIFICATION_COLUMNS}
+    classified = _sum_available(list(components.values()))
+    return {
+        **components,
+        "classified": classified,
+        "total_not_individualized": get("Total não Individualizado", "Total nao Individualizado"),
+        "not_informed": get(
+            "Carteira não Informada ou não se Aplica",
+            "Carteira nao Informada ou nao se Aplica",
+        ),
+        "total_external": get("Total Exterior"),
+        "total_general": get("Total Geral"),
+        "delinquency": get("Inadimplência", "Inadimplencia"),
+    }
+
+
+def _build_pdd_quality_issues(
+    metrics_by_period: Mapping[str, Mapping[str, Optional[float]]],
+    periods: Sequence[str],
+    source_findings: Mapping[str, _ExpectedLossResult],
+) -> tuple[QualityIssue, ...]:
+    issues: list[QualityIssue] = []
+    for period in periods:
+        metrics = metrics_by_period.get(period, {})
+        pdd_value = _numeric(metrics.get("provision"))
+        portfolio_value = _numeric(metrics.get("total_general"))
+        source_result = source_findings.get(
+            period,
+            _ExpectedLossResult(
+                None,
+                (_SourceFinding("pdd_source_unavailable"),),
+            ),
+        )
+
+        for finding in source_result.findings:
+            issues.append(
+                QualityIssue(
+                    period=period,
+                    severity="warning",
+                    code=finding.code,
+                    pdd_value=pdd_value,
+                    portfolio_value=portfolio_value,
+                    ratio=_safe_ratio(pdd_value, portfolio_value),
+                    row_key="provision",
+                    affected_row_keys=PDD_DEPENDENT_ROW_KEYS[1:],
+                    denominator_label=ROW_BY_KEY[
+                        "provision_over_portfolio"
+                    ].denominator_label,
+                    details=finding.details,
+                )
+            )
+
+        if pdd_value is None:
+            continue
+
+        ratio_specs = (
+            ("provision_over_portfolio", "total_general"),
+            ("provision_over_c5", "c5"),
+            ("provision_over_delinquency", "delinquency"),
+        )
+        for row_key, denominator_key in ratio_specs:
+            spec = ROW_BY_KEY[row_key]
+            denominator_value = _numeric(metrics.get(denominator_key))
+            if denominator_value is None:
+                issues.append(
+                    QualityIssue(
+                        period=period,
+                        severity="warning",
+                        code="missing_denominator",
+                        pdd_value=pdd_value,
+                        portfolio_value=None,
+                        ratio=None,
+                        row_key=row_key,
+                        denominator_label=spec.denominator_label,
+                    )
+                )
+                continue
+            if denominator_value < 0:
+                issues.append(
+                    QualityIssue(
+                        period=period,
+                        severity="critical",
+                        code=(
+                            "negative_portfolio"
+                            if row_key == "provision_over_portfolio"
+                            else "negative_denominator"
+                        ),
+                        pdd_value=pdd_value,
+                        portfolio_value=denominator_value,
+                        ratio=None,
+                        row_key=row_key,
+                        denominator_label=spec.denominator_label,
+                    )
+                )
+                continue
+            if denominator_value == 0:
+                issues.append(
+                    QualityIssue(
+                        period=period,
+                        severity="critical" if pdd_value > 0 else "warning",
+                        code=(
+                            "pdd_with_zero_portfolio"
+                            if row_key == "provision_over_portfolio"
+                            else "zero_denominator"
+                        ),
+                        pdd_value=pdd_value,
+                        portfolio_value=denominator_value,
+                        ratio=None,
+                        row_key=row_key,
+                        denominator_label=spec.denominator_label,
+                    )
+                )
+
+        if portfolio_value is None or portfolio_value <= 0:
+            continue
+        ratio = pdd_value / portfolio_value
+        excess_tolerance = max(
+            PDD_UNRELIABLE_ABSOLUTE_TOLERANCE,
+            portfolio_value * PDD_UNRELIABLE_RELATIVE_TOLERANCE,
+        )
+        if pdd_value - portfolio_value > excess_tolerance:
+            issues.append(
+                QualityIssue(
+                    period=period,
+                    severity="critical",
+                    code="pdd_exceeds_portfolio",
+                    pdd_value=pdd_value,
+                    portfolio_value=portfolio_value,
+                    ratio=ratio,
+                    row_key="provision_over_portfolio",
+                    denominator_label=ROW_BY_KEY["provision_over_portfolio"].denominator_label,
+                )
+            )
+        elif ratio > PDD_ATTENTION_RATIO:
+            issues.append(
+                QualityIssue(
+                    period=period,
+                    severity="warning",
+                    code="high_pdd_ratio",
+                    pdd_value=pdd_value,
+                    portfolio_value=portfolio_value,
+                    ratio=ratio,
+                    row_key="provision_over_portfolio",
+                    denominator_label=ROW_BY_KEY["provision_over_portfolio"].denominator_label,
+                )
+            )
+    return tuple(issues)
+
+
+def _build_delinquency_quality_issues(
+    metrics_by_period: Mapping[str, Mapping[str, Optional[float]]],
+    periods: Sequence[str],
+) -> tuple[QualityIssue, ...]:
+    """Valida a Inadimplencia do Relatorio 16 na propria linha exibida."""
+
+    issues: list[QualityIssue] = []
+    denominator_label = ROW_BY_KEY["delinquency"].denominator_label
+    for period in periods:
+        metrics = metrics_by_period.get(period, {})
+        delinquency = _numeric(metrics.get("delinquency"))
+        portfolio = _numeric(metrics.get("total_general"))
+
+        if delinquency is None:
+            issues.append(
+                QualityIssue(
+                    period=period,
+                    severity="warning",
+                    code="delinquency_missing",
+                    pdd_value=None,
+                    portfolio_value=portfolio,
+                    ratio=None,
+                    row_key="delinquency",
+                    denominator_label=denominator_label,
+                    details=("Inadimplência", "Relatório 16"),
+                )
+            )
+            continue
+
+        ratio = _safe_ratio(delinquency, portfolio)
+        if delinquency < 0:
+            issues.append(
+                QualityIssue(
+                    period=period,
+                    severity="critical",
+                    code="delinquency_negative",
+                    pdd_value=delinquency,
+                    portfolio_value=portfolio,
+                    ratio=ratio,
+                    row_key="delinquency",
+                    denominator_label=denominator_label,
+                )
+            )
+
+        if portfolio is None:
+            issues.append(
+                QualityIssue(
+                    period=period,
+                    severity="warning",
+                    code="delinquency_portfolio_missing",
+                    pdd_value=delinquency,
+                    portfolio_value=None,
+                    ratio=None,
+                    row_key="delinquency",
+                    denominator_label=denominator_label,
+                )
+            )
+            continue
+        if portfolio <= 0:
+            issues.append(
+                QualityIssue(
+                    period=period,
+                    severity="critical",
+                    code="delinquency_invalid_portfolio",
+                    pdd_value=delinquency,
+                    portfolio_value=portfolio,
+                    ratio=None,
+                    row_key="delinquency",
+                    denominator_label=denominator_label,
+                )
+            )
+            continue
+
+        if delinquency > portfolio:
+            issues.append(
+                QualityIssue(
+                    period=period,
+                    severity="critical",
+                    code="delinquency_exceeds_portfolio",
+                    pdd_value=delinquency,
+                    portfolio_value=portfolio,
+                    ratio=delinquency / portfolio,
+                    row_key="delinquency",
+                    denominator_label=denominator_label,
+                )
+            )
+    return tuple(issues)
+
+
+def build_carteira_4966_model(
+    carteira: pd.DataFrame,
+    ativo: Optional[pd.DataFrame],
+    periods: Sequence[str],
+    *,
+    base_period: Optional[str] = None,
+) -> Carteira4966Model:
+    """Constroi os valores brutos e ratios do modelo 4966.
+
+    ``carteira`` e ``ativo`` devem estar previamente recortados para uma unica
+    instituicao. Caso o matching com Ativo falhe, a carteira continua disponivel
+    e as linhas de provisao permanecem N/D.
+    """
+
+    ordered_periods = tuple(sorted(dict.fromkeys(str(period) for period in periods), key=_period_sort_key))
+    source_periods = comparison_source_periods(ordered_periods)
+    carteira_relevant = [
+        column
+        for candidates in (
+            *[(column,) for column in CLASSIFICATION_COLUMNS],
+            ("Total não Individualizado",),
+            ("Carteira não Informada ou não se Aplica",),
+            ("Total Exterior",),
+            ("Total Geral",),
+            ("Inadimplência",),
+        )
+        if (column := _resolve_column(carteira, candidates)) is not None
+    ]
+    ativo_relevant = [
+        column
+        for candidate in EXPECTED_LOSS_COLUMNS
+        if (column := _resolve_column(ativo, (candidate,))) is not None
+    ]
+
+    all_carteira_periods = set(source_periods)
+    period_column = _resolve_column(carteira, ("Período", "Periodo"))
+    if period_column:
+        all_carteira_periods.update(carteira[period_column].dropna().astype(str).tolist())
+
+    metrics_by_period: dict[str, dict[str, Optional[float]]] = {}
+    for period in sorted(all_carteira_periods, key=_period_sort_key):
+        carteira_row = _best_row_for_period(carteira, period, carteira_relevant)
+        metrics_by_period[period] = _metrics_for_row(carteira_row, carteira)
+
+    provision_by_period: dict[str, Optional[float]] = {}
+    provision_findings: dict[str, _ExpectedLossResult] = {}
+    for period in source_periods:
+        ativo_row = _best_row_for_period(ativo, period, ativo_relevant)
+        provision_result = _expected_loss_from_row(ativo_row, ativo)
+        conflicting_columns = _conflicting_columns_for_period(
+            ativo,
+            period,
+            ativo_relevant,
+        )
+        if conflicting_columns:
+            provision_result = _ExpectedLossResult(
+                provision_result.value,
+                (
+                    *provision_result.findings,
+                    _SourceFinding(
+                        "pdd_conflicting_rows",
+                        conflicting_columns,
+                    ),
+                ),
+            )
+        provision_findings[period] = provision_result
+        provision_by_period[period] = provision_result.value
+        metrics_by_period.setdefault(period, {})["provision"] = provision_by_period[period]
+
+    valid_base_periods = []
+    for period in ordered_periods:
+        total_general = _numeric(metrics_by_period.get(period, {}).get("total_general"))
+        if total_general is not None and total_general > 0:
+            valid_base_periods.append(period)
+    selected_base = None
+    if base_period in valid_base_periods:
+        selected_base = str(base_period)
+    else:
+        fourth_quarters = [period for period in valid_base_periods if _period_sort_key(period)[1] == 4]
+        if fourth_quarters:
+            selected_base = max(fourth_quarters, key=_period_sort_key)
+        elif valid_base_periods:
+            selected_base = max(valid_base_periods, key=_period_sort_key)
+    base_value = (
+        _numeric(metrics_by_period[selected_base].get("total_general"))
+        if selected_base is not None
+        else None
+    )
+
+    qoq: dict[str, Optional[float]] = {}
+    for period in ordered_periods:
+        current = metrics_by_period.get(period, {}).get("total_general")
+        previous = metrics_by_period.get(_previous_period(period) or "", {}).get("total_general")
+        qoq[period] = _safe_ratio(current, previous)
+        if qoq[period] is not None:
+            qoq[period] -= 1.0
+
+    cells: dict[str, dict[str, MetricCell]] = {spec.key: {} for spec in ROW_SPECS}
+    for spec in ROW_SPECS:
+        for period in source_periods:
+            metrics = metrics_by_period.get(period, {})
+            value = _numeric(metrics.get(spec.value_key))
+            if spec.layout == "paired":
+                denominator = (
+                    base_value
+                    if spec.denominator_key == "base_total"
+                    else metrics.get(spec.denominator_key or "")
+                )
+                cells[spec.key][period] = MetricCell(value, _safe_ratio(value, denominator))
+            elif spec.layout == "currency_span":
+                cells[spec.key][period] = MetricCell(value)
+            elif spec.layout == "percent_span":
+                cells[spec.key][period] = MetricCell(
+                    _safe_ratio(value, metrics.get(spec.denominator_key or ""))
+                )
+            else:
+                raise ValueError(f"Layout de linha não suportado: {spec.layout}")
+
+    pdd_quality_issues = _build_pdd_quality_issues(
+        metrics_by_period,
+        source_periods,
+        provision_findings,
+    )
+    delinquency_quality_issues = _build_delinquency_quality_issues(
+        metrics_by_period,
+        source_periods,
+    )
+
+    return Carteira4966Model(
+        periods=ordered_periods,
+        period_labels={period: format_period_label(period) for period in ordered_periods},
+        base_period=selected_base,
+        base_value=base_value,
+        qoq=qoq,
+        cells={key: {p: cell for p, cell in values.items() if p in ordered_periods} for key, values in cells.items()},
+        reference_cells={key: {p: cell for p, cell in values.items() if p not in ordered_periods} for key, values in cells.items()},
+        quality_issues=tuple(issue for issue in (*pdd_quality_issues, *delinquency_quality_issues) if issue.period in ordered_periods),
+        reference_quality_issues=tuple(issue for issue in (*pdd_quality_issues, *delinquency_quality_issues) if issue.period not in ordered_periods),
+    )
+
+
+def _format_number_ptbr(value: float, decimals: int = 0) -> str:
+    rendered = f"{value:,.{decimals}f}"
+    return rendered.replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def format_brl_millions(value: Optional[float]) -> str:
+    number = _numeric(value)
+    return "N/D" if number is None else _format_number_ptbr(number / 1_000_000, 0)
+
+
+def _format_brl_millions_for_alert(value: Optional[float]) -> str:
+    number = _numeric(value)
+    if number is None:
+        return "N/D"
+    millions = number / 1_000_000
+    magnitude = abs(millions)
+    if magnitude >= 100:
+        decimals = 0
+    elif magnitude >= 10:
+        decimals = 1
+    elif magnitude >= 1:
+        decimals = 2
+    else:
+        decimals = 3
+    return _format_number_ptbr(millions, decimals)
+
+
+def format_percentage(value: Optional[float], decimals: int = 0) -> str:
+    # Percentuais chegam como frações. Não aplique aqui o limiar monetário de
+    # `_numeric`, pois 0,0049 representa 0,49%, e não um resíduo desprezível.
+    number = _finite_number(value)
+    if number is None:
+        return "N/D"
+    percentage = number * 100
+    if round(percentage, decimals) == 0:
+        percentage = 0.0
+    return f"{_format_number_ptbr(percentage, decimals)}%"
+
+
+def _excel_percentage_format_code(decimals: int = 2) -> str:
+    decimals = max(0, int(decimals))
+    return "0%" if decimals == 0 else f"0.{('0' * decimals)}%"
+
+
+def _excel_marked_format_code(number_format: str) -> str:
+    return f'{number_format}"*"'
+
+
+def quality_issue_message(issue: QualityIssue) -> str:
+    period_label = format_period_label(issue.period)
+    pdd_label = _format_brl_millions_for_alert(issue.pdd_value)
+    denominator_label = _format_brl_millions_for_alert(issue.portfolio_value)
+    affected_label = ROW_BY_KEY.get(issue.row_key, ROW_BY_KEY["provision"]).label
+    details = ", ".join(issue.details)
+
+    if issue.code == "delinquency_missing":
+        return (
+            f"{period_label}: a coluna Inadimplência do Relatório 16 está indisponível "
+            "ou não foi publicada para a instituição. Vencidos acima de 90 dias "
+            "(conceito de arrasto) permanece como N/D até validação da fonte."
+        )
+    if issue.code == "delinquency_negative":
+        return (
+            f"{period_label}: a Inadimplência publicada no Relatório 16 é negativa "
+            f"(R$ {pdd_label} mi). O valor permanece visível para auditoria, mas é "
+            "considerado não confiável até validação no IFData."
+        )
+    if issue.code == "delinquency_portfolio_missing":
+        return (
+            f"{period_label}: a Inadimplência de R$ {pdd_label} mi foi publicada, mas a "
+            "Carteira Total do mesmo período está indisponível. O valor bruto permanece "
+            "visível e o percentual fica N/D até validação da fonte."
+        )
+    if issue.code == "delinquency_invalid_portfolio":
+        return (
+            f"{period_label}: a Inadimplência é R$ {pdd_label} mi, mas a Carteira Total "
+            f"do mesmo período é R$ {denominator_label} mi. O valor bruto permanece "
+            "visível para auditoria e o percentual fica N/D, mas o cruzamento é não confiável."
+        )
+    if issue.code == "delinquency_exceeds_portfolio":
+        return (
+            f"{period_label}: a Inadimplência de R$ {pdd_label} mi equivale a "
+            f"{format_percentage(issue.ratio, 2)} da Carteira Total de R$ "
+            f"{denominator_label} mi e supera o total do mesmo período. O valor permanece "
+            "visível para auditoria, mas o cruzamento requer validação no IFData."
+        )
+    if issue.code == "pdd_source_unavailable":
+        return (
+            f"{period_label}: a tabela Ativo (Relatório 2) não está disponível. "
+            f"{affected_label} e as razões dependentes não podem ser calculados com segurança."
+        )
+    if issue.code == "pdd_period_unmatched":
+        return (
+            f"{period_label}: não houve correspondência segura da instituição e do período "
+            f"na tabela Ativo (Relatório 2). {affected_label} e as razões dependentes "
+            "permanecem indisponíveis."
+        )
+    if issue.code == "pdd_components_missing":
+        return (
+            f"{period_label}: faltam colunas obrigatórias de Perda Esperada no Relatório 2"
+            f"{f' ({details})' if details else ''}. O cálculo de PDD não foi estimado parcialmente."
+        )
+    if issue.code == "pdd_component_values_missing":
+        return (
+            f"{period_label}: há componentes obrigatórios de Perda Esperada sem valor"
+            f"{f' ({details})' if details else ''}. O cálculo de PDD não foi estimado parcialmente."
+        )
+    if issue.code == "pdd_unexpected_sign":
+        return (
+            f"{period_label}: ao menos um componente publicado de Perda Esperada tem sinal positivo"
+            f"{f' ({details})' if details else ''}. A magnitude foi exibida, mas requer validação "
+            "na fonte."
+        )
+    if issue.code == "pdd_conflicting_rows":
+        return (
+            f"{period_label}: há mais de uma linha do Relatório 2 com valores conflitantes de "
+            f"Perda Esperada{f' ({details})' if details else ''}. A linha mais completa foi "
+            "mantida visível, mas o cálculo requer validação na fonte."
+        )
+    if issue.code == "missing_denominator":
+        return (
+            f"{period_label}: o denominador ({issue.denominator_label or 'dado de referência'}) "
+            "está indisponível ou não foi publicado. "
+            f"{affected_label} não pode ser calculado e está marcado para validação."
+        )
+    if issue.code == "zero_denominator":
+        return (
+            f"{period_label}: {issue.denominator_label or 'o denominador'} está zerado. "
+            f"{affected_label} não pode ser calculado e está marcado para validação."
+        )
+    if issue.code == "negative_denominator":
+        return (
+            f"{period_label}: {issue.denominator_label or 'o denominador'} é negativo "
+            f"(R$ {denominator_label} mi). {affected_label} não é confiável sem validação na fonte."
+        )
+    if issue.code == "pdd_exceeds_portfolio":
+        return (
+            f"{period_label}: PDD de R$ {pdd_label} mi equivale a "
+            f"{format_percentage(issue.ratio, 1)} da Carteira Total de R$ {denominator_label} mi. "
+            "Como a PDD supera a carteira, o cruzamento foi sinalizado como não confiável."
+        )
+    if issue.code == "pdd_with_zero_portfolio":
+        return (
+            f"{period_label}: há PDD de R$ {pdd_label} mi, mas a Carteira Total está zerada. "
+            "A razão não pode ser calculada e o cruzamento foi sinalizado como não confiável."
+        )
+    if issue.code == "negative_portfolio":
+        return (
+            f"{period_label}: a Carteira Total é negativa (R$ {denominator_label} mi). "
+            "O denominador deve ser validado no Relatório 16 antes do uso."
+        )
+    return (
+        f"{period_label}: PDD de R$ {pdd_label} mi equivale a "
+        f"{format_percentage(issue.ratio, 1)} da Carteira Total de R$ {denominator_label} mi. "
+        f"A razão ultrapassa o limiar de atenção de {format_percentage(PDD_ATTENTION_RATIO, 0)}."
+    )
+
+
+def _cell_quality_message(
+    model: Carteira4966Model,
+    row_key: str,
+    period: str,
+) -> str:
+    issues = sorted(
+        model.cell_quality_issues(row_key, period),
+        key=lambda issue: 0 if issue.severity == "critical" else 1,
+    )
+    return "\n\n".join(
+        dict.fromkeys(quality_issue_message(issue) for issue in issues)
+    )
+
+
+def quality_issues_dataframe(model: Carteira4966Model) -> pd.DataFrame:
+    columns = [
+        "Indicador(es) afetado(s)",
+        "Período",
+        "Severidade",
+        "Checagem",
+        "Valor observado (R$ mm)",
+        "Denominador",
+        "Denominador (R$ mm)",
+        "Resultado (%)",
+        "PDD / Carteira Total (%)",
+        "Diagnóstico",
+    ]
+    rows = []
+    for issue in model.quality_issues:
+        rows.append(
+            {
+                "Indicador(es) afetado(s)": ", ".join(
+                    ROW_BY_KEY[row_key].label
+                    for row_key in (issue.row_key, *issue.affected_row_keys)
+                ),
+                "Período": model.period_labels.get(issue.period, format_period_label(issue.period)),
+                "Severidade": "Não confiável" if issue.severity == "critical" else "Atenção",
+                "Checagem": issue.code,
+                "Valor observado (R$ mm)": (
+                    None if issue.pdd_value is None else issue.pdd_value / 1_000_000
+                ),
+                "Denominador": issue.denominator_label or "Não se aplica",
+                "Denominador (R$ mm)": (
+                    None
+                    if issue.portfolio_value is None
+                    else issue.portfolio_value / 1_000_000
+                ),
+                "Resultado (%)": (
+                    None if issue.ratio is None else issue.ratio * 100
+                ),
+                "PDD / Carteira Total (%)": (
+                    issue.ratio * 100
+                    if issue.applies_to("provision_over_portfolio")
+                    and issue.ratio is not None
+                    else None
+                ),
+                "Diagnóstico": quality_issue_message(issue),
+            }
+        )
+    return pd.DataFrame(rows, columns=columns)
+
+
+def _cell_title(spec: RowSpec, cell: MetricCell, *, secondary: bool = False) -> str:
+    if secondary or spec.layout == "percent_span":
+        is_missing = (
+            (spec.layout == "paired" and cell.secondary is None)
+            or (spec.layout == "percent_span" and cell.primary is None)
+        )
+        if is_missing:
+            return "Dado ou denominador indisponível"
+        return spec.denominator_label
+    if cell.primary is None:
+        return "Dado indisponível na fonte"
+    return f"Valor bruto: R$ {_format_number_ptbr(cell.primary, 2)}"
+
+
+def render_carteira_4966_html(model: Carteira4966Model) -> str:
+    """Renderiza tabela HTML acessivel, responsiva e isolada por namespace CSS."""
+
+    min_width = max(700, 240 + len(model.periods) * 168)
+    base_label = model.period_labels.get(model.base_period or "", "N/D")
+
+    def render_data_cell(
+        content: str,
+        *,
+        classes: Sequence[str] = (),
+        title: str = "",
+        period: str = "",
+        colspan: Optional[int] = None,
+        quality_issue: Optional[QualityIssue] = None,
+        quality_message: str = "",
+        tooltip_id: str = "",
+        delta: Optional[CellDelta] = None,
+    ) -> str:
+        """Monta uma celula sem atributos vazios e com alerta acessivel."""
+
+        class_names = [class_name for class_name in classes if class_name]
+        attributes: list[str] = []
+        tooltip = ""
+        if quality_issue is not None:
+            class_names.extend(
+                (
+                    f"tc-4966-quality-{quality_issue.severity}",
+                    "tc-4966-has-tooltip",
+                )
+            )
+            attributes.extend(
+                (
+                    'tabindex="0"',
+                    f'aria-describedby="{html.escape(tooltip_id, quote=True)}"',
+                    f'data-quality="{html.escape(quality_issue.severity, quote=True)}"',
+                )
+            )
+            tooltip_text = html.escape(quality_message).replace("\n", "<br>")
+            tooltip = (
+                '<span class="tc-4966-quality-marker" aria-hidden="true">*</span>'
+                f'<span id="{html.escape(tooltip_id, quote=True)}" '
+                'class="tc-4966-tooltip" role="tooltip">'
+                '<strong>Alerta de confiabilidade.</strong> '
+                f'{tooltip_text}</span>'
+            )
+        if class_names:
+            attributes.insert(
+                0,
+                f'class="{html.escape(" ".join(class_names), quote=True)}"',
+            )
+        if colspan is not None:
+            attributes.append(f'colspan="{int(colspan)}"')
+        if period:
+            attributes.append(f'data-period="{html.escape(period, quote=True)}"')
+        # Células sinalizadas já expõem o diagnóstico por um tooltip próprio,
+        # associado via aria-describedby. Manter também o title nativo faz os
+        # dois balões se sobreporem e duplica a mensagem no hover/foco.
+        if delta is not None:
+            title += f"; QoQ vs {format_period_label(delta.reference_period or 'N/D')}: {delta.display}; {delta.method}"
+            if delta.reason:
+                title += "; " + delta.reason
+        if title and quality_issue is None:
+            attributes.append(f'title="{html.escape(title, quote=True)}"')
+        attribute_text = f" {' '.join(attributes)}" if attributes else ""
+        variation = "" if delta is None else (
+            f'<span class="tc-4966-delta {delta.tone}" aria-label="'
+            f'{html.escape("QoQ: " + delta.display, quote=True)}">{html.escape(delta.display)}</span>'
+        )
+        return f'<td{attribute_text}><span class="tc-4966-value">{content}{tooltip}</span>{variation}</td>'
+
+    parts = [
+        """
+<style>
+.tc-4966-region {
+  --tc-ink: #222222;
+  --tc-ink-soft: #555961;
+  --tc-line: __LINE__;
+  --tc-surface: #ffffff;
+  --tc-surface-soft: __SECTION__;
+  width: 100%;
+  overflow: auto;
+  max-height: 640px;
+  margin: .75rem 0 1rem;
+  background: var(--tc-surface);
+  outline: none;
+}
+.tc-4966-region:focus-visible {
+  outline: 2px solid #6e6e6e;
+  outline-offset: 2px;
+}
+.tc-4966-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  color: var(--tc-ink);
+  background: var(--tc-surface);
+  font-family: __FONT__;
+  font-size: 14px;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.tc-4966-table caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.tc-4966-table th, .tc-4966-table td {
+  box-sizing: border-box;
+  border: 1px solid var(--tc-line);
+  padding: 6px 3px;
+  vertical-align: middle;
+}
+.tc-4966-table thead th {
+  position: sticky;
+  z-index: 3;
+  color: #ffffff;
+  background: __HEADER__;
+  text-align: center;
+  font-size: 12pt;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.tc-4966-table thead tr:nth-child(1) th { top: 0; height: 34px; }
+.tc-4966-table thead tr:nth-child(2) th { top: 34px; height: 26px; }
+.tc-4966-table thead tr:nth-child(3) th { top: 60px; height: 26px; }
+.tc-4966-table thead .tc-4966-qoq { color: #ffffff; font-size: 11px; font-weight: 500; }
+.tc-4966-table thead .tc-4966-subhead { background: __HEADER__; color: #ffffff; font-size: 11px; }
+.tc-4966-table .tc-4966-label {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  min-width: 220px;
+  max-width: 260px;
+  background: var(--tc-surface);
+  text-align: left;
+  font-weight: 400;
+}
+.tc-4966-table thead .tc-4966-label { z-index: 4; background: __HEADER__; }
+.tc-4966-table td { min-width: 0; text-align: center; white-space: nowrap; }
+.tc-4966-table .tc-4966-period-end { border-right: 1px solid var(--tc-line); }
+.tc-4966-table .tc-4966-section-label {
+  background: var(--tc-surface-soft);
+  color: var(--tc-ink-soft);
+  text-align: left;
+  font-size: 14px;
+  padding: 5px 8px;
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+.tc-4966-table .tc-4966-emphasis { font-weight: 700; }
+.tc-4966-table .tc-4966-ratio-row .tc-4966-label { padding-left: 20px; color: var(--tc-ink-soft); }
+.tc-4966-table .tc-4966-total-row > * {
+  background: #ffffff;
+  font-weight: 700;
+}
+.tc-4966-table .tc-4966-missing { color: #6d7077; font-style: italic; }
+.tc-4966-value { display: block; font-weight: 600; }
+.tc-4966-delta { display: block; margin-top: 3px; font-size: 11px; font-weight: 400; font-style: normal; white-space: normal; color: #666666; }
+.tc-4966-delta.favorable { color: #16713B; }
+.tc-4966-delta.attention { color: #B32624; }
+.tc-4966-table .tc-4966-quality-warning {
+  color: #654c00;
+  background: #fff4cc;
+  font-weight: 700;
+}
+.tc-4966-table .tc-4966-quality-critical {
+  color: #9f231b;
+  background: #fde8e7;
+  font-weight: 750;
+}
+.tc-4966-table .tc-4966-has-tooltip {
+  position: relative;
+  cursor: help;
+  outline: none;
+}
+.tc-4966-table .tc-4966-has-tooltip:focus-visible {
+  box-shadow: inset 0 0 0 2px #6e6e6e;
+}
+.tc-4966-table .tc-4966-has-tooltip:hover,
+.tc-4966-table .tc-4966-has-tooltip:focus,
+.tc-4966-table .tc-4966-has-tooltip:focus-within {
+  z-index: 20;
+}
+.tc-4966-quality-marker {
+  margin-left: 2px;
+  font-weight: 850;
+}
+.tc-4966-tooltip {
+  position: absolute;
+  right: 4px;
+  bottom: calc(100% + 6px);
+  z-index: 30;
+  width: 300px;
+  max-width: calc(100vw - 48px);
+  padding: 8px 10px;
+  border-radius: 3px;
+  color: #ffffff;
+  background: #333333;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: left;
+  white-space: normal;
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .12s ease, transform .12s ease;
+}
+.tc-4966-has-tooltip:hover .tc-4966-tooltip,
+.tc-4966-has-tooltip:focus .tc-4966-tooltip,
+.tc-4966-has-tooltip:focus-within .tc-4966-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+.tc-4966-tooltip:hover {
+  opacity: 1;
+  transform: translateY(0);
+}
+.tc-4966-quality-legend {
+  margin: 8px 12px 10px;
+  color: var(--tc-ink-soft);
+  font-size: 11px;
+}
+@media (max-width: 768px) {
+  .tc-4966-table { font-size: 12px; }
+  .tc-4966-table th, .tc-4966-table td { padding: 7px 8px; }
+  .tc-4966-table .tc-4966-label { min-width: 220px; max-width: 260px; }
+}
+</style>
+""".replace("__HEADER__", HEADER_BACKGROUND).replace("__SECTION__", SECTION_BACKGROUND).replace("__LINE__", LINE_COLOR).replace("__FONT__", FONT_FAMILY),
+        (
+            f'<div class="tc-4966-region" role="region" tabindex="0" '
+            f'aria-label="{html.escape(TITLE, quote=True)}">'
+            f'<table class="tc-4966-table" style="min-width:{min_width}px">'
+            f'<caption>{html.escape(TITLE)}. Valores em milhões de reais.</caption>'
+            '<colgroup><col style="width:240px">'
+            + "".join('<col style="width:84px"><col style="width:84px">' for _ in model.periods)
+            + "</colgroup><thead><tr>"
+            '<th class="tc-4966-label" rowspan="3" scope="col">Indicador</th>'
+        ),
+    ]
+
+    for period in model.periods:
+        parts.append(
+            f'<th class="tc-4966-period-end" colspan="2" scope="colgroup">'
+            f'{html.escape(model.period_labels[period])}</th>'
+        )
+    parts.append("</tr><tr>")
+    for period in model.periods:
+        qoq_text = f"QoQ vs {format_period_label(_previous_period(period) or 'N/D')}"
+        parts.append(
+            f'<th class="tc-4966-qoq tc-4966-period-end" colspan="2" scope="colgroup">'
+            f'{html.escape(qoq_text)}</th>'
+        )
+    parts.append("</tr><tr>")
+    for _ in model.periods:
+        parts.append('<th class="tc-4966-subhead" scope="col">R$ mm</th>')
+        parts.append(
+            f'<th class="tc-4966-subhead tc-4966-period-end" scope="col" '
+            f'title="Classificação: base comum {html.escape(base_label, quote=True)}; '
+            'vencidos: Carteira Total do mesmo período">%</th>'
+        )
+    parts.append("</tr></thead>")
+
+    for group in GROUP_SPECS:
+        parts.append(f'<tbody data-group="{html.escape(group.key, quote=True)}">')
+        if group.label:
+            section_id = f"tc-4966-group-{group.key}"
+            parts.append(
+                '<tr class="tc-4966-section">'
+                f'<th id="{section_id}" class="tc-4966-section-label" '
+                f'colspan="{1 + len(model.periods) * 2}">{html.escape(group.label)}</th></tr>'
+            )
+
+        group_rows = [spec for spec in ROW_SPECS if spec.group == group.key]
+        for spec in group_rows:
+            row_classes = []
+            if spec.emphasis:
+                row_classes.append("tc-4966-emphasis-row")
+            if spec.key == "total_portfolio":
+                row_classes.append("tc-4966-total-row")
+            if spec.layout == "percent_span":
+                row_classes.append("tc-4966-ratio-row")
+            row_class_attribute = (
+                f' class="{html.escape(" ".join(row_classes), quote=True)}"'
+                if row_classes
+                else ""
+            )
+            parts.append(
+                f'<tr{row_class_attribute} '
+                f'data-row-key="{html.escape(spec.key, quote=True)}">'
+            )
+            label_classes = "tc-4966-label" + (" tc-4966-emphasis" if spec.emphasis else "")
+            parts.append(
+                f'<th class="{label_classes}" scope="row" '
+                f'title="{html.escape(spec.help_text, quote=True)}">{html.escape(spec.label)}</th>'
+            )
+            for period in model.periods:
+                cell = model.cells[spec.key][period]
+                quality_issue = model.cell_quality_issue(spec.key, period)
+                quality_message = (
+                    _cell_quality_message(model, spec.key, period)
+                    if quality_issue is not None
+                    else ""
+                )
+                quality_description_id = (
+                    "tc-4966-quality-"
+                    f"{spec.key}-{re.sub(r'[^a-zA-Z0-9_-]+', '-', period)}"
+                )
+                if spec.layout == "paired":
+                    primary = format_brl_millions(cell.primary)
+                    secondary = format_percentage(cell.secondary, spec.percent_decimals)
+                    primary_title = (
+                        quality_message
+                        if quality_issue is not None
+                        else _cell_title(spec, cell)
+                    )
+                    secondary_title = (
+                        quality_message
+                        if quality_issue is not None
+                        else _cell_title(spec, cell, secondary=True)
+                    )
+                    parts.append(
+                        render_data_cell(
+                            html.escape(primary),
+                            classes=(
+                                "tc-4966-missing" if cell.primary is None else "",
+                            ),
+                            title=primary_title,
+                            period=period,
+                            quality_issue=quality_issue,
+                            quality_message=quality_message,
+                            tooltip_id=f"{quality_description_id}-primary",
+                            delta=cell_delta(model, spec, period),
+                        )
+                    )
+                    parts.append(
+                        render_data_cell(
+                            html.escape(secondary),
+                            classes=(
+                                "tc-4966-period-end",
+                                "tc-4966-missing" if cell.secondary is None else "",
+                            ),
+                            title=secondary_title,
+                            period=period,
+                            quality_issue=quality_issue,
+                            quality_message=quality_message,
+                            tooltip_id=f"{quality_description_id}-secondary",
+                            delta=cell_delta(model, spec, period, secondary=True),
+                        )
+                    )
+                elif spec.layout == "currency_span":
+                    rendered = format_brl_millions(cell.primary)
+                    cell_title = (
+                        quality_message
+                        if quality_issue is not None
+                        else _cell_title(spec, cell)
+                    )
+                    parts.append(
+                        render_data_cell(
+                            html.escape(rendered),
+                            classes=(
+                                "tc-4966-period-end",
+                                "tc-4966-missing" if cell.primary is None else "",
+                            ),
+                            title=cell_title,
+                            period=period,
+                            colspan=2,
+                            quality_issue=quality_issue,
+                            quality_message=quality_message,
+                            tooltip_id=quality_description_id,
+                            delta=cell_delta(model, spec, period),
+                        )
+                    )
+                else:
+                    rendered = format_percentage(cell.primary, spec.percent_decimals)
+                    cell_title = (
+                        quality_message
+                        if quality_issue is not None
+                        else _cell_title(spec, cell)
+                    )
+                    parts.append(
+                        render_data_cell(
+                            html.escape(rendered),
+                            classes=(
+                                "tc-4966-period-end",
+                                "tc-4966-missing" if cell.primary is None else "",
+                            ),
+                            title=cell_title,
+                            period=period,
+                            colspan=2,
+                            quality_issue=quality_issue,
+                            quality_message=quality_message,
+                            tooltip_id=quality_description_id,
+                            delta=cell_delta(model, spec, period),
+                        )
+                    )
+            parts.append("</tr>")
+        parts.append("</tbody>")
+
+    parts.append("</table>")
+    if model.quality_issues:
+        parts.append(
+            '<div class="tc-4966-quality-legend">'
+            '<span aria-hidden="true">*</span> célula sujeita a validação. '
+            'Passe o cursor ou use a tecla Tab para consultar o diagnóstico; '
+            'os alertas também permanecem disponíveis fora da tabela.'
+            "</div>"
+        )
+    parts.append("</div>")
+    return "".join(parts)
+
+
+def model_to_audit_dataframe(model: Carteira4966Model) -> pd.DataFrame:
+    rows: list[dict[str, object]] = []
+    for spec in ROW_SPECS:
+        if spec.layout == "paired":
+            unit = "R$ milhões + %"
+        elif spec.layout == "currency_span":
+            unit = "R$ milhões"
+        else:
+            unit = "%"
+        row: dict[str, object] = {
+            "Indicador": spec.label,
+            "Unidade": unit,
+            "Denominador": spec.denominator_label or "Não se aplica",
+        }
+        for period in model.periods:
+            label = model.period_labels[period]
+            cell = model.cells[spec.key][period]
+            if spec.layout == "paired":
+                row[f"{label} (R$ mm)"] = None if cell.primary is None else cell.primary / 1_000_000
+                row[f"{label} (%)"] = None if cell.secondary is None else cell.secondary * 100
+            elif spec.layout == "currency_span":
+                row[f"{label} (R$ mm)"] = None if cell.primary is None else cell.primary / 1_000_000
+            else:
+                row[f"{label} (%)"] = None if cell.primary is None else cell.primary * 100
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def _write_variations_sheet(workbook, model: Carteira4966Model) -> None:
+    """Resultados numéricos completos e leitura visual nos dois downloads."""
+    sheet = workbook.add_worksheet("Variações")
+    frame = variation_dataframe(model)
+    header = workbook.add_format({"bold": True, "bg_color": HEADER_BACKGROUND, "font_color": "#FFFFFF", "text_wrap": True})
+    text = workbook.add_format({"font_name": "Calibri", "valign": "vcenter"})
+    numbers = workbook.add_format({"num_format": "#,##0.000000"})
+    percentage = workbook.add_format({"num_format": "0.00%"})
+    delta_formats = {unit: workbook.add_format({"num_format": code}) for unit, code in {"bps": "0", "p.p.": "0.00", "%": "0.00"}.items()}
+    tone_formats = {tone: workbook.add_format({"font_color": color, "font_name": "Calibri", "align": "center"}) for tone, color in VARIATION_COLORS.items()}
+    for col, name in enumerate(frame.columns):
+        sheet.write_string(0, col, name, header)
+    for row, record in enumerate(frame.to_dict("records"), 1):
+        for col, (name, value) in enumerate(record.items()):
+            fmt = tone_formats[record["Leitura"]] if name == "Variação" else text
+            if name in {"Atual (R$ ou decimal)", "Base (R$ ou decimal)", "Delta numérico"}:
+                fmt = delta_formats[record["Unidade delta"]] if name == "Delta numérico" else percentage if record["Componente"] == "%" else numbers
+                number = _finite_number(value)
+                if number is None:
+                    sheet.write_blank(row, col, None, fmt)
+                else:
+                    sheet.write_number(row, col, number, fmt)
+            else:
+                sheet.write_string(row, col, str(value), fmt)
+    sheet.set_column(0, 0, 52)
+    sheet.set_column(1, 3, 15)
+    sheet.set_column(4, 8, 22)
+    sheet.set_column(9, 9, 14)
+    sheet.set_column(10, 11, 70)
+    sheet.freeze_panes(1, 4)
+    sheet.autofilter(0, 0, len(frame), len(frame.columns) - 1)
+    sheet.hide_gridlines(2)
+    sheet.write_string(len(frame) + 2, 0, VARIATION_NOTE, text)
+    sheet.write_string(len(frame) + 3, 0, COLOR_NOTE, text)
+
+
+def build_carteira_4966_raw_excel(
+    model: Carteira4966Model,
+    carteira_source: Optional[pd.DataFrame] = None,
+    ativo_source: Optional[pd.DataFrame] = None,
+) -> bytes:
+    """Exporta dados auditáveis com percentuais Excel em escala decimal.
+
+    A tabela de auditoria do Streamlit usa pontos percentuais para facilitar a
+    leitura. No arquivo, esses campos voltam à escala decimal e recebem formato
+    percentual nativo. Assim, 3,91% é gravado como ``0,0391`` com ``0.00%``.
+    """
+
+    output = BytesIO()
+    audit = model_to_audit_dataframe(model).copy()
+    quality = quality_issues_dataframe(model).copy()
+
+    audit_percent_columns = [
+        column for column in audit.columns if str(column).endswith(" (%)")
+    ]
+    for column in audit_percent_columns:
+        audit[column] = pd.to_numeric(audit[column], errors="coerce") / 100.0
+
+    quality_percent_columns = [
+        column for column in quality.columns if str(column).endswith(" (%)")
+    ]
+    for column in quality_percent_columns:
+        quality[column] = pd.to_numeric(quality[column], errors="coerce") / 100.0
+
+    carteira_export = (
+        carteira_source.copy()
+        if isinstance(carteira_source, pd.DataFrame)
+        else pd.DataFrame()
+    )
+    ativo_export = (
+        ativo_source.copy()
+        if isinstance(ativo_source, pd.DataFrame)
+        else pd.DataFrame()
+    )
+    if ativo_export.empty:
+        ativo_export = pd.DataFrame(
+            {
+                "Status": [
+                    "Dados de provisão indisponíveis para a instituição e os períodos selecionados."
+                ]
+            }
+        )
+
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        if not quality.empty:
+            quality.to_excel(writer, index=False, sheet_name="Alertas qualidade")
+        audit.to_excel(writer, index=False, sheet_name="Modelo calculado")
+        carteira_export.to_excel(writer, index=False, sheet_name="Rel16 Carteira")
+        ativo_export.to_excel(writer, index=False, sheet_name="Rel2 Ativo")
+
+        workbook = writer.book
+        header_format = workbook.add_format(
+            {
+                "bold": True,
+                "font_color": "#FFFFFF",
+                "bg_color": "#24262D",
+                "border": 1,
+                "border_color": "#C9CBD0",
+                "valign": "vcenter",
+                "text_wrap": True,
+            }
+        )
+        percent_format = workbook.add_format(
+            {"num_format": _excel_percentage_format_code(2), "align": "right"}
+        )
+        number_format = workbook.add_format(
+            {"num_format": "#,##0.00", "align": "right"}
+        )
+        raw_quality_formats = {}
+        for severity, font_color, background in (
+            ("warning", "#654C00", "#FFF4CC"),
+            ("critical", "#9F231B", "#FDE8E7"),
+        ):
+            raw_quality_formats[(severity, "missing")] = workbook.add_format(
+                {
+                    "bold": True,
+                    "font_color": font_color,
+                    "bg_color": background,
+                    "align": "center",
+                }
+            )
+            raw_quality_formats[(severity, "percent")] = workbook.add_format(
+                {
+                    "bold": True,
+                    "font_color": font_color,
+                    "bg_color": background,
+                    "align": "right",
+                    "num_format": _excel_marked_format_code(
+                        _excel_percentage_format_code(2)
+                    ),
+                }
+            )
+            raw_quality_formats[(severity, "number")] = workbook.add_format(
+                {
+                    "bold": True,
+                    "font_color": font_color,
+                    "bg_color": background,
+                    "align": "right",
+                    "num_format": _excel_marked_format_code("#,##0.00"),
+                }
+            )
+
+        def style_sheet(
+            sheet_name: str,
+            frame: pd.DataFrame,
+            *,
+            percent_columns: Sequence[str] = (),
+        ) -> None:
+            worksheet = writer.sheets[sheet_name]
+            for column_index, column_name in enumerate(frame.columns):
+                worksheet.write(0, column_index, column_name, header_format)
+                content_lengths = [
+                    len(str(value))
+                    for value in frame[column_name].dropna().head(100)
+                ]
+                width = min(
+                    max([len(str(column_name)), *content_lengths], default=12) + 2,
+                    60,
+                )
+                width = max(width, 14)
+                if column_name in percent_columns:
+                    worksheet.set_column(column_index, column_index, max(width, 18))
+                    for row_index, value in enumerate(frame[column_name], start=1):
+                        number = _finite_number(value)
+                        if number is None:
+                            worksheet.write_blank(
+                                row_index,
+                                column_index,
+                                None,
+                                percent_format,
+                            )
+                        else:
+                            worksheet.write_number(
+                                row_index,
+                                column_index,
+                                number,
+                                percent_format,
+                            )
+                elif str(column_name).endswith("(R$ mm)"):
+                    worksheet.set_column(
+                        column_index,
+                        column_index,
+                        max(width, 18),
+                        number_format,
+                    )
+                else:
+                    worksheet.set_column(column_index, column_index, width)
+            worksheet.freeze_panes(1, 0)
+            worksheet.set_row(0, 30)
+            if len(frame.index) > 0 and len(frame.columns) > 0:
+                worksheet.autofilter(
+                    0,
+                    0,
+                    len(frame.index),
+                    len(frame.columns) - 1,
+                )
+            worksheet.hide_gridlines(2)
+
+        if not quality.empty:
+            style_sheet(
+                "Alertas qualidade",
+                quality,
+                percent_columns=quality_percent_columns,
+            )
+        style_sheet(
+            "Modelo calculado",
+            audit,
+            percent_columns=audit_percent_columns,
+        )
+
+        audit_sheet = writer.sheets["Modelo calculado"]
+        audit_row_by_key = {
+            spec.key: row_index + 1
+            for row_index, spec in enumerate(ROW_SPECS)
+        }
+        audit_column_by_name = {
+            str(column_name): column_index
+            for column_index, column_name in enumerate(audit.columns)
+        }
+        processed_quality_cells: set[tuple[str, str]] = set()
+        for issue in model.quality_issues:
+            for row_key in (issue.row_key, *issue.affected_row_keys):
+                quality_cell_key = (row_key, issue.period)
+                if quality_cell_key in processed_quality_cells:
+                    continue
+                processed_quality_cells.add(quality_cell_key)
+                cell_issue = model.cell_quality_issue(row_key, issue.period)
+                if cell_issue is None:
+                    continue
+                message = _cell_quality_message(model, row_key, issue.period)
+                spec = ROW_BY_KEY[row_key]
+                period_label = model.period_labels.get(
+                    issue.period,
+                    format_period_label(issue.period),
+                )
+                row_index = audit_row_by_key[row_key]
+                if spec.layout == "paired":
+                    column_names = (
+                        f"{period_label} (R$ mm)",
+                        f"{period_label} (%)",
+                    )
+                elif spec.layout == "currency_span":
+                    column_names = (f"{period_label} (R$ mm)",)
+                else:
+                    column_names = (f"{period_label} (%)",)
+
+                for column_name in column_names:
+                    column_index = audit_column_by_name.get(column_name)
+                    if column_index is None:
+                        continue
+                    value = audit.iloc[row_index - 1, column_index]
+                    number = _finite_number(value)
+                    if number is None:
+                        audit_sheet.write(
+                            row_index,
+                            column_index,
+                            "N/D*",
+                            raw_quality_formats[(cell_issue.severity, "missing")],
+                        )
+                    else:
+                        format_kind = (
+                            "percent" if column_name.endswith(" (%)") else "number"
+                        )
+                        audit_sheet.write_number(
+                            row_index,
+                            column_index,
+                            number,
+                            raw_quality_formats[(cell_issue.severity, format_kind)],
+                        )
+                    audit_sheet.write_comment(
+                        row_index,
+                        column_index,
+                        message,
+                        {"author": "Toma Conta"},
+                    )
+
+        style_sheet("Rel16 Carteira", carteira_export)
+        style_sheet("Rel2 Ativo", ativo_export)
+        _write_variations_sheet(workbook, model)
+
+    output.seek(0)
+    return output.getvalue()
+
+
+def build_carteira_4966_excel(model: Carteira4966Model) -> bytes:
+    """Gera o workbook visual usando a mesma ROW_SPECS da tela."""
+
+    import xlsxwriter
+
+    output = BytesIO()
+    workbook = xlsxwriter.Workbook(output, {"in_memory": True})
+    worksheet = workbook.add_worksheet("Modelo 4966")
+    last_column = len(model.periods) * 2
+    base_label = model.period_labels.get(model.base_period or "", "N/D")
+
+    border = {"border": 1, "border_color": "#DDDDDD"}
+    title_fmt = workbook.add_format(
+        {"bold": True, "font_size": 15, "font_color": "#374151", "align": "left", "valign": "vcenter"}
+    )
+    header_fmt = workbook.add_format(
+        {
+            "bold": True,
+            "font_color": "#FFFFFF",
+            "bg_color": HEADER_BACKGROUND,
+            "align": "center",
+            "valign": "vcenter",
+            **border,
+        }
+    )
+    qoq_fmt = workbook.add_format(
+        {
+            "font_color": "#FFFFFF",
+            "bg_color": HEADER_BACKGROUND,
+            "align": "center",
+            "valign": "vcenter",
+            "font_size": 9,
+            **border,
+        }
+    )
+    delta_formats = {
+        tone: workbook.add_format({"font_name": "Calibri", "font_size": 9, "font_color": color, "align": "center", "valign": "vcenter", **border})
+        for tone, color in VARIATION_COLORS.items()
+    }
+    delta_label_fmt = workbook.add_format({"font_size": 9, "font_color": VARIATION_COLORS["neutral"], "indent": 1, **border})
+    subheader_fmt = workbook.add_format(
+        {
+            "bold": True,
+            "font_color": "#FFFFFF",
+            "bg_color": HEADER_BACKGROUND,
+            "align": "center",
+            "valign": "vcenter",
+            "font_size": 9,
+            **border,
+        }
+    )
+    section_fmt = workbook.add_format(
+        {"bold": True, "font_color": "#555961", "bg_color": SECTION_BACKGROUND, "align": "left", "valign": "vcenter", **border}
+    )
+    label_fmt = workbook.add_format({"align": "left", "valign": "vcenter", **border})
+    label_bold_fmt = workbook.add_format({"bold": True, "align": "left", "valign": "vcenter", **border})
+    total_label_fmt = workbook.add_format(
+        {
+            "bold": True,
+            "align": "left",
+            "valign": "vcenter",
+            "bg_color": "#FFFFFF",
+            **border,
+        }
+    )
+    label_ratio_fmt = workbook.add_format(
+        {
+            **border,
+            "align": "left",
+            "valign": "vcenter",
+            "indent": 1,
+            "bottom": 3,
+            "bottom_color": "#C9CBD0",
+        }
+    )
+    currency_fmt = workbook.add_format({"align": "center", "valign": "vcenter", "num_format": "#,##0", **border})
+    currency_bold_fmt = workbook.add_format(
+        {
+            "bold": True,
+            "align": "center",
+            "valign": "vcenter",
+            "num_format": "#,##0",
+            **border,
+        }
+    )
+    total_currency_fmt = workbook.add_format(
+        {
+            "bold": True,
+            "align": "center",
+            "valign": "vcenter",
+            "bg_color": "#FFFFFF",
+            "num_format": "#,##0",
+            **border,
+        }
+    )
+    percent_decimals = sorted({spec.percent_decimals for spec in ROW_SPECS})
+    percent_formats = {
+        decimals: workbook.add_format(
+            {
+                "align": "center",
+                "valign": "vcenter",
+                "num_format": _excel_percentage_format_code(decimals),
+                **border,
+            }
+        )
+        for decimals in percent_decimals
+    }
+    total_percent_formats = {
+        decimals: workbook.add_format(
+            {
+                "bold": True,
+                "align": "center",
+                "valign": "vcenter",
+                "bg_color": "#FFFFFF",
+                "num_format": _excel_percentage_format_code(decimals),
+                **border,
+            }
+        )
+        for decimals in percent_decimals
+    }
+    percent_span_formats = {
+        decimals: workbook.add_format(
+            {
+                **border,
+                "align": "center",
+                "valign": "vcenter",
+                "num_format": _excel_percentage_format_code(decimals),
+                "bottom": 3,
+                "bottom_color": "#C9CBD0",
+            }
+        )
+        for decimals in percent_decimals
+    }
+    missing_fmt = workbook.add_format(
+        {
+            "align": "center",
+            "valign": "vcenter",
+            "italic": True,
+            "font_color": "#6D7077",
+            **border,
+        }
+    )
+    quality_palette = {
+        "warning": ("#654C00", "#FFF4CC"),
+        "critical": ("#9F231B", "#FDE8E7"),
+    }
+    quality_missing_formats = {
+        severity: workbook.add_format(
+            {
+                **border,
+                "bold": True,
+                "font_color": font_color,
+                "bg_color": background,
+                "align": "center",
+                "valign": "vcenter",
+            }
+        )
+        for severity, (font_color, background) in quality_palette.items()
+    }
+    quality_currency_formats = {
+        severity: workbook.add_format(
+            {
+                **border,
+                "bold": True,
+                "font_color": font_color,
+                "bg_color": background,
+                "align": "center",
+                "valign": "vcenter",
+                "num_format": _excel_marked_format_code("#,##0"),
+            }
+        )
+        for severity, (font_color, background) in quality_palette.items()
+    }
+    quality_percent_formats = {
+        (severity, decimals): workbook.add_format(
+            {
+                **border,
+                "bold": True,
+                "font_color": font_color,
+                "bg_color": background,
+                "align": "center",
+                "valign": "vcenter",
+                "num_format": _excel_marked_format_code(
+                    _excel_percentage_format_code(decimals)
+                ),
+                "bottom": 3,
+                "bottom_color": "#C9CBD0",
+            }
+        )
+        for severity, (font_color, background) in quality_palette.items()
+        for decimals in percent_decimals
+    }
+    quality_paired_percent_formats = {
+        (severity, decimals): workbook.add_format(
+            {
+                **border,
+                "bold": True,
+                "font_color": font_color,
+                "bg_color": background,
+                "align": "center",
+                "valign": "vcenter",
+                "num_format": _excel_marked_format_code(
+                    _excel_percentage_format_code(decimals)
+                ),
+            }
+        )
+        for severity, (font_color, background) in quality_palette.items()
+        for decimals in percent_decimals
+    }
+
+    worksheet.merge_range(0, 0, 0, last_column, TITLE, title_fmt)
+    worksheet.set_row(0, 24)
+    worksheet.merge_range(1, 0, 3, 0, "Indicador", header_fmt)
+
+    column = 1
+    for period in model.periods:
+        qoq_text = f"QoQ vs {format_period_label(_previous_period(period) or 'N/D')}"
+        worksheet.merge_range(1, column, 1, column + 1, model.period_labels[period], header_fmt)
+        worksheet.merge_range(2, column, 2, column + 1, qoq_text, qoq_fmt)
+        worksheet.write(3, column, "R$ mm", subheader_fmt)
+        worksheet.write(3, column + 1, "%", subheader_fmt)
+        worksheet.write_comment(
+            3,
+            column + 1,
+            (
+                f"Classificação: Carteira Total de {base_label} como base comum. "
+                "Vencidos acima de 90 dias: Carteira Total do mesmo período."
+            ),
+            {"author": "Toma Conta"},
+        )
+        column += 2
+
+    row_index = 4
+    for group in GROUP_SPECS:
+        if group.label:
+            worksheet.merge_range(row_index, 0, row_index, last_column, group.label, section_fmt)
+            row_index += 1
+
+        for spec in (item for item in ROW_SPECS if item.group == group.key):
+            if spec.key == "total_portfolio":
+                label_format = total_label_fmt
+            elif spec.layout == "percent_span":
+                label_format = label_ratio_fmt
+            elif spec.emphasis:
+                label_format = label_bold_fmt
+            else:
+                label_format = label_fmt
+            worksheet.write(row_index, 0, spec.label, label_format)
+            if spec.help_text:
+                worksheet.write_comment(row_index, 0, spec.help_text, {"author": "Toma Conta"})
+            column = 1
+            for period in model.periods:
+                cell = model.cells[spec.key][period]
+                quality_issue = model.cell_quality_issue(spec.key, period)
+                if spec.layout == "paired":
+                    if quality_issue is not None:
+                        if cell.primary is None:
+                            worksheet.write(
+                                row_index,
+                                column,
+                                "N/D*",
+                                quality_missing_formats[quality_issue.severity],
+                            )
+                        else:
+                            worksheet.write_number(
+                                row_index,
+                                column,
+                                cell.primary / 1_000_000,
+                                quality_currency_formats[quality_issue.severity],
+                            )
+                        if cell.secondary is None:
+                            worksheet.write(
+                                row_index,
+                                column + 1,
+                                "N/D*",
+                                quality_missing_formats[quality_issue.severity],
+                            )
+                        else:
+                            worksheet.write_number(
+                                row_index,
+                                column + 1,
+                                cell.secondary,
+                                quality_paired_percent_formats[
+                                    (quality_issue.severity, spec.percent_decimals)
+                                ],
+                            )
+                        quality_message = _cell_quality_message(model, spec.key, period)
+                        for quality_column in (column, column + 1):
+                            worksheet.write_comment(
+                                row_index,
+                                quality_column,
+                                quality_message,
+                                {"author": "Toma Conta"},
+                            )
+                    else:
+                        if cell.primary is None:
+                            worksheet.write(row_index, column, "N/D", missing_fmt)
+                        else:
+                            worksheet.write_number(
+                                row_index,
+                                column,
+                                cell.primary / 1_000_000,
+                                (
+                                    total_currency_fmt
+                                    if spec.key == "total_portfolio"
+                                    else currency_bold_fmt if spec.emphasis else currency_fmt
+                                ),
+                            )
+                        if cell.secondary is None:
+                            worksheet.write(row_index, column + 1, "N/D", missing_fmt)
+                        else:
+                            worksheet.write_number(
+                                row_index,
+                                column + 1,
+                                cell.secondary,
+                                (
+                                    total_percent_formats[spec.percent_decimals]
+                                    if spec.key == "total_portfolio"
+                                    else percent_formats[spec.percent_decimals]
+                                ),
+                            )
+                        if spec.denominator_key != "base_total" and spec.denominator_label:
+                            worksheet.write_comment(
+                                row_index,
+                                column + 1,
+                                spec.denominator_label,
+                                {"author": "Toma Conta"},
+                            )
+                elif spec.layout == "currency_span":
+                    value = "N/D*" if cell.primary is None and quality_issue is not None else (
+                        "N/D" if cell.primary is None else cell.primary / 1_000_000
+                    )
+                    if quality_issue is not None:
+                        cell_format = (
+                            quality_missing_formats[quality_issue.severity]
+                            if cell.primary is None
+                            else quality_currency_formats[quality_issue.severity]
+                        )
+                    else:
+                        cell_format = missing_fmt if cell.primary is None else currency_bold_fmt
+                    worksheet.merge_range(row_index, column, row_index, column + 1, value, cell_format)
+                    if quality_issue is not None:
+                        worksheet.write_comment(
+                            row_index,
+                            column,
+                            _cell_quality_message(model, spec.key, period),
+                            {"author": "Toma Conta"},
+                        )
+                else:
+                    value = "N/D*" if cell.primary is None and quality_issue is not None else (
+                        "N/D" if cell.primary is None else cell.primary
+                    )
+                    if quality_issue is not None:
+                        cell_format = (
+                            quality_missing_formats[quality_issue.severity]
+                            if cell.primary is None
+                            else quality_percent_formats[
+                                (quality_issue.severity, spec.percent_decimals)
+                            ]
+                        )
+                    else:
+                        if cell.primary is None:
+                            cell_format = missing_fmt
+                        else:
+                            cell_format = percent_span_formats[spec.percent_decimals]
+                    worksheet.merge_range(row_index, column, row_index, column + 1, value, cell_format)
+                    if quality_issue is not None:
+                        worksheet.write_comment(
+                            row_index,
+                            column,
+                            _cell_quality_message(model, spec.key, period),
+                            {"author": "Toma Conta"},
+                        )
+                column += 2
+            row_index += 1
+
+            worksheet.write_string(row_index, 0, "Variação QoQ", delta_label_fmt)
+            for index, period in enumerate(model.periods):
+                column = 1 + index * 2
+                for secondary in ([False, True] if spec.layout == "paired" else [False]):
+                    delta = cell_delta(model, spec, period, secondary=secondary)
+                    delta_column = column + int(secondary)
+                    fmt = delta_formats[delta.tone]
+                    if spec.layout == "paired":
+                        worksheet.write_string(row_index, delta_column, delta.display, fmt)
+                    else:
+                        worksheet.merge_range(row_index, column, row_index, column + 1, delta.display, fmt)
+                    worksheet.write_comment(row_index, delta_column, (
+                        f"QoQ vs {format_period_label(delta.reference_period or 'N/D')}; "
+                        f"atual: {delta.current}; referência: {delta.reference}; "
+                        f"{delta.method}; {delta.reason or 'Disponível'}"
+                    ), {"author": "Toma Conta"})
+            row_index += 1
+
+    worksheet.write_string(row_index + 1, 0, VARIATION_NOTE, delta_label_fmt)
+    worksheet.write_string(row_index + 2, 0, COLOR_NOTE, delta_label_fmt)
+
+    worksheet.set_column(0, 0, 49)
+    worksheet.set_column(1, last_column, 13)
+    worksheet.freeze_panes(4, 1)
+    worksheet.repeat_rows(1, 3)
+    worksheet.hide_gridlines(2)
+    worksheet.set_landscape()
+    worksheet.fit_to_pages(1, 1)
+    worksheet.set_margins(0.25, 0.25, 0.5, 0.5)
+
+    if model.quality_issues:
+        alerts = workbook.add_worksheet("Alertas qualidade")
+        alert_header = workbook.add_format(
+            {
+                "bold": True,
+                "font_color": "#FFFFFF",
+                "bg_color": "#9F231B",
+                "align": "left",
+                **border,
+            }
+        )
+        alert_text = workbook.add_format({"text_wrap": True, "valign": "top", **border})
+        alert_number = workbook.add_format(
+            {"num_format": "#,##0.00", "valign": "top", **border}
+        )
+        alert_percent = workbook.add_format(
+            {
+                "num_format": _excel_percentage_format_code(
+                    ROW_BY_KEY["provision_over_portfolio"].percent_decimals
+                ),
+                "valign": "top",
+                **border,
+            }
+        )
+        alert_headers = (
+            "Período",
+            "Severidade",
+            "Checagem",
+            "Valor observado (R$ mm)",
+            "Denominador (R$ mm)",
+            "Resultado (%)",
+            "Diagnóstico",
+            "Indicador(es) afetado(s)",
+        )
+        for column, header in enumerate(alert_headers):
+            alerts.write(0, column, header, alert_header)
+        for row, issue in enumerate(model.quality_issues, start=1):
+            alerts.write(row, 0, model.period_labels.get(issue.period, issue.period), alert_text)
+            alerts.write(
+                row,
+                1,
+                "Não confiável" if issue.severity == "critical" else "Atenção",
+                alert_text,
+            )
+            alerts.write(row, 2, issue.code, alert_text)
+            if issue.pdd_value is None:
+                alerts.write_blank(row, 3, None, alert_number)
+            else:
+                alerts.write_number(row, 3, issue.pdd_value / 1_000_000, alert_number)
+            if issue.portfolio_value is None:
+                alerts.write_blank(row, 4, None, alert_number)
+            else:
+                alerts.write_number(
+                    row,
+                    4,
+                    issue.portfolio_value / 1_000_000,
+                    alert_number,
+                )
+            if issue.ratio is None:
+                alerts.write(row, 5, "N/D", alert_text)
+            else:
+                alerts.write_number(row, 5, issue.ratio, alert_percent)
+            alerts.write(row, 6, quality_issue_message(issue), alert_text)
+            alerts.write(
+                row,
+                7,
+                ", ".join(
+                    ROW_BY_KEY[row_key].label
+                    for row_key in (issue.row_key, *issue.affected_row_keys)
+                ),
+                alert_text,
+            )
+        alerts.set_column(0, 0, 12)
+        alerts.set_column(1, 2, 18)
+        alerts.set_column(3, 5, 23)
+        alerts.set_column(6, 6, 90)
+        alerts.set_column(7, 7, 70)
+        alerts.set_default_row(42)
+        alerts.freeze_panes(1, 0)
+        alerts.autofilter(0, 0, len(model.quality_issues), len(alert_headers) - 1)
+        alerts.hide_gridlines(2)
+
+    glossary = workbook.add_worksheet("Glossário")
+    gloss_header = workbook.add_format(
+        {"bold": True, "font_color": "#FFFFFF", "bg_color": "#24262D", "align": "left", **border}
+    )
+    gloss_text = workbook.add_format({"text_wrap": True, "valign": "top", **border})
+    headers = ("Variável", "Definição", "Fonte")
+    for column, header in enumerate(headers):
+        glossary.write(0, column, header, gloss_header)
+    for row, item in enumerate(GLOSSARY_ROWS, start=1):
+        for column, header in enumerate(headers):
+            glossary.write(row, column, item[header], gloss_text)
+    glossary.set_column(0, 0, 40)
+    glossary.set_column(1, 1, 95)
+    glossary.set_column(2, 2, 55)
+    glossary.set_default_row(38)
+    glossary.freeze_panes(1, 0)
+    glossary.hide_gridlines(2)
+
+    _write_variations_sheet(workbook, model)
+
+    workbook.close()
+    output.seek(0)
+    return output.getvalue()
