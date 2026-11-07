@@ -23,6 +23,8 @@ npx wrangler deploy
 
 O `build.json` inclui repositório, commit da interface e origem dos dados. O cabeçalho `X-Atlas-Repository` identifica o Worker responsável pela resposta. Os arquivos financeiros publicados em uma revisão compartilhada mantêm seus próprios hashes, datas e commit de geração; a versão da interface não substitui a proveniência dos dados.
 
+A configuração observada no painel está registrada em `deployment/cloudflare-build.json`: branch `main`, Node 24.22.1, cache de build ativo e previews desabilitados. A integração reutiliza o token de build já existente da conta Cloudflare; nenhuma credencial integra este repositório. Um push na `main` inicia build, testes e publicação do Worker.
+
 ## Atualização compartilhada
 
 O workflow `tomaconta-shared.yml` consulta e executa a fila. `tomaconta-shared-clock.yml` consulta a fila e pode disparar o executor com `GITHUB_TOKEN` efêmero. O relógio resolve e valida o ID do workflow neste repositório pelo filename, sem IDs herdados do projeto anterior.

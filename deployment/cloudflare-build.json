@@ -1,0 +1,14 @@
+{
+  "worker": "atlas-sfn",
+  "repository": "abalroar/atlas-sfn",
+  "productionBranch": "main",
+  "rootDirectory": "/",
+  "buildCommand": "npm ci --include=dev && npm ci --include=dev --prefix web && npm test && npm run build",
+  "deployCommand": "npx wrangler deploy",
+  "environmentVariables": {"NODE_VERSION": "24.22.1"},
+  "previewBuilds": false,
+  "buildCaching": true,
+  "configuredThrough": "Cloudflare Workers Builds",
+  "publicAddress": "https://matheusprat.es/atlas-sfn/",
+  "serviceBinding": {"sourceWorker": "personalwebsite", "binding": "ATLAS_SFN", "targetWorker": "atlas-sfn"}
+}
