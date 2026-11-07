@@ -1,0 +1,129 @@
+{
+  "checkedAt": "2026-11-07T18:56:05.444399+00:00",
+  "scope": "github-publication-and-shared-refresh-migration",
+  "repository": {
+    "name": "abalroar/atlas-sfn",
+    "id": 1449624970,
+    "ownerId": 255978345,
+    "branch": "main",
+    "url": "https://github.com/abalroar/atlas-sfn"
+  },
+  "publication": {
+    "publicUrl": "https://matheusprat.es/atlas-sfn/",
+    "legacyAlias": "https://matheusprat.es/tomaconta/",
+    "worker": "atlas-sfn",
+    "forwardingWorker": "personalwebsite",
+    "forwardingBinding": "ATLAS_SFN",
+    "hostingPR": "https://github.com/abalroar/matheusprat.es/pull/19",
+    "hostingMerge": "f12acafccdda3d71ceb0b5f14b43f381713e38a5",
+    "automaticBuildCommit": "271d63ceb7db9f0a3694b70674915f379066f258",
+    "automaticBuildId": "30a5cb9d-f83f-4885-b542-80f01d411ab1",
+    "automaticBuildStatus": "success",
+    "publicBuildMatches": true,
+    "responseRepositoryHeader": "abalroar/atlas-sfn"
+  },
+  "sharedRefresh": {
+    "oldRepositoryEnabled": false,
+    "newRepositoryEnabled": true,
+    "identity": "GitHub OIDC, exact repository IDs and workflow main ref",
+    "unchangedAudience": "https://matheusprat.es/tomaconta/api/shared/runner",
+    "sameD1AndR2": true,
+    "jobId": "f67509c44e624078be1f84c88910f250",
+    "requested": {
+      "kind": "mercado_imobiliario",
+      "mode": "incremental",
+      "start": "2025-09",
+      "end": "2026-08"
+    },
+    "runUrl": "https://github.com/abalroar/atlas-sfn/actions/runs/42403323980",
+    "runEvent": "workflow_dispatch",
+    "runConclusion": "success",
+    "beforeRevision": "eb542cf64e1c4d6fb9543d38c72f6df7",
+    "publishedRevision": "be12b20ee4bc4da1bd26f7974d52b64b",
+    "publishedAt": "2026-11-07T18:53:43.990Z",
+    "generationCommit": "271d63ceb7db9f0a3694b70674915f379066f258",
+    "validation": {
+      "complete": true,
+      "failures": 0
+    },
+    "sourceFilesBefore": 72,
+    "sourceFilesAfter": 72,
+    "changedSourceFiles": [],
+    "freshBrowserShowsPublished": true,
+    "nativeSchedulesEnabled": true,
+    "nativeScheduleRunObservedAtCheck": false
+  },
+  "tests": {
+    "web": 150,
+    "workerRouting": 11,
+    "python": 244,
+    "pythonSubtests": 16,
+    "hosting": 86,
+    "githubCI": "https://github.com/abalroar/atlas-sfn/actions/runs/42402788154",
+    "githubCIStatus": "success"
+  },
+  "preservation": {
+    "verifiedFiles": 7750,
+    "webDataFiles": 7500,
+    "originalCalculations": "identical",
+    "externalLinks": 0,
+    "publicXlsxCellsChangedFromLocalValidatedExport": 0,
+    "cachedBalanceMillionBRL": {
+      "C26": 2739215.10893335,
+      "E26": 2846417.63266847,
+      "C39": 227761.73214346,
+      "E39": 249766.16937891
+    }
+  },
+  "publicDownloads": {
+    "entity": "prudential-C0080099",
+    "periods": [
+      "202512",
+      "202606"
+    ],
+    "xlsx": {
+      "bytes": 638754,
+      "sha256": "dc6363eadbee3f0d6ac3059c7e9eef123017a702391d3be89c931d5364dbeac0",
+      "sheets": [
+        "Comitê",
+        "Balanço",
+        "DRE",
+        "Carteira 4.966",
+        "Mapa COSIF",
+        "Dados COSIF",
+        "Dados IFData",
+        "Validações"
+      ],
+      "formulas": 13120
+    },
+    "pptx": {
+      "bytes": 54317,
+      "sha256": "2bfe3b7757b80fe8ada7effefd1366b9166234e75db2bcf4f970c39bf21c65bf",
+      "slides": 3,
+      "nativeTables": 4
+    },
+    "chartDecks": [
+      {
+        "filename": "Toma_Conta_Mercado_Imobiliário_Contratação_PF (3).pptx",
+        "bytes": 54037,
+        "sha256": "9678984524f96c5c02aa670e9a8ab6891e1f7960876b2dff267ec70aaeaf61d6",
+        "slides": 2,
+        "nativeCharts": 4,
+        "textFonts": [
+          "Calibri"
+        ]
+      },
+      {
+        "filename": "Toma_Conta_Estatísticas_do_Sistema_Financeiro_Nacional (3).pptx",
+        "bytes": 758491,
+        "sha256": "0a245f8019ca224d6ba2cfb0897eaca800ae0d6a3b1d5c8602c2f867ac2a7727",
+        "slides": 20,
+        "nativeCharts": 75,
+        "textFonts": [
+          "Calibri"
+        ]
+      }
+    ],
+    "fonts": "Calibri"
+  }
+}
