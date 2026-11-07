@@ -10,7 +10,7 @@
   "scripts": {
     "setup": "npm ci --prefix web && npm ci --prefix experiments/agency-map",
     "dev": "npm --prefix web run dev -- --port 5178",
-    "build": "npm --prefix web run build",
+    "build": "npm --prefix web run build && node scripts/write_build_info.mjs",
     "test": "npm run test:web && npm run test:worker",
     "test:web": "npm --prefix web test",
     "test:worker": "node --test tests/worker-routing.test.mjs",

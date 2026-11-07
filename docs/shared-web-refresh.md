@@ -28,17 +28,17 @@ Todas as rotas `/runner/…` exigem `Authorization: Bearer <JWT>` emitido pelo G
 
 | Claim | Valor |
 | --- | --- |
-| `repository` | `abalroar/tomaconta` |
-| `repository_id` | `1141557164` |
+| `repository` | `abalroar/atlas-sfn` |
+| `repository_id` | `1449624970` |
 | `repository_owner_id` | `255978345` |
 | `ref` | `refs/heads/main` |
-| `workflow_ref` | `abalroar/tomaconta/.github/workflows/tomaconta-shared.yml@refs/heads/main` |
+| `workflow_ref` | `abalroar/atlas-sfn/.github/workflows/tomaconta-shared.yml@refs/heads/main` |
 | `event_name` | `schedule` ou `workflow_dispatch` |
 | `runner_environment` | `github-hosted` |
 
 Também são verificados `exp`, `nbf`, `iat`, `sha`, `workflow_sha`, `run_id` e `run_attempt`. A reserva fica vinculada ao par execução/tentativa. A renovação do JWT durante a mesma execução preserva essa identidade. O workflow precisa de `id-token: write`; as demais permissões podem permanecer de leitura. Os claims e a emissão estão documentados na [referência OIDC do GitHub](https://docs.github.com/en/actions/reference/security/oidc).
 
-O executor identifica suas requisições OIDC e da API compartilhada com o cabeçalho fixo `User-Agent: TomaContaSharedRunner/1.0 (+https://github.com/abalroar/tomaconta)`, incluindo o transporte com pool. A constante não recebe substituição por variável de ambiente ou cabeçalho do pedido. A Cloudflare recomenda identificar a aplicação com um User-Agent descritivo e documenta que alguns valores padrão de bibliotecas, como `urllib`, podem ser recusados antes da execução do Worker no [Browser Integrity Check de workers.dev](https://developers.cloudflare.com/workers/configuration/routing/workers-dev/#browser-integrity-check-on-workersdev). O cabeçalho identifica o próprio serviço; assinatura RS256, claims, audiência, endereço da API e proteções do ambiente mantêm seus contratos.
+O executor identifica suas requisições OIDC e da API compartilhada com o cabeçalho fixo `User-Agent: AtlasSFNSharedRunner/1.0 (+https://github.com/abalroar/atlas-sfn)`, incluindo o transporte com pool. A constante não recebe substituição por variável de ambiente ou cabeçalho do pedido. A Cloudflare recomenda identificar a aplicação com um User-Agent descritivo e documenta que alguns valores padrão de bibliotecas, como `urllib`, podem ser recusados antes da execução do Worker no [Browser Integrity Check de workers.dev](https://developers.cloudflare.com/workers/configuration/routing/workers-dev/#browser-integrity-check-on-workersdev). O cabeçalho identifica o próprio serviço; assinatura RS256, claims, audiência, endereço da API e proteções do ambiente mantêm seus contratos.
 
 ## API pública
 
@@ -83,10 +83,10 @@ O modo `diagnostic` apenas solicita a identidade ao emissor GitHub e confere a e
 O responsável pela publicação executa estes comandos em etapas, conferindo os resultados de cada uma:
 
 ```sh
-gh workflow run tomaconta-shared.yml --ref main -f diagnostic=true --repo abalroar/tomaconta
-gh workflow run tomaconta-shared.yml --ref main -f bootstrap=true --repo abalroar/tomaconta
+gh workflow run tomaconta-shared.yml --ref main -f diagnostic=true --repo abalroar/atlas-sfn
+gh workflow run tomaconta-shared.yml --ref main -f bootstrap=true --repo abalroar/atlas-sfn
 # Somente após conferir uma revisão compartilhada ativa:
-gh variable set TOMACONTA_SHARED_ENABLED --body true --repo abalroar/tomaconta
+gh variable set TOMACONTA_SHARED_ENABLED --body true --repo abalroar/atlas-sfn
 ```
 
 Para suspender apenas a consulta periódica, definir a mesma variável como `false`. O diagnóstico manual tem prioridade sobre a opção `bootstrap` quando ambas forem selecionadas.
@@ -153,8 +153,8 @@ O recibo do relógio registra evento `schedule`, run ID, horário UTC, pedidos o
 
 ## Conferência pública em 07/11/2026
 
-O [bootstrap 42354223004](https://github.com/abalroar/tomaconta/actions/runs/42354223004) publicou `c8eed6c80d114b088c8672f55245906e`, com 7.608 arquivos e 291.332.640 bytes. A preparação levou 1,608 s de tempo de parede em produção; esse número inclui I/O e não mede CPU isoladamente. A publicação atômica terminou sem alterar os módulos contábeis.
+O [bootstrap 42354223004](https://github.com/abalroar/atlas-sfn/actions/runs/42354223004) publicou `c8eed6c80d114b088c8672f55245906e`, com 7.608 arquivos e 291.332.640 bytes. A preparação levou 1,608 s de tempo de parede em produção; esse número inclui I/O e não mede CPU isoladamente. A publicação atômica terminou sem alterar os módulos contábeis.
 
-O [pedido imobiliário 42355724780](https://github.com/abalroar/tomaconta/actions/runs/42355724780), criado pela interface pública, publicou `7dd4626a08de419c84dafd1e2d9e9f5e` em 165,71 s após a reserva. Reutilizou 7.604 arquivos e enviou quatro novos objetos. A sessão anterior manteve `c8eed6c8` até carregar a nova base, e uma sessão nova exibiu o link do mapa com a revisão `7dd4626a`.
+O [pedido imobiliário 42355724780](https://github.com/abalroar/atlas-sfn/actions/runs/42355724780), criado pela interface pública, publicou `7dd4626a08de419c84dafd1e2d9e9f5e` em 165,71 s após a reserva. Reutilizou 7.604 arquivos e enviou quatro novos objetos. A sessão anterior manteve `c8eed6c8` até carregar a nova base, e uma sessão nova exibiu o link do mapa com a revisão `7dd4626a`.
 
 Foram baixados dessa base os Excel/PPTX prudenciais da Afinz (duas competências) e individuais do Itaú (oito no Excel, três no PPTX conforme o renderer original). Os componentes `xl/` e `ppt/` ficaram byte-idênticos às referências anteriores. Os decks de 75, 24 e quatro gráficos passaram em 50.592 verificações contra o JSON realmente servido nessa revisão: dados, planilhas editáveis, zeros, N/D, eixos, Calibri, fundo branco e paleta. A conferência visual no PowerPoint nativo incluiu Balanço/DRE e gráficos imobiliários. Falha e restauração condicionais foram conferidas em D1/R2 local; não se provocou falha de coleta nem restauração artificial na base pública.

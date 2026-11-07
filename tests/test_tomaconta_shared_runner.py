@@ -20,8 +20,8 @@ spec.loader.exec_module(r)
 
 def public_claims(now=1000, **updates):
     return {"iss": "https://token.actions.githubusercontent.com", "aud": r.AUDIENCE,
-            "repository": "abalroar/tomaconta", "repository_owner": "abalroar",
-            "repository_id": "1141557164", "repository_owner_id": "255978345",
+            "repository": "abalroar/atlas-sfn", "repository_owner": "abalroar",
+            "repository_id": "1449624970", "repository_owner_id": "255978345",
             "ref": "refs/heads/main", "workflow_ref": r.WORKFLOW,
             "repository_visibility": "public", "runner_environment": "github-hosted",
             "event_name": "workflow_dispatch", "sha": "a" * 40, "workflow_sha": "a" * 40,
@@ -320,12 +320,19 @@ def test_original_cache_incomplete_receipts_are_rejected():
 
 
 def test_context_restricts_repository_workflow_main_and_events():
-    env = {"GITHUB_REPOSITORY_ID": "1141557164", "GITHUB_REPOSITORY_OWNER_ID": "255978345", "GITHUB_REF": "refs/heads/main",
+    env = {"GITHUB_REPOSITORY_ID": "1449624970", "GITHUB_REPOSITORY_OWNER_ID": "255978345", "GITHUB_REF": "refs/heads/main",
            "GITHUB_WORKFLOW_REF": r.WORKFLOW, "GITHUB_EVENT_NAME": "schedule", "GITHUB_SHA": "a" * 40}
     r.check_github_context(env)
     for key, value in (("GITHUB_REF", "refs/pull/1/merge"), ("GITHUB_EVENT_NAME", "pull_request"),
                        ("GITHUB_REPOSITORY_ID", "9"), ("GITHUB_REPOSITORY_OWNER_ID", "8"), ("GITHUB_WORKFLOW_REF", "other")):
         with pytest.raises(r.RunnerError): r.check_github_context({**env, key: value})
+
+
+def test_legacy_repository_identity_cannot_update_the_atlas():
+    claims = public_claims(repository="abalroar/tomaconta", repository_id="1141557164",
+                           workflow_ref="abalroar/tomaconta/.github/workflows/tomaconta-shared.yml@refs/heads/main")
+    with pytest.raises(r.RunnerError, match="repository"):
+        r.diagnose_identity_claims(claims, env={}, now=1000)
 
 
 def test_oidc_is_cached_renewed_and_requested_for_exact_audience():
@@ -685,6 +692,6 @@ def test_runner_identifies_itself_with_fixed_application_user_agent(monkeypatch)
         return io.BytesIO(b'{"pending":false}')
     api = r.SharedAPI(identity=Identity(), opener=opener)
     assert api.request("GET", "/runner/pending", headers={"User-Agent": "invalid-request-override", "user-agent": "invalid-lowercase-override"}) == {"pending": False}
-    assert calls[0].get_header("User-agent") == "TomaContaSharedRunner/1.0 (+https://github.com/abalroar/tomaconta)"
+    assert calls[0].get_header("User-agent") == "AtlasSFNSharedRunner/1.0 (+https://github.com/abalroar/atlas-sfn)"
     assert r.API_ROOT == "https://matheusprat.es/tomaconta/api/shared"
     assert r.AUDIENCE == "https://matheusprat.es/tomaconta/api/shared/runner"

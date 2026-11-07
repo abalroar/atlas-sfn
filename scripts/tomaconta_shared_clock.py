@@ -17,16 +17,17 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
-REPOSITORY = "abalroar/tomaconta"
-REPOSITORY_ID = "1141557164"
+REPOSITORY = "abalroar/atlas-sfn"
+REPOSITORY_ID = "1449624970"
 OWNER_ID = "255978345"
 CLOCK_WORKFLOW = REPOSITORY + "/.github/workflows/tomaconta-shared-clock.yml@refs/heads/main"
-EXECUTOR_WORKFLOW_ID = 410128602
+EXECUTOR_WORKFLOW_FILE = "tomaconta-shared.yml"
 GH_ROOT = "https://api.github.com/repos/" + REPOSITORY
 JOBS_URL = "https://matheusprat.es/tomaconta/api/shared/jobs"
-RUNS_URL = GH_ROOT + f"/actions/workflows/{EXECUTOR_WORKFLOW_ID}/runs"
-DISPATCH_URL = GH_ROOT + "/actions/workflows/tomaconta-shared.yml/dispatches"
-USER_AGENT = "TomaContaSharedRunner/1.0 (+https://github.com/abalroar/tomaconta)"
+WORKFLOW_URL = GH_ROOT + f"/actions/workflows/{EXECUTOR_WORKFLOW_FILE}"
+RUNS_URL = WORKFLOW_URL + "/runs"
+DISPATCH_URL = WORKFLOW_URL + "/dispatches"
+USER_AGENT = "AtlasSFNSharedRunner/1.0 (+https://github.com/abalroar/atlas-sfn)"
 ACTIVE_RUN_STATUSES = ("queued", "in_progress", "waiting", "requested", "pending")
 JOB_STATUSES = {"queued", "running", "succeeded", "failed", "needs_review"}
 MAX_JOBS = 40  # GET /jobs server limit.
@@ -136,7 +137,16 @@ def pending_jobs(packet):
     return queued, running
 
 
-def active_run(packet, status):
+def workflow_identity(packet):
+    workflow_id = packet.get("id") if isinstance(packet, dict) else None
+    if (type(workflow_id) is not int or not 0 < workflow_id < 10 ** 25
+            or packet.get("path") != ".github/workflows/" + EXECUTOR_WORKFLOW_FILE
+            or packet.get("state") != "active"):
+        raise ClockError("Workflow do GitHub fora do contexto esperado")
+    return workflow_id
+
+
+def active_run(packet, status, workflow_id):
     runs = packet.get("workflow_runs") if isinstance(packet, dict) else None
     total = packet.get("total_count") if isinstance(packet, dict) else None
     if type(total) is not int or total < 0 or not isinstance(runs, list) or len(runs) != min(total, 1):
@@ -144,7 +154,7 @@ def active_run(packet, status):
     if not runs:
         return None
     run = runs[0]
-    if (not isinstance(run, dict) or run.get("workflow_id") != EXECUTOR_WORKFLOW_ID
+    if (not isinstance(run, dict) or run.get("workflow_id") != workflow_id
             or run.get("head_branch") != "main" or run.get("status") != status
             or not re.fullmatch(r"\d{1,25}", str(run.get("id", "")))):
         raise ClockError("Execução do GitHub fora do contexto esperado")
@@ -161,11 +171,14 @@ def run_clock(*, env=None, client_factory=Client, now=None):
                "queuedJobIds": queued, "runningJobIds": running}
     if not queued and not running:
         return {**receipt, "outcome": "empty"}
+    # Workflow IDs are assigned separately in each repository. Resolve the
+    # exact filename within this repository before checking its active runs.
+    workflow_id = workflow_identity(api.request("GET", WORKFLOW_URL))
     # Filter each active state server-side: a long completed history cannot
     # conceal an older active run. No arbitrary age or lease inference is used.
     for status in ACTIVE_RUN_STATUSES:
         url = RUNS_URL + "?" + urlencode({"branch": "main", "status": status, "per_page": 1})
-        run_id = active_run(api.request("GET", url), status)
+        run_id = active_run(api.request("GET", url), status, workflow_id)
         if run_id is not None:
             return {**receipt, "outcome": "executor_active", "executorRunId": run_id, "executorStatus": status}
     # A running public job may have an expired lease. The original executor's

@@ -1,4 +1,4 @@
-name: Relógio da atualização compartilhada Toma Conta
+name: Relógio da atualização compartilhada Atlas SFN
 
 on:
   schedule:
@@ -7,13 +7,13 @@ on:
 permissions: {}
 
 concurrency:
-  group: tomaconta-shared-clock-main
+  group: atlas-shared-clock-main
   cancel-in-progress: false
 
 jobs:
   wake:
     if: >-
-      github.repository_id == '1141557164' &&
+      github.repository_id == '1449624970' &&
       github.repository_owner_id == '255978345' &&
       github.ref == 'refs/heads/main' &&
       github.event.repository.private == false &&

@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("shared_clock", ROOT / "scripts/tomaconta_shared_clock.py")
 c = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(c)
+WORKFLOW_ID = 990012345
 
 
 def context(**updates):
@@ -38,11 +39,13 @@ class API:
             raise c.ClockError("API do relógio respondeu HTTP 403")
         if url == c.JOBS_URL:
             return self.packet if self.packet is not None else {"jobs": self.jobs}
+        if url == c.WORKFLOW_URL:
+            return {"id": WORKFLOW_ID, "path": ".github/workflows/" + c.EXECUTOR_WORKFLOW_FILE, "state": "active"}
         if method == "GET":
             query = parse_qs(urlsplit(url).query)
             assert query["branch"] == ["main"] and query["per_page"] == ["1"]
             status = query["status"][0]
-            runs = ([{"id": 99, "workflow_id": c.EXECUTOR_WORKFLOW_ID, "head_branch": "main", "status": status}]
+            runs = ([{"id": 99, "workflow_id": WORKFLOW_ID, "head_branch": "main", "status": status}]
                     if self.active == status else [])
             return {"total_count": len(runs), "workflow_runs": runs}
         assert url == c.DISPATCH_URL
@@ -62,7 +65,7 @@ def test_queued_dispatches_only_original_main_once_and_logs_parent_run():
                       "executorEvent": "workflow_dispatch"}
     mutations = [call for call in api.calls if call[0] != "GET"]
     assert mutations == [("POST", c.DISPATCH_URL, {"ref": "main"})]
-    assert len(api.calls) == 7
+    assert len(api.calls) == 8
     assert "ephemeral-test-token" not in json.dumps(result)
 
 
@@ -98,7 +101,7 @@ def test_api_failure_stops_without_retry(stage):
     with pytest.raises(c.ClockError, match="HTTP 403"):
         execute(api)
     assert sum(method == "POST" for method, *_ in api.calls) == (1 if stage == "dispatch" else 0)
-    assert len(api.calls) == {"jobs": 1, "runs": 2, "dispatch": 7}[stage]
+    assert len(api.calls) == {"jobs": 1, "runs": 2, "dispatch": 8}[stage]
 
 
 @pytest.mark.parametrize("updates", [
@@ -133,7 +136,7 @@ def test_incomplete_github_response_cannot_be_treated_as_no_active_runs():
     api = API([{"id": "a" * 32, "status": "queued"}])
     original = api.request
     def incomplete(method, url, **kwargs):
-        if url != c.JOBS_URL:
+        if url not in {c.JOBS_URL, c.WORKFLOW_URL}:
             return {"total_count": 1, "workflow_runs": []}
         return original(method, url, **kwargs)
     api.request = incomplete
@@ -142,9 +145,44 @@ def test_incomplete_github_response_cannot_be_treated_as_no_active_runs():
 
 
 def test_filtered_active_history_blocks_even_with_many_matching_runs():
-    packet = {"total_count": 250, "workflow_runs": [{"id": 99, "workflow_id": c.EXECUTOR_WORKFLOW_ID,
+    packet = {"total_count": 250, "workflow_runs": [{"id": 99, "workflow_id": WORKFLOW_ID,
                                                     "head_branch": "main", "status": "queued"}]}
-    assert c.active_run(packet, "queued") == "99"
+    assert c.active_run(packet, "queued", WORKFLOW_ID) == "99"
+
+
+@pytest.mark.parametrize("packet", [
+    {}, {"id": 0, "path": ".github/workflows/tomaconta-shared.yml", "state": "active"},
+    {"id": True, "path": ".github/workflows/tomaconta-shared.yml", "state": "active"},
+    {"id": WORKFLOW_ID, "path": ".github/workflows/other.yml", "state": "active"},
+    {"id": WORKFLOW_ID, "path": ".github/workflows/tomaconta-shared.yml", "state": "disabled_manually"},
+])
+def test_workflow_metadata_must_identify_the_active_exact_file(packet):
+    api = API([{"id": "a" * 32, "status": "queued"}])
+    original = api.request
+    def metadata(method, url, **kwargs):
+        if url == c.WORKFLOW_URL:
+            api.calls.append((method, url, None))
+            return packet
+        return original(method, url, **kwargs)
+    api.request = metadata
+    with pytest.raises(c.ClockError, match="Workflow"):
+        execute(api)
+    assert all(method == "GET" for method, *_ in api.calls)
+
+
+def test_run_from_another_workflow_id_is_rejected_after_filename_resolution():
+    packet = {"total_count": 1, "workflow_runs": [{"id": 99, "workflow_id": WORKFLOW_ID + 1,
+                                                 "head_branch": "main", "status": "queued"}]}
+    with pytest.raises(c.ClockError, match="contexto"):
+        c.active_run(packet, "queued", WORKFLOW_ID)
+
+
+def test_legacy_repository_context_is_rejected_before_network_access():
+    def forbidden(_token):
+        pytest.fail("Legacy repository must not create a client")
+    with pytest.raises(c.ClockError):
+        c.run_clock(env=context(GITHUB_REPOSITORY="abalroar/tomaconta", GITHUB_REPOSITORY_ID="1141557164"),
+                    client_factory=forbidden)
 
 
 class Response:

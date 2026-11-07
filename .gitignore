@@ -20,3 +20,4 @@ __pycache__/
 data/cache/
 data/cache_versions/
 outputs/
+data/logs/

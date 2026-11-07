@@ -38799,5 +38799,17 @@
       "bytes": 10677,
       "sha256": "a2261a749883dfd21011473ea5466d89699263b8ec9dbf020b9172b79acee3eb"
     }
-  ]
+  ],
+  "adjustedFiles": [
+    ".github/workflows/tomaconta-shared-clock.yml",
+    ".github/workflows/tomaconta-shared.yml",
+    "docs/shared-web-refresh.md",
+    "scripts/tomaconta_shared_clock.py",
+    "scripts/tomaconta_shared_runner.py",
+    "tests/test_tomaconta_shared_clock.py",
+    "tests/test_tomaconta_shared_runner.py",
+    "web/server/shared.js",
+    "web/tests/shared.test.mjs"
+  ],
+  "adjustmentReason": "Migração autorizada do executor e OIDC para abalroar/atlas-sfn, preservando a audiência e os modelos financeiros."
 }

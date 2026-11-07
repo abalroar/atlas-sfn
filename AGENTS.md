@@ -8,4 +8,5 @@ Repositório independente do Atlas, extraído do Toma Conta. Leia `README.md` e 
 - Use afirmações diretas. Evite estruturas como "não é X, é Y", "vai além de X", slogans e contraposições retóricas.
 - Não inclua credenciais, caches de execução ou arquivos pessoais. Não use links simbólicos para o repositório anterior.
 - Valide com `npm test`, `npm run build` e os testes Python pertinentes. `npm run verify:migration` confere a preservação dos dados e do código financeiro extraído.
-- Esta extração foi solicitada como repositório local. Alterar o repositório GitHub executor, sua identidade OIDC ou as rotas públicas exige uma migração explícita da configuração de publicação. Preserve a identidade de produção enquanto isso.
+- O repositório oficial é `abalroar/atlas-sfn`. O Worker financeiro é `atlas-sfn`; o site pessoal encaminha `/atlas-sfn/` e a entrada legada `/tomaconta/` para ele por service binding. Preserve o endereço público e os bindings financeiros existentes.
+- O executor compartilhado autentica o repositório e workflow exatos por OIDC. Toda mudança de identidade deve atualizar as guardas do workflow, runner, relógio e handler juntas, com testes que rejeitem a identidade antiga.

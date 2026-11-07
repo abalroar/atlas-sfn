@@ -45,7 +45,7 @@ function setup() {
   async function token(overrides = {}) {
     const header = base64(JSON.stringify({alg: 'RS256', typ: 'JWT', kid: 'test-key'}));
     const claims = base64(JSON.stringify({iss: 'https://token.actions.githubusercontent.com', aud: OIDC_AUDIENCE,
-      repository: 'abalroar/tomaconta', repository_id: '1141557164', repository_owner_id: '255978345', ref: 'refs/heads/main', workflow_ref: OIDC_WORKFLOW,
+      repository: 'abalroar/atlas-sfn', repository_id: '1449624970', repository_owner_id: '255978345', ref: 'refs/heads/main', workflow_ref: OIDC_WORKFLOW,
       event_name: 'workflow_dispatch', runner_environment: 'github-hosted', sha: 'a'.repeat(40), workflow_sha: 'a'.repeat(40), run_id: '1234', run_attempt: '1',
       iat: now / 1000 - 5, nbf: now / 1000 - 5, exp: now / 1000 + 300, ...overrides}));
     const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key.privateKey, encoder.encode(`${header}.${claims}`));
@@ -128,6 +128,7 @@ test('OIDC accepts only signed exact workflow/repository/main/audience and expir
   for (const overrides of [{repository_id: '999'}, {repository_owner_id: '999'}, {ref: 'refs/pull/1/merge'}, {aud: 'wrong'}, {workflow_ref: OIDC_WORKFLOW.replace('tomaconta-shared', 'other')}, {event_name: 'pull_request'}, {runner_environment: 'self-hosted'}, {exp: fixture.now() / 1000 - 1}]) await assert.rejects(auth(await fixture.token(overrides)), /autorizado/);
   const parts = jwt.split('.'); parts[1] = base64(JSON.stringify({ref: 'refs/heads/main'}));
   await assert.rejects(auth(parts.join('.')), /Assinatura/);
+  await assert.rejects(auth(await fixture.token({repository: 'abalroar/tomaconta', repository_id: '1141557164', workflow_ref: 'abalroar/tomaconta/.github/workflows/tomaconta-shared.yml@refs/heads/main'})), /autorizado/);
 });
 
 test('unconfigured financial bindings retain static mode and never touch photo storage', async () => {

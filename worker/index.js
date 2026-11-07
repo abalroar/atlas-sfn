@@ -8,6 +8,7 @@ const SECURITY_HEADERS = {
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
+  'X-Atlas-Repository': 'abalroar/atlas-sfn',
 };
 
 export function withHeaders(response, request) {
@@ -19,7 +20,7 @@ export function withHeaders(response, request) {
     headers.set('X-Robots-Tag', 'noindex, nofollow');
   } else if (pathname.startsWith(`${APP_ROOT}assets/`)) {
     headers.set('Cache-Control', 'public, max-age=31536000, immutable');
-  } else if (headers.get('Content-Type')?.includes('text/html') || pathname.startsWith(`${APP_ROOT}data/`)) {
+  } else if (headers.get('Content-Type')?.includes('text/html') || pathname.startsWith(`${APP_ROOT}data/`) || pathname === `${APP_ROOT}build.json`) {
     headers.set('Cache-Control', 'public, max-age=0, must-revalidate');
   }
   return new Response(request.method === 'HEAD' ? null : response.body, {

@@ -54,11 +54,15 @@ Os comandos sobrescrevem os arquivos derivados correspondentes; rode apenas ao p
 
 ## Publicação e identidade
 
-Esta operação criou um repositório **local**. O site público continua em `https://matheusprat.es/atlas-sfn/`, com a configuração já publicada. Nenhum domínio, banco, bucket ou versão pública foi alterado pela extração.
+O repositório oficial é `https://github.com/abalroar/atlas-sfn`, branch `main`. O endereço público permanece `https://matheusprat.es/atlas-sfn/`.
 
-A identidade OIDC permanece vinculada ao executor `abalroar/tomaconta` e à audiência canônica existente. As rotas antigas `/tomaconta/api/` continuam compatíveis. Os workflows de atualização mantêm suas guardas de repositório; em outro repositório GitHub eles não executam automaticamente. Para transferir o executor remoto, será necessário configurar os IDs reais do novo repositório no workflow, relógio, runner e handler, manter o protocolo e validar uma atualização ponta a ponta. Copiar o código local não troca a identidade de produção.
+O Worker `atlas-sfn` contém o site e suas APIs. O Worker do site pessoal encaminha os prefixos `/atlas-sfn/` e `/tomaconta/` pelo service binding `ATLAS_SFN`, preservando método, corpo, contexto e cabeçalhos. Os bindings financeiros D1/R2 existentes conservam revisões e histórico; os recursos da galeria são separados.
 
-O `wrangler.jsonc` independente não declara rotas de domínio e usa apenas os bindings financeiros existentes. Não execute publicação antes de decidir o vínculo entre o novo Worker e o domínio atual. `web/tools/package_site.mjs` mantém a alternativa já usada para empacotar o Atlas no repositório de hospedagem do site pessoal.
+O executor compartilhado autentica exclusivamente `abalroar/atlas-sfn` (repo ID `1449624970`, owner `255978345`), workflow `tomaconta-shared.yml` na `main`. A audiência canônica continua `https://matheusprat.es/tomaconta/api/shared/runner`; a assinatura e as demais guardas OIDC permanecem obrigatórias. O relógio resolve o ID do workflow pelo arquivo no próprio repositório, sem reutilizar o ID do Toma Conta.
+
+A variável GitHub `TOMACONTA_SHARED_ENABLED=true` ativa a consulta agendada da fila no repositório oficial. Sua desativação no repositório antigo impede dois executores de disputar a mesma fila. `build.json` identifica o repositório, commit da interface e origem dos dados efetivamente publicados. Os dados de uma revisão compartilhada conservam seus próprios hashes e commit de geração.
+
+O build de produção usa `npm ci --include=dev`, `npm ci --include=dev --prefix web`, `npm test` e `npm run build`; a publicação do Worker usa `npx wrangler deploy`. A integração de publicação automática está documentada em `docs/deployment.md`.
 
 ## Estudos visuais
 

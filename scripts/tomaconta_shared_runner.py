@@ -30,8 +30,8 @@ from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parents[1]
 API_ROOT = "https://matheusprat.es/tomaconta/api/shared"
 AUDIENCE = API_ROOT + "/runner"
-RUNNER_USER_AGENT = "TomaContaSharedRunner/1.0 (+https://github.com/abalroar/tomaconta)"
-WORKFLOW = "abalroar/tomaconta/.github/workflows/tomaconta-shared.yml@refs/heads/main"
+RUNNER_USER_AGENT = "AtlasSFNSharedRunner/1.0 (+https://github.com/abalroar/atlas-sfn)"
+WORKFLOW = "abalroar/atlas-sfn/.github/workflows/tomaconta-shared.yml@refs/heads/main"
 KINDS = {"bootstrap", "financeiro", "individual", "mercado_credito_sgs", "mercado_imobiliario", "scr_data", "spb_meios_pagamento", "rede_agencias", "tudo"}
 HEX = re.compile(r"[a-f0-9]{64}\Z")
 MAX_FILE = 64_000_000
@@ -58,7 +58,7 @@ def digest(path):
 
 
 def check_github_context(env=os.environ):
-    required = {"GITHUB_REPOSITORY_ID": "1141557164", "GITHUB_REPOSITORY_OWNER_ID": "255978345",
+    required = {"GITHUB_REPOSITORY_ID": "1449624970", "GITHUB_REPOSITORY_OWNER_ID": "255978345",
                 "GITHUB_REF": "refs/heads/main", "GITHUB_WORKFLOW_REF": WORKFLOW}
     if any(env.get(key) != value for key, value in required.items()):
         raise RunnerError("A execução deve usar o workflow oficial da branch main")
@@ -78,8 +78,8 @@ def diagnose_identity_claims(claims, *, audience=AUDIENCE, env=os.environ, now=N
         raise RunnerError("Claims OIDC divergentes: payload")
     now = time.time() if now is None else now
     expected = {"iss": "https://token.actions.githubusercontent.com", "aud": audience,
-                "repository": "abalroar/tomaconta", "repository_owner": "abalroar",
-                "repository_id": "1141557164", "repository_owner_id": "255978345",
+                "repository": "abalroar/atlas-sfn", "repository_owner": "abalroar",
+                "repository_id": "1449624970", "repository_owner_id": "255978345",
                 "ref": "refs/heads/main", "workflow_ref": WORKFLOW,
                 "runner_environment": "github-hosted", "repository_visibility": "public"}
     checks = {key: (str(claims.get(key)) == value if key.endswith("_id") else claims.get(key) == value)

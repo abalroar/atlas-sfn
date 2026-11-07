@@ -2,10 +2,10 @@ import {SCHEMA} from './shared-schema.js';
 
 export const SHARED_ROOT = '/tomaconta/api/shared';
 export const OIDC_AUDIENCE = 'https://matheusprat.es/tomaconta/api/shared/runner';
-export const OIDC_WORKFLOW = 'abalroar/tomaconta/.github/workflows/tomaconta-shared.yml@refs/heads/main';
+export const OIDC_WORKFLOW = 'abalroar/atlas-sfn/.github/workflows/tomaconta-shared.yml@refs/heads/main';
 const ISSUER = 'https://token.actions.githubusercontent.com';
 const JWKS_URL = `${ISSUER}/.well-known/jwks`;
-const REPOSITORY_ID = '1141557164', OWNER_ID = '255978345';
+const REPOSITORY_ID = '1449624970', OWNER_ID = '255978345';
 const HEX = /^[a-f0-9]{64}$/, ID = /^[a-f0-9]{32}$/, COMMIT = /^[a-f0-9]{40}$/;
 const LEASE_MS = 180000, MAX_ATTEMPTS = 3, MAX_PENDING = 4;
 const SUCCESS_COOLDOWN = 15 * 60000, FAILED_COOLDOWN = 60000;
@@ -110,7 +110,7 @@ export async function authenticateRunner(request, {fetcher = fetch, now = Date.n
   try {const key = await crypto.subtle.importKey('jwk', jwk, {name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256'}, false, ['verify']); verified = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, decode64(parts[2]), new TextEncoder().encode(`${parts[0]}.${parts[1]}`));} catch {}
   if (!verified) fail(401, 'Assinatura do executor inválida.');
   const seconds = now / 1000;
-  if (claims.iss !== ISSUER || claims.aud !== OIDC_AUDIENCE || String(claims.repository_id) !== REPOSITORY_ID || String(claims.repository_owner_id) !== OWNER_ID || claims.repository !== 'abalroar/tomaconta' || claims.ref !== 'refs/heads/main' || claims.workflow_ref !== OIDC_WORKFLOW || !['schedule', 'workflow_dispatch'].includes(claims.event_name) || claims.runner_environment !== 'github-hosted' || !COMMIT.test(claims.sha || '') || !COMMIT.test(claims.workflow_sha || '') || !Number.isFinite(claims.exp) || claims.exp <= seconds || !Number.isFinite(claims.nbf) || claims.nbf > seconds + 30 || !Number.isFinite(claims.iat) || claims.iat > seconds + 30 || claims.iat < seconds - 600 || !/^\d{1,25}$/.test(String(claims.run_id)) || !/^\d{1,8}$/.test(String(claims.run_attempt))) fail(403, 'Este workflow não está autorizado a atualizar a base.');
+  if (claims.iss !== ISSUER || claims.aud !== OIDC_AUDIENCE || String(claims.repository_id) !== REPOSITORY_ID || String(claims.repository_owner_id) !== OWNER_ID || claims.repository !== 'abalroar/atlas-sfn' || claims.ref !== 'refs/heads/main' || claims.workflow_ref !== OIDC_WORKFLOW || !['schedule', 'workflow_dispatch'].includes(claims.event_name) || claims.runner_environment !== 'github-hosted' || !COMMIT.test(claims.sha || '') || !COMMIT.test(claims.workflow_sha || '') || !Number.isFinite(claims.exp) || claims.exp <= seconds || !Number.isFinite(claims.nbf) || claims.nbf > seconds + 30 || !Number.isFinite(claims.iat) || claims.iat > seconds + 30 || claims.iat < seconds - 600 || !/^\d{1,25}$/.test(String(claims.run_id)) || !/^\d{1,8}$/.test(String(claims.run_attempt))) fail(403, 'Este workflow não está autorizado a atualizar a base.');
   return {id: `${claims.run_id}:${claims.run_attempt}`, event: claims.event_name, commit: claims.sha, workflowCommit: claims.workflow_sha};
 }
 

@@ -1,4 +1,4 @@
-name: Atualização compartilhada Toma Conta
+name: Atualização compartilhada Atlas SFN
 
 on:
   schedule:
@@ -20,13 +20,13 @@ permissions:
   id-token: write
 
 concurrency:
-  group: tomaconta-shared-main
+  group: atlas-shared-main
   cancel-in-progress: false
 
 jobs:
   pending:
     if: >-
-      github.repository_id == '1141557164' &&
+      github.repository_id == '1449624970' &&
       github.repository_owner_id == '255978345' &&
       github.ref == 'refs/heads/main' &&
       github.event.repository.private == false &&
