@@ -1,0 +1,4 @@
+.atlas-mark{display:inline-flex;align-items:baseline;gap:12px;min-width:0;color:inherit}
+.atlas-mark-name{font-family:'Fraunces Variable',Georgia,serif;font-size:34px;line-height:1;font-weight:560;letter-spacing:-.02em;font-variation-settings:'opsz' 144,'SOFT' 60,'WONK' 1}
+.atlas-mark-sub{font-size:14px;color:#4a6670;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:1050px){.atlas-mark-sub{display:none}}

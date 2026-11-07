@@ -87,7 +87,8 @@ def main():
                 "cnpjBase": key, "name": brand[0] if brand else short_institution(r["institution"]),
                 "legalName": r["institution"], "segment": r["segment"], "color": brand[1] if brand else None,
                 "analysisId": link["analysisId"] if link else None,
-                "analysisName": link["analysisName"] if link else None, "count": 0,
+                "analysisName": link["analysisName"] if link else None,
+                "analysisCode": link["code"] if link else None, "count": 0,
             })
         inst = inst_index[key]
         institutions[inst]["count"] += 1

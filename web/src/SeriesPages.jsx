@@ -2,7 +2,7 @@ import React, {useEffect, useId, useMemo, useState} from 'react';
 import {ChartPanel, ExportMenu} from './Chart.jsx';
 import {defaultInterval, sectionLabel, seriesCollections, seriesSections} from './series-data.js';
 
-const TITLES = {sfn: 'Sistema financeiro', imob: 'Mercado imobiliário', payments: 'Pagamentos'};
+const TITLES = {sfn: 'Estatísticas de crédito', imob: 'Mercado imobiliário', payments: 'Pagamentos'};
 
 export function PeriodFilters({window, setWindow, start, setStart, end, setEnd}) {
   return <>
@@ -13,7 +13,7 @@ export function PeriodFilters({window, setWindow, start, setStart, end, setEnd})
   </>;
 }
 
-export default function SeriesPages({page, manifest, sfn = [], extra = [], imob = [], uf = 'br', setUf, loading = false, onError}) {
+export default function SeriesPages({page, manifest, sfn = [], extra = [], imob = [], uf = 'br', setUf, loading = false, onError, onNavigate}) {
   const [window, setWindow] = useState('12');
   const defaults = useMemo(() => defaultInterval([...sfn, ...extra, ...imob]), [sfn, extra, imob]);
   const [start, setStart] = useState(defaults.start), [end, setEnd] = useState(defaults.end);
@@ -27,7 +27,8 @@ export default function SeriesPages({page, manifest, sfn = [], extra = [], imob 
   const id = useId();
   return <>
     <section className="tc-page-header" aria-labelledby={`${id}-heading`}>
-      <div className="tc-page-title"><h1 id={`${id}-heading`}>{TITLES[page]}</h1></div>
+      <div className="tc-page-title">{page === 'imob' && <a className="tc-parent-link" href="?view=sfn" onClick={event => {if (onNavigate && event.button === 0 && !event.metaKey && !event.ctrlKey) {event.preventDefault(); onNavigate('sfn');}}}>Estatísticas de crédito</a>}<h1 id={`${id}-heading`}>{TITLES[page]}</h1></div>
+      {page === 'sfn' && <a className="tc-subpage" href="?view=imob" onClick={event => {if (onNavigate && event.button === 0 && !event.metaKey && !event.ctrlKey) {event.preventDefault(); onNavigate('imob');}}}><strong>Mercado imobiliário</strong><span>Contratação PF e PJ, estoque e características dos imóveis financiados, por UF.</span></a>}
       <div className="tc-section-controls">
         {page !== 'payments' && <label className="tc-field tc-topic-field">Assunto<select value={section} onChange={event => setSection(event.target.value)}>{topics.map(topic => <option value={topic} key={topic}>{sectionLabel(topic)}</option>)}</select></label>}
         {page === 'imob' && <label className="tc-field">Abrangência<select value={uf} onChange={event => setUf?.(event.target.value)}>{(manifest.ufs || ['br']).map(value => <option key={value} value={value}>{value === 'br' ? 'Brasil' : value.toUpperCase()}</option>)}</select></label>}

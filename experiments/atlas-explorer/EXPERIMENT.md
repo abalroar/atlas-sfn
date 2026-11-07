@@ -80,6 +80,14 @@ A landing do site (`?view=overview`) usa esta composição desde 07/11/2026: `we
 
 `pipeline/06_pix.py` gera `pix-adocao.json`: pessoas físicas pagadoras no mês (BCB, `QT_PES_PagadorPF`) divididas pela população estimada de 2025 (IBGE, tabela 6579), de nov/2020 a out/2026. O passo da landing anima essa razão por município e termina em Pacaraima (RR), onde 179.432 pessoas pagaram com Pix em out/2026 para uma população estimada de 23.112. O BCB não documenta como atribui o município; a interface descreve o dado sem explicar a causa. O passo do ouro saiu.
 
+### Versão em filme (07/11/2026)
+
+A landing abre como filme: o mapa ocupa a tela, o percurso começa sozinho (com movimento reduzido, abre direto na exploração; `?filme` força o percurso) e, ao fim ou a qualquer gesto, a coluna de busca entra pela esquerda. Capítulos: Brasil, agências e postos (redes acendem banco a banco, nas cores próprias), inadimplência, por renda, Pix, Pacaraima, poupança e crédito rural. Mapa de base com tintas hipsométricas, batimetria e sombreamento (Terrain Tiles), que se apagam na escala de rua.
+
+- `07_rural.py`: crédito rural 2025 por mês e município (SICOR, operações com município informado).
+- `08_poupanca.py`: poupança ESTBAN por agência somada em células de 0,4° × 0,25°, desenhada como linhas de relevo com altura proporcional à raiz do saldo.
+- `09_ifdata_regiao.py`: carteira de crédito por região (IF.data, relatório 9), exibida na ficha da instituição pelo código prudencial.
+
 ## Limites para publicação
 
 - O OpenFreeMap público serve bem a um estudo. Em produção, convém hospedar um PMTiles recortado para o Brasil no R2.

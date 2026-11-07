@@ -51,6 +51,7 @@
    "color": "#b49612",
    "analysisId": "b0cbcee8867e0b37",
    "analysisName": "BB - PRUDENCIAL",
+   "analysisCode": "C0080329",
    "count": 5316
   },
   {
@@ -61,6 +62,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 266
   },
   {
@@ -71,6 +73,7 @@
    "color": "#087eaa",
    "analysisId": "12651c6cfd2d796a",
    "analysisName": "CAIXA ECONÔMICA FEDERAL - PRUDENCIAL",
+   "analysisCode": "C0080738",
    "count": 3860
   },
   {
@@ -81,6 +84,7 @@
    "color": null,
    "analysisId": "8debf22957381dff",
    "analysisName": "INTER - PRUDENCIAL",
+   "analysisCode": "C0080996",
    "count": 1
   },
   {
@@ -91,6 +95,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -101,6 +106,7 @@
    "color": null,
    "analysisId": "910c1c31538ecaaa",
    "analysisName": "BANCO BARI DE INVESTIMENTO E FINANCI. - PRUDENCIAL",
+   "analysisCode": "C0080893",
    "count": 1
   },
   {
@@ -111,6 +117,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -121,6 +128,7 @@
    "color": null,
    "analysisId": "84f951447a52580c",
    "analysisName": "BANCO B3 - PRUDENCIAL",
+   "analysisCode": "C0081225",
    "count": 1
   },
   {
@@ -131,6 +139,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 18
   },
   {
@@ -141,6 +150,7 @@
    "color": null,
    "analysisId": "f786bfeb7127ced9",
    "analysisName": "BNP PARIBAS - PRUDENCIAL",
+   "analysisCode": "C0080673",
    "count": 1
   },
   {
@@ -151,6 +161,7 @@
    "color": null,
    "analysisId": "499732f9213bfff3",
    "analysisName": "BBC S.A. - PRUDENCIAL",
+   "analysisCode": "C0084480",
    "count": 1
   },
   {
@@ -161,6 +172,7 @@
    "color": null,
    "analysisId": "60fd5fd1db5de591",
    "analysisName": "VOTORANTIM - PRUDENCIAL",
+   "analysisCode": "C0080484",
    "count": 2
   },
   {
@@ -171,6 +183,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -181,6 +194,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -191,6 +205,7 @@
    "color": null,
    "analysisId": "0cdd0c5ebd4c2e08",
    "analysisName": "MORGAN STANLEY - PRUDENCIAL",
+   "analysisCode": "C0080628",
    "count": 1
   },
   {
@@ -201,6 +216,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -211,6 +227,7 @@
    "color": null,
    "analysisId": "ac8036c1608c3e12",
    "analysisName": "SAFRA - PRUDENCIAL",
+   "analysisCode": "C0080109",
    "count": 1
   },
   {
@@ -221,6 +238,7 @@
    "color": null,
    "analysisId": "9b63bfe4591cf0d2",
    "analysisName": "BCO TOYOTA DO BRASIL S.A. - PRUDENCIAL",
+   "analysisCode": "C0081562",
    "count": 1
   },
   {
@@ -231,6 +249,7 @@
    "color": null,
    "analysisId": "ac8036c1608c3e12",
    "analysisName": "SAFRA - PRUDENCIAL",
+   "analysisCode": "C0080109",
    "count": 9
   },
   {
@@ -241,6 +260,7 @@
    "color": null,
    "analysisId": "88a2d69696fa6faa",
    "analysisName": "BCO ABN AMRO CLEARING - PRUDENCIAL",
+   "analysisCode": "C0081579",
    "count": 1
   },
   {
@@ -251,6 +271,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -261,6 +282,7 @@
    "color": null,
    "analysisId": "bcf0d3845f9d5430",
    "analysisName": "HONDA - PRUDENCIAL",
+   "analysisCode": "C0080611",
    "count": 1
   },
   {
@@ -271,6 +293,7 @@
    "color": null,
    "analysisId": "1271a247d1938e89",
    "analysisName": "BRADESCO - PRUDENCIAL",
+   "analysisCode": "C0080075",
    "count": 1
   },
   {
@@ -281,6 +304,7 @@
    "color": null,
    "analysisId": "6d654bf76d85abaf",
    "analysisName": "GOLDMAN SACHS - PRUDENCIAL",
+   "analysisCode": "C0080714",
    "count": 1
   },
   {
@@ -291,6 +315,7 @@
    "color": null,
    "analysisId": "73f0e1311a08e627",
    "analysisName": "BANCO AFINZ BM - PRUDENCIAL",
+   "analysisCode": "C0083539",
    "count": 2
   },
   {
@@ -301,6 +326,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -311,6 +337,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 124
   },
   {
@@ -321,6 +348,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 198
   },
   {
@@ -331,6 +359,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -341,6 +370,7 @@
    "color": null,
    "analysisId": "1271a247d1938e89",
    "analysisName": "BRADESCO - PRUDENCIAL",
+   "analysisCode": "C0080075",
    "count": 4
   },
   {
@@ -351,6 +381,7 @@
    "color": null,
    "analysisId": "1271a247d1938e89",
    "analysisName": "BRADESCO - PRUDENCIAL",
+   "analysisCode": "C0080075",
    "count": 6
   },
   {
@@ -361,6 +392,7 @@
    "color": null,
    "analysisId": "04f795a83aad3cc0",
    "analysisName": "BCO DO NORDESTE DO BRASIL S.A. - PRUDENCIAL",
+   "analysisCode": "C0081593",
    "count": 301
   },
   {
@@ -371,6 +403,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -381,6 +414,7 @@
    "color": null,
    "analysisId": "adf3272cd5f79d92",
    "analysisName": "BANK OF CHINA (BRASIL) - PRUDENCIAL",
+   "analysisCode": "C0080295",
    "count": 7
   },
   {
@@ -391,6 +425,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -401,6 +436,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -411,6 +447,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -421,6 +458,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -431,6 +469,7 @@
    "color": null,
    "analysisId": "12ffe837e27691d7",
    "analysisName": "PICPAY - PRUDENCIAL",
+   "analysisCode": "C0088022",
    "count": 1
   },
   {
@@ -441,6 +480,7 @@
    "color": null,
    "analysisId": "e63b1348d01b6135",
    "analysisName": "PAGSEGURO - PRUDENCIAL",
+   "analysisCode": "C0084813",
    "count": 1
   },
   {
@@ -451,6 +491,7 @@
    "color": null,
    "analysisId": "20b23c57e82bcf19",
    "analysisName": "YAMAHA MOTOR - PRUDENCIAL",
+   "analysisCode": "C0080721",
    "count": 1
   },
   {
@@ -461,6 +502,7 @@
    "color": null,
    "analysisId": "615cd978063cc2ae",
    "analysisName": "AGIBANK - PRUDENCIAL",
+   "analysisCode": "C0083694",
    "count": 1003
   },
   {
@@ -471,6 +513,7 @@
    "color": null,
    "analysisId": "adf3272cd5f79d92",
    "analysisName": "BANK OF CHINA (BRASIL) - PRUDENCIAL",
+   "analysisCode": "C0080295",
    "count": 2
   },
   {
@@ -481,6 +524,7 @@
    "color": null,
    "analysisId": "1158033738ca5910",
    "analysisName": "SANTANDER - PRUDENCIAL",
+   "analysisCode": "C0080185",
    "count": 1
   },
   {
@@ -491,6 +535,7 @@
    "color": null,
    "analysisId": "d59ea16a5615c658",
    "analysisName": "SCANIA - PRUDENCIAL",
+   "analysisCode": "C0080776",
    "count": 1
   },
   {
@@ -501,6 +546,7 @@
    "color": null,
    "analysisId": "5ef703a3e7ebf7b0",
    "analysisName": "RANDON - PRUDENCIAL",
+   "analysisCode": "C0080800",
    "count": 1
   },
   {
@@ -511,6 +557,7 @@
    "color": null,
    "analysisId": "f6c545cfd8918e0a",
    "analysisName": "BANCO TRAVELEX - PRUDENCIAL",
+   "analysisCode": "C0080783",
    "count": 1
   },
   {
@@ -521,6 +568,7 @@
    "color": null,
    "analysisId": "cf732296eef40006",
    "analysisName": "FINAXIS - PRUDENCIAL",
+   "analysisCode": "C0080790",
    "count": 1
   },
   {
@@ -531,6 +579,7 @@
    "color": null,
    "analysisId": "679ea35ef21fc991",
    "analysisName": "SENFFNET IP - PRUDENCIAL",
+   "analysisCode": "C0083670",
    "count": 2
   },
   {
@@ -541,6 +590,7 @@
    "color": null,
    "analysisId": "53b67eac12361c7a",
    "analysisName": "BCO DO EST. DE SE S.A. - PRUDENCIAL",
+   "analysisCode": "C0081634",
    "count": 72
   },
   {
@@ -551,6 +601,7 @@
    "color": null,
    "analysisId": "1dde7d6ed48fd642",
    "analysisName": "WESTERN UNION - PRUDENCIAL",
+   "analysisCode": "C0080886",
    "count": 1
   },
   {
@@ -561,6 +612,7 @@
    "color": null,
    "analysisId": "017cdfd2bb0f31c6",
    "analysisName": "PARANÁ BANCO - PRUDENCIAL",
+   "analysisCode": "C0080233",
    "count": 24
   },
   {
@@ -571,6 +623,7 @@
    "color": null,
    "analysisId": "62681ae33b0c2731",
    "analysisName": "BOCOM - PRUDENCIAL",
+   "analysisCode": "C0084624",
    "count": 3
   },
   {
@@ -581,6 +634,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -591,6 +645,7 @@
    "color": null,
    "analysisId": "6501c3f5b2c638c5",
    "analysisName": "MERCANTIL DO BRASIL - PRUDENCIAL",
+   "analysisCode": "C0080123",
    "count": 300
   },
   {
@@ -601,6 +656,7 @@
    "color": null,
    "analysisId": "e052771e37154c83",
    "analysisName": "BCO TRIANGULO S.A. - PRUDENCIAL",
+   "analysisCode": "C0081438",
    "count": 7
   },
   {
@@ -611,6 +667,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -621,6 +678,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -631,6 +689,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -641,6 +700,7 @@
    "color": null,
    "analysisId": "1271a247d1938e89",
    "analysisName": "BRADESCO - PRUDENCIAL",
+   "analysisCode": "C0080075",
    "count": 1
   },
   {
@@ -651,6 +711,7 @@
    "color": null,
    "analysisId": "545f669a707f7c28",
    "analysisName": "BANESTES - PRUDENCIAL",
+   "analysisCode": "C0080147",
    "count": 149
   },
   {
@@ -661,6 +722,7 @@
    "color": null,
    "analysisId": "999d58e9ad078f4f",
    "analysisName": "ABC-BRASIL - PRUDENCIAL",
+   "analysisCode": "C0080312",
    "count": 12
   },
   {
@@ -671,6 +733,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -681,6 +744,7 @@
    "color": null,
    "analysisId": "033b6e700d07948b",
    "analysisName": "STONEX DTVM - PRUDENCIAL",
+   "analysisCode": "C0084088",
    "count": 1
   },
   {
@@ -691,6 +755,7 @@
    "color": null,
    "analysisId": "15c83151a16d1806",
    "analysisName": "SCOTIABANK BRASIL - PRUDENCIAL",
+   "analysisCode": "C0081452",
    "count": 1
   },
   {
@@ -701,6 +766,7 @@
    "color": null,
    "analysisId": "1158033738ca5910",
    "analysisName": "SANTANDER - PRUDENCIAL",
+   "analysisCode": "C0080185",
    "count": 1
   },
   {
@@ -711,6 +777,7 @@
    "color": "#254d78",
    "analysisId": "5d53c967bf0ddc8d",
    "analysisName": "BTG PACTUAL - PRUDENCIAL",
+   "analysisCode": "C0080336",
    "count": 28
   },
   {
@@ -721,6 +788,7 @@
    "color": null,
    "analysisId": "ece9dd77185aee5b",
    "analysisName": "BCO CLASSICO S.A. - PRUDENCIAL",
+   "analysisCode": "C0081665",
    "count": 1
   },
   {
@@ -731,6 +799,7 @@
    "color": null,
    "analysisId": "0faf3452a8377438",
    "analysisName": "BANCO C6 - PRUDENCIAL",
+   "analysisCode": "C0084844",
    "count": 20
   },
   {
@@ -741,6 +810,7 @@
    "color": null,
    "analysisId": "8602d320e86fde35",
    "analysisName": "BCO GUANABARA S.A. - PRUDENCIAL",
+   "analysisCode": "C0081672",
    "count": 2
   },
   {
@@ -751,6 +821,7 @@
    "color": null,
    "analysisId": "febdf6dd2c2b622d",
    "analysisName": "INDUSTRIAL DO BRASIL - PRUDENCIAL",
+   "analysisCode": "C0080477",
    "count": 10
   },
   {
@@ -761,6 +832,7 @@
    "color": null,
    "analysisId": "6aca6a7ecc15337e",
    "analysisName": "UBS (BRASIL) - PRUDENCIAL",
+   "analysisCode": "C0080219",
    "count": 1
   },
   {
@@ -771,6 +843,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -781,6 +854,7 @@
    "color": null,
    "analysisId": "1271a247d1938e89",
    "analysisName": "BRADESCO - PRUDENCIAL",
+   "analysisCode": "C0080075",
    "count": 1
   },
   {
@@ -791,6 +865,7 @@
    "color": null,
    "analysisId": "0cd87c06adc8cf58",
    "analysisName": "JP MORGAN CHASE - PRUDENCIAL",
+   "analysisCode": "C0080116",
    "count": 2
   },
   {
@@ -801,6 +876,7 @@
    "color": null,
    "analysisId": "1271a247d1938e89",
    "analysisName": "BRADESCO - PRUDENCIAL",
+   "analysisCode": "C0080075",
    "count": 1
   },
   {
@@ -811,6 +887,7 @@
    "color": null,
    "analysisId": "1e6a5be08d9a6c50",
    "analysisName": "XP - PRUDENCIAL",
+   "analysisCode": "C0082475",
    "count": 1
   },
   {
@@ -821,6 +898,7 @@
    "color": null,
    "analysisId": "a25a122289d0e415",
    "analysisName": "CAIXA GERAL - PRUDENCIAL",
+   "analysisCode": "C0080927",
    "count": 1
   },
   {
@@ -831,6 +909,7 @@
    "color": null,
    "analysisId": "8f165ee0fcb1bc12",
    "analysisName": "CITIBANK - PRUDENCIAL",
+   "analysisCode": "C0080192",
    "count": 51
   },
   {
@@ -841,6 +920,7 @@
    "color": null,
    "analysisId": "5348a1996c641cb7",
    "analysisName": "RODOBENS - PRUDENCIAL",
+   "analysisCode": "C0080855",
    "count": 1
   },
   {
@@ -851,6 +931,7 @@
    "color": null,
    "analysisId": "5c332963b8a9dde2",
    "analysisName": "FATOR - PRUDENCIAL",
+   "analysisCode": "C0080350",
    "count": 2
   },
   {
@@ -861,6 +942,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -871,6 +953,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -881,6 +964,7 @@
    "color": null,
    "analysisId": "ae29abcaaa4eceac",
    "analysisName": "BNY MELLON - PRUDENCIAL",
+   "analysisCode": "C0080910",
    "count": 2
   },
   {
@@ -891,6 +975,7 @@
    "color": null,
    "analysisId": "4d5d86604a335002",
    "analysisName": "BCO DAYCOVAL S.A - PRUDENCIAL",
+   "analysisCode": "C0081744",
    "count": 1
   },
   {
@@ -901,6 +986,7 @@
    "color": null,
    "analysisId": "6b5084333e906fa3",
    "analysisName": "GENIAL - PRUDENCIAL",
+   "analysisCode": "C0080941",
    "count": 2
   },
   {
@@ -911,6 +997,7 @@
    "color": null,
    "analysisId": "8122d70254feb5ef",
    "analysisName": "ANDBANK - PRUDENCIAL",
+   "analysisCode": "C0081256",
    "count": 3
   },
   {
@@ -921,6 +1008,7 @@
    "color": null,
    "analysisId": "68979e6c28563a0c",
    "analysisName": "BMG - PRUDENCIAL",
+   "analysisCode": "C0080178",
    "count": 1
   },
   {
@@ -931,6 +1019,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -941,6 +1030,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -951,6 +1041,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -961,6 +1052,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -971,6 +1063,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -981,6 +1074,7 @@
    "color": null,
    "analysisId": "d8b8d3d698a1d5e7",
    "analysisName": "VOLVO - PRUDENCIAL",
+   "analysisCode": "C0080769",
    "count": 1
   },
   {
@@ -991,6 +1085,7 @@
    "color": "#37596b",
    "analysisId": "ac8036c1608c3e12",
    "analysisName": "SAFRA - PRUDENCIAL",
+   "analysisCode": "C0080109",
    "count": 246
   },
   {
@@ -1001,6 +1096,7 @@
    "color": null,
    "analysisId": "cf67155c7d77e023",
    "analysisName": "BCO FIBRA S.A. - PRUDENCIAL",
+   "analysisCode": "C0081483",
    "count": 1
   },
   {
@@ -1011,6 +1107,7 @@
    "color": null,
    "analysisId": "7e34a4e541c357c1",
    "analysisName": "VOLKSWAGEN - PRUDENCIAL",
+   "analysisCode": "C0080202",
    "count": 1
   },
   {
@@ -1021,6 +1118,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1031,6 +1129,7 @@
    "color": null,
    "analysisId": "0b1a6d148e918f90",
    "analysisName": "GM - PRUDENCIAL",
+   "analysisCode": "C0080848",
    "count": 1
   },
   {
@@ -1041,6 +1140,7 @@
    "color": null,
    "analysisId": "5d53c967bf0ddc8d",
    "analysisName": "BTG PACTUAL - PRUDENCIAL",
+   "analysisCode": "C0080336",
    "count": 19
   },
   {
@@ -1051,6 +1151,7 @@
    "color": null,
    "analysisId": "60fd5fd1db5de591",
    "analysisName": "VOTORANTIM - PRUDENCIAL",
+   "analysisCode": "C0080484",
    "count": 6
   },
   {
@@ -1061,6 +1162,7 @@
    "color": null,
    "analysisId": "5f6d3c0745685d8f",
    "analysisName": "ITAU - PRUDENCIAL",
+   "analysisCode": "C0080099",
    "count": 5
   },
   {
@@ -1071,6 +1173,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1081,6 +1184,7 @@
    "color": null,
    "analysisId": "ce468789def3a588",
    "analysisName": "BCO SUMITOMO MITSUI BRASIL S.A. - PRUDENCIAL",
+   "analysisCode": "C0081720",
    "count": 1
   },
   {
@@ -1091,6 +1195,7 @@
    "color": "#eb6b21",
    "analysisId": "5f6d3c0745685d8f",
    "analysisName": "ITAU - PRUDENCIAL",
+   "analysisCode": "C0080099",
    "count": 3383
   },
   {
@@ -1101,6 +1206,7 @@
    "color": "#cf334b",
    "analysisId": "1271a247d1938e89",
    "analysisName": "BRADESCO - PRUDENCIAL",
+   "analysisCode": "C0080075",
    "count": 4274
   },
   {
@@ -1111,6 +1217,7 @@
    "color": null,
    "analysisId": "be24aebb8c82cc0e",
    "analysisName": "MERCEDES-BENZ - PRUDENCIAL",
+   "analysisCode": "C0080563",
    "count": 1
   },
   {
@@ -1121,6 +1228,7 @@
    "color": null,
    "analysisId": "da15868ad5dd64b3",
    "analysisName": "OMNI - PRUDENCIAL",
+   "analysisCode": "C0080460",
    "count": 1
   },
   {
@@ -1131,6 +1239,7 @@
    "color": null,
    "analysisId": "5f6d3c0745685d8f",
    "analysisName": "ITAU - PRUDENCIAL",
+   "analysisCode": "C0080099",
    "count": 8
   },
   {
@@ -1141,6 +1250,7 @@
    "color": null,
    "analysisId": "d91b547c3bda01fa",
    "analysisName": "SOFISA - PRUDENCIAL",
+   "analysisCode": "C0080271",
    "count": 23
   },
   {
@@ -1151,6 +1261,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1161,6 +1272,7 @@
    "color": null,
    "analysisId": "0398ff6d852476db",
    "analysisName": "CREFISA S.A. CFI - PRUDENCIAL",
+   "analysisCode": "C0083632",
    "count": 1195
   },
   {
@@ -1171,6 +1283,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1181,6 +1294,7 @@
    "color": null,
    "analysisId": "5f6d3c0745685d8f",
    "analysisName": "ITAU - PRUDENCIAL",
+   "analysisCode": "C0080099",
    "count": 1
   },
   {
@@ -1191,6 +1305,7 @@
    "color": null,
    "analysisId": "68979e6c28563a0c",
    "analysisName": "BMG - PRUDENCIAL",
+   "analysisCode": "C0080178",
    "count": 28
   },
   {
@@ -1201,6 +1316,7 @@
    "color": null,
    "analysisId": "5f6d3c0745685d8f",
    "analysisName": "ITAU - PRUDENCIAL",
+   "analysisCode": "C0080099",
    "count": 1
   },
   {
@@ -1211,6 +1327,7 @@
    "color": null,
    "analysisId": "0faf3452a8377438",
    "analysisName": "BANCO C6 - PRUDENCIAL",
+   "analysisCode": "C0084844",
    "count": 1
   },
   {
@@ -1221,6 +1338,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1231,6 +1349,7 @@
    "color": null,
    "analysisId": "a250bcd235befc24",
    "analysisName": "BANCO PAULISTA - PRUDENCIAL",
+   "analysisCode": "C0080381",
    "count": 1
   },
   {
@@ -1241,6 +1360,7 @@
    "color": null,
    "analysisId": "703406d72c52cdc1",
    "analysisName": "BOFA MERRILL LYNCH - PRUDENCIAL",
+   "analysisCode": "C0080556",
    "count": 1
   },
   {
@@ -1251,6 +1371,7 @@
    "color": null,
    "analysisId": "e090e12a186fc9d5",
    "analysisName": "PINE - PRUDENCIAL",
+   "analysisCode": "C0080374",
    "count": 4
   },
   {
@@ -1261,6 +1382,7 @@
    "color": null,
    "analysisId": "4d5d86604a335002",
    "analysisName": "BCO DAYCOVAL S.A - PRUDENCIAL",
+   "analysisCode": "C0081744",
    "count": 55
   },
   {
@@ -1271,6 +1393,7 @@
    "color": null,
    "analysisId": "8231a4d2dd8c4cde",
    "analysisName": "STELLANTIS - PRUDENCIAL",
+   "analysisCode": "C0087298",
    "count": 1
   },
   {
@@ -1281,6 +1404,7 @@
    "color": null,
    "analysisId": "1158033738ca5910",
    "analysisName": "SANTANDER - PRUDENCIAL",
+   "analysisCode": "C0080185",
    "count": 1
   },
   {
@@ -1291,6 +1415,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1301,6 +1426,7 @@
    "color": null,
    "analysisId": "68979e6c28563a0c",
    "analysisName": "BMG - PRUDENCIAL",
+   "analysisCode": "C0080178",
    "count": 1
   },
   {
@@ -1311,6 +1437,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1321,6 +1448,7 @@
    "color": null,
    "analysisId": "e07df219e81a1fb4",
    "analysisName": "RENDIMENTO - PRUDENCIAL",
+   "analysisCode": "C0080659",
    "count": 8
   },
   {
@@ -1331,6 +1459,7 @@
    "color": null,
    "analysisId": "60938b6c1dacb036",
    "analysisName": "BS2 - PRUDENCIAL",
+   "analysisCode": "C0080422",
    "count": 6
   },
   {
@@ -1341,6 +1470,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1351,6 +1481,7 @@
    "color": null,
    "analysisId": "9e78512af01162b3",
    "analysisName": "CREDIT AGRICOLE - PRUDENCIAL",
+   "analysisCode": "C0080491",
    "count": 1
   },
   {
@@ -1361,6 +1492,7 @@
    "color": null,
    "analysisId": "71f0d38a4021f9bf",
    "analysisName": "VR - PRUDENCIAL",
+   "analysisCode": "C0080408",
    "count": 1
   },
   {
@@ -1371,6 +1503,7 @@
    "color": null,
    "analysisId": "17c81505c269c9ca",
    "analysisName": "OURIBANK - PRUDENCIAL",
+   "analysisCode": "C0081012",
    "count": 2
   },
   {
@@ -1381,6 +1514,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1391,6 +1525,7 @@
    "color": "#bd3540",
    "analysisId": "1158033738ca5910",
    "analysisName": "SANTANDER - PRUDENCIAL",
+   "analysisCode": "C0080185",
    "count": 3678
   },
   {
@@ -1401,6 +1536,7 @@
    "color": null,
    "analysisId": "1271a247d1938e89",
    "analysisName": "BRADESCO - PRUDENCIAL",
+   "analysisCode": "C0080075",
    "count": 1
   },
   {
@@ -1411,6 +1547,7 @@
    "color": null,
    "analysisId": "a3dfe32808e7d0db",
    "analysisName": "BANRISUL - PRUDENCIAL",
+   "analysisCode": "C0080154",
    "count": 634
   },
   {
@@ -1421,6 +1558,7 @@
    "color": null,
    "analysisId": "cc97e144da9cead3",
    "analysisName": "BANCO DIGIMAIS - PRUDENCIAL",
+   "analysisCode": "C0081799",
    "count": 2
   },
   {
@@ -1431,6 +1569,7 @@
    "color": null,
    "analysisId": "6af3beb153c1a5c9",
    "analysisName": "ORIGINAL - PRUDENCIAL",
+   "analysisCode": "C0080903",
    "count": 3
   },
   {
@@ -1441,6 +1580,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 12
   },
   {
@@ -1451,6 +1591,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1461,6 +1602,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -1471,6 +1613,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 9
   },
   {
@@ -1481,6 +1624,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1491,6 +1635,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 30
   },
   {
@@ -1501,6 +1646,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1511,6 +1657,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 14
   },
   {
@@ -1521,6 +1668,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 26
   },
   {
@@ -1531,6 +1679,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 14
   },
   {
@@ -1541,6 +1690,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 18
   },
   {
@@ -1551,6 +1701,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 48
   },
   {
@@ -1561,6 +1712,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 23
   },
   {
@@ -1571,6 +1723,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 10
   },
   {
@@ -1581,6 +1734,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 32
   },
   {
@@ -1591,6 +1745,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -1601,6 +1756,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 11
   },
   {
@@ -1611,6 +1767,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -1621,6 +1778,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 15
   },
   {
@@ -1631,6 +1789,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 59
   },
   {
@@ -1641,6 +1800,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 8
   },
   {
@@ -1651,6 +1811,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 11
   },
   {
@@ -1661,6 +1822,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 20
   },
   {
@@ -1671,6 +1833,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -1681,6 +1844,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1691,6 +1855,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 36
   },
   {
@@ -1701,6 +1866,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 23
   },
   {
@@ -1711,6 +1877,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -1721,6 +1888,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -1731,6 +1899,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 22
   },
   {
@@ -1741,6 +1910,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -1751,6 +1921,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 50
   },
   {
@@ -1761,6 +1932,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1771,6 +1943,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 73
   },
   {
@@ -1781,6 +1954,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 16
   },
   {
@@ -1791,6 +1965,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1801,6 +1976,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -1811,6 +1987,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1821,6 +1998,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 6
   },
   {
@@ -1831,6 +2009,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -1841,6 +2020,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 22
   },
   {
@@ -1851,6 +2031,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -1861,6 +2042,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1871,6 +2053,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1881,6 +2064,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1891,6 +2075,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1901,6 +2086,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1911,6 +2097,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -1921,6 +2108,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 8
   },
   {
@@ -1931,6 +2119,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1941,6 +2130,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1951,6 +2141,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1961,6 +2152,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 8
   },
   {
@@ -1971,6 +2163,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -1981,6 +2174,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -1991,6 +2185,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -2001,6 +2196,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -2011,6 +2207,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -2021,6 +2218,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -2031,6 +2229,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -2041,6 +2240,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -2051,6 +2251,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 111
   },
   {
@@ -2061,6 +2262,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -2071,6 +2273,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 12
   },
   {
@@ -2081,6 +2284,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -2091,6 +2295,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -2101,6 +2306,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -2111,6 +2317,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -2121,6 +2328,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -2131,6 +2339,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 19
   },
   {
@@ -2141,6 +2350,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -2151,6 +2361,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -2161,6 +2372,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -2171,6 +2383,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -2181,6 +2394,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -2191,6 +2405,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 10
   },
   {
@@ -2201,6 +2416,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 18
   },
   {
@@ -2211,6 +2427,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 42
   },
   {
@@ -2221,6 +2438,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 13
   },
   {
@@ -2231,6 +2449,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -2241,6 +2460,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 44
   },
   {
@@ -2251,6 +2471,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -2261,6 +2482,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 20
   },
   {
@@ -2271,6 +2493,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -2281,6 +2504,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -2291,6 +2515,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 17
   },
   {
@@ -2301,6 +2526,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 19
   },
   {
@@ -2311,6 +2537,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -2321,6 +2548,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -2331,6 +2559,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 8
   },
   {
@@ -2341,6 +2570,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -2351,6 +2581,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -2361,6 +2592,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 14
   },
   {
@@ -2371,6 +2603,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 12
   },
   {
@@ -2381,6 +2614,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 16
   },
   {
@@ -2391,6 +2625,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -2401,6 +2636,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -2411,6 +2647,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -2421,6 +2658,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -2431,6 +2669,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 23
   },
   {
@@ -2441,6 +2680,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -2451,6 +2691,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 6
   },
   {
@@ -2461,6 +2702,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 14
   },
   {
@@ -2471,6 +2713,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 38
   },
   {
@@ -2481,6 +2724,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -2491,6 +2735,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 25
   },
   {
@@ -2501,6 +2746,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 52
   },
   {
@@ -2511,6 +2757,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -2521,6 +2768,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -2531,6 +2779,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -2541,6 +2790,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 11
   },
   {
@@ -2551,6 +2801,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 23
   },
   {
@@ -2561,6 +2812,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 19
   },
   {
@@ -2571,6 +2823,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 64
   },
   {
@@ -2581,6 +2834,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -2591,6 +2845,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 21
   },
   {
@@ -2601,6 +2856,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 47
   },
   {
@@ -2611,6 +2867,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 9
   },
   {
@@ -2621,6 +2878,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 35
   },
   {
@@ -2631,6 +2889,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 12
   },
   {
@@ -2641,6 +2900,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 31
   },
   {
@@ -2651,6 +2911,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 21
   },
   {
@@ -2661,6 +2922,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 28
   },
   {
@@ -2671,6 +2933,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 11
   },
   {
@@ -2681,6 +2944,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -2691,6 +2955,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -2701,6 +2966,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -2711,6 +2977,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -2721,6 +2988,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 76
   },
   {
@@ -2731,6 +2999,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -2741,6 +3010,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 24
   },
   {
@@ -2751,6 +3021,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 19
   },
   {
@@ -2761,6 +3032,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -2771,6 +3043,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 16
   },
   {
@@ -2781,6 +3054,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 20
   },
   {
@@ -2791,6 +3065,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -2801,6 +3076,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 23
   },
   {
@@ -2811,6 +3087,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 44
   },
   {
@@ -2821,6 +3098,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -2831,6 +3109,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 44
   },
   {
@@ -2841,6 +3120,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 29
   },
   {
@@ -2851,6 +3131,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -2861,6 +3142,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -2871,6 +3153,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 22
   },
   {
@@ -2881,6 +3164,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 13
   },
   {
@@ -2891,6 +3175,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 17
   },
   {
@@ -2901,6 +3186,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 53
   },
   {
@@ -2911,6 +3197,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 16
   },
   {
@@ -2921,6 +3208,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 8
   },
   {
@@ -2931,6 +3219,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 12
   },
   {
@@ -2941,6 +3230,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 6
   },
   {
@@ -2951,6 +3241,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -2961,6 +3252,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -2971,6 +3263,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 23
   },
   {
@@ -2981,6 +3274,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 32
   },
   {
@@ -2991,6 +3285,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 17
   },
   {
@@ -3001,6 +3296,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -3011,6 +3307,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 43
   },
   {
@@ -3021,6 +3318,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 56
   },
   {
@@ -3031,6 +3329,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -3041,6 +3340,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 38
   },
   {
@@ -3051,6 +3351,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -3061,6 +3362,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -3071,6 +3373,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -3081,6 +3384,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -3091,6 +3395,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 21
   },
   {
@@ -3101,6 +3406,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -3111,6 +3417,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 28
   },
   {
@@ -3121,6 +3428,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 44
   },
   {
@@ -3131,6 +3439,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 100
   },
   {
@@ -3141,6 +3450,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 28
   },
   {
@@ -3151,6 +3461,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -3161,6 +3472,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -3171,6 +3483,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 32
   },
   {
@@ -3181,6 +3494,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 36
   },
   {
@@ -3191,6 +3505,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 10
   },
   {
@@ -3201,6 +3516,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 69
   },
   {
@@ -3211,6 +3527,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 11
   },
   {
@@ -3221,6 +3538,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 13
   },
   {
@@ -3231,6 +3549,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 30
   },
   {
@@ -3241,6 +3560,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 20
   },
   {
@@ -3251,6 +3571,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -3261,6 +3582,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 9
   },
   {
@@ -3271,6 +3593,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 32
   },
   {
@@ -3281,6 +3604,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 9
   },
   {
@@ -3291,6 +3615,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 33
   },
   {
@@ -3301,6 +3626,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 6
   },
   {
@@ -3311,6 +3637,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 6
   },
   {
@@ -3321,6 +3648,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 46
   },
   {
@@ -3331,6 +3659,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 26
   },
   {
@@ -3341,6 +3670,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 33
   },
   {
@@ -3351,6 +3681,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -3361,6 +3692,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 13
   },
   {
@@ -3371,6 +3703,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 66
   },
   {
@@ -3381,6 +3714,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -3391,6 +3725,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -3401,6 +3736,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -3411,6 +3747,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 141
   },
   {
@@ -3421,6 +3758,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -3431,6 +3769,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 8
   },
   {
@@ -3441,6 +3780,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 19
   },
   {
@@ -3451,6 +3791,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 49
   },
   {
@@ -3461,6 +3802,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 31
   },
   {
@@ -3471,6 +3813,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 13
   },
   {
@@ -3481,6 +3824,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -3491,6 +3835,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 21
   },
   {
@@ -3501,6 +3846,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -3511,6 +3857,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -3521,6 +3868,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -3531,6 +3879,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -3541,6 +3890,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 11
   },
   {
@@ -3551,6 +3901,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -3561,6 +3912,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -3571,6 +3923,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 16
   },
   {
@@ -3581,6 +3934,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 10
   },
   {
@@ -3591,6 +3945,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 10
   },
   {
@@ -3601,6 +3956,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -3611,6 +3967,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -3621,6 +3978,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 31
   },
   {
@@ -3631,6 +3989,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 25
   },
   {
@@ -3641,6 +4000,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -3651,6 +4011,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 30
   },
   {
@@ -3661,6 +4022,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 15
   },
   {
@@ -3671,6 +4033,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 18
   },
   {
@@ -3681,6 +4044,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 37
   },
   {
@@ -3691,6 +4055,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -3701,6 +4066,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 65
   },
   {
@@ -3711,6 +4077,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 30
   },
   {
@@ -3721,6 +4088,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 26
   },
   {
@@ -3731,6 +4099,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -3741,6 +4110,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 31
   },
   {
@@ -3751,6 +4121,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 73
   },
   {
@@ -3761,6 +4132,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 27
   },
   {
@@ -3771,6 +4143,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 40
   },
   {
@@ -3781,6 +4154,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 29
   },
   {
@@ -3791,6 +4165,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 21
   },
   {
@@ -3801,6 +4176,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 10
   },
   {
@@ -3811,6 +4187,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 42
   },
   {
@@ -3821,6 +4198,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -3831,6 +4209,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 53
   },
   {
@@ -3841,6 +4220,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -3851,6 +4231,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -3861,6 +4242,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -3871,6 +4253,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -3881,6 +4264,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 41
   },
   {
@@ -3891,6 +4275,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 25
   },
   {
@@ -3901,6 +4286,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 54
   },
   {
@@ -3911,6 +4297,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -3921,6 +4308,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 11
   },
   {
@@ -3931,6 +4319,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -3941,6 +4330,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 49
   },
   {
@@ -3951,6 +4341,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 35
   },
   {
@@ -3961,6 +4352,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 11
   },
   {
@@ -3971,6 +4363,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 8
   },
   {
@@ -3981,6 +4374,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -3991,6 +4385,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 19
   },
   {
@@ -4001,6 +4396,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 32
   },
   {
@@ -4011,6 +4407,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 11
   },
   {
@@ -4021,6 +4418,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 22
   },
   {
@@ -4031,6 +4429,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 17
   },
   {
@@ -4041,6 +4440,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 27
   },
   {
@@ -4051,6 +4451,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 6
   },
   {
@@ -4061,6 +4462,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -4071,6 +4473,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -4081,6 +4484,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -4091,6 +4495,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 13
   },
   {
@@ -4101,6 +4506,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 17
   },
   {
@@ -4111,6 +4517,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 48
   },
   {
@@ -4121,6 +4528,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -4131,6 +4539,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -4141,6 +4550,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -4151,6 +4561,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 16
   },
   {
@@ -4161,6 +4572,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 43
   },
   {
@@ -4171,6 +4583,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 34
   },
   {
@@ -4181,6 +4594,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 30
   },
   {
@@ -4191,6 +4605,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 18
   },
   {
@@ -4201,6 +4616,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 17
   },
   {
@@ -4211,6 +4627,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 55
   },
   {
@@ -4221,6 +4638,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -4231,6 +4649,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 13
   },
   {
@@ -4241,6 +4660,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 6
   },
   {
@@ -4251,6 +4671,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 29
   },
   {
@@ -4261,6 +4682,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 52
   },
   {
@@ -4271,6 +4693,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 16
   },
   {
@@ -4281,6 +4704,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 20
   },
   {
@@ -4291,6 +4715,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 23
   },
   {
@@ -4301,6 +4726,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 48
   },
   {
@@ -4311,6 +4737,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 19
   },
   {
@@ -4321,6 +4748,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 32
   },
   {
@@ -4331,6 +4759,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 20
   },
   {
@@ -4341,6 +4770,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -4351,6 +4781,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 29
   },
   {
@@ -4361,6 +4792,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 100
   },
   {
@@ -4371,6 +4803,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 22
   },
   {
@@ -4381,6 +4814,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -4391,6 +4825,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 11
   },
   {
@@ -4401,6 +4836,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 36
   },
   {
@@ -4411,6 +4847,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 67
   },
   {
@@ -4421,6 +4858,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 44
   },
   {
@@ -4431,6 +4869,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -4441,6 +4880,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 28
   },
   {
@@ -4451,6 +4891,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -4461,6 +4902,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 60
   },
   {
@@ -4471,6 +4913,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 9
   },
   {
@@ -4481,6 +4924,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -4491,6 +4935,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 12
   },
   {
@@ -4501,6 +4946,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 50
   },
   {
@@ -4511,6 +4957,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -4521,6 +4968,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 34
   },
   {
@@ -4531,6 +4979,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 16
   },
   {
@@ -4541,6 +4990,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 34
   },
   {
@@ -4551,6 +5001,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 48
   },
   {
@@ -4561,6 +5012,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 8
   },
   {
@@ -4571,6 +5023,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 49
   },
   {
@@ -4581,6 +5034,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -4591,6 +5045,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 12
   },
   {
@@ -4601,6 +5056,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -4611,6 +5067,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -4621,6 +5078,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 68
   },
   {
@@ -4631,6 +5089,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 40
   },
   {
@@ -4641,6 +5100,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 38
   },
   {
@@ -4651,6 +5111,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 21
   },
   {
@@ -4661,6 +5122,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 10
   },
   {
@@ -4671,6 +5133,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -4681,6 +5144,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -4691,6 +5155,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 20
   },
   {
@@ -4701,6 +5166,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 22
   },
   {
@@ -4711,6 +5177,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 90
   },
   {
@@ -4721,6 +5188,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 26
   },
   {
@@ -4731,6 +5199,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 24
   },
   {
@@ -4741,6 +5210,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -4751,6 +5221,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 33
   },
   {
@@ -4761,6 +5232,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -4771,6 +5243,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -4781,6 +5254,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 29
   },
   {
@@ -4791,6 +5265,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 15
   },
   {
@@ -4801,6 +5276,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 19
   },
   {
@@ -4811,6 +5287,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 17
   },
   {
@@ -4821,6 +5298,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -4831,6 +5309,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 87
   },
   {
@@ -4841,6 +5320,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 13
   },
   {
@@ -4851,6 +5331,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 53
   },
   {
@@ -4861,6 +5342,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 23
   },
   {
@@ -4871,6 +5353,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 20
   },
   {
@@ -4881,6 +5364,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 12
   },
   {
@@ -4891,6 +5375,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 10
   },
   {
@@ -4901,6 +5386,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -4911,6 +5397,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 9
   },
   {
@@ -4921,6 +5408,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 28
   },
   {
@@ -4931,6 +5419,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 10
   },
   {
@@ -4941,6 +5430,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 22
   },
   {
@@ -4951,6 +5441,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -4961,6 +5452,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 13
   },
   {
@@ -4971,6 +5463,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 14
   },
   {
@@ -4981,6 +5474,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 25
   },
   {
@@ -4991,6 +5485,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -5001,6 +5496,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 15
   },
   {
@@ -5011,6 +5507,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 16
   },
   {
@@ -5021,6 +5518,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 17
   },
   {
@@ -5031,6 +5529,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 17
   },
   {
@@ -5041,6 +5540,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 17
   },
   {
@@ -5051,6 +5551,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 60
   },
   {
@@ -5061,6 +5562,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 26
   },
   {
@@ -5071,6 +5573,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -5081,6 +5584,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -5091,6 +5595,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 18
   },
   {
@@ -5101,6 +5606,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -5111,6 +5617,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 23
   },
   {
@@ -5121,6 +5628,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -5131,6 +5639,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 23
   },
   {
@@ -5141,6 +5650,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 39
   },
   {
@@ -5151,6 +5661,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -5161,6 +5672,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 27
   },
   {
@@ -5171,6 +5683,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -5181,6 +5694,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -5191,6 +5705,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 25
   },
   {
@@ -5201,6 +5716,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 16
   },
   {
@@ -5211,6 +5727,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 20
   },
   {
@@ -5221,6 +5738,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 6
   },
   {
@@ -5231,6 +5749,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 10
   },
   {
@@ -5241,6 +5760,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 31
   },
   {
@@ -5251,6 +5771,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 18
   },
   {
@@ -5261,6 +5782,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 9
   },
   {
@@ -5271,6 +5793,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -5281,6 +5804,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -5291,6 +5815,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 12
   },
   {
@@ -5301,6 +5826,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 16
   },
   {
@@ -5311,6 +5837,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -5321,6 +5848,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 48
   },
   {
@@ -5331,6 +5859,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -5341,6 +5870,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 12
   },
   {
@@ -5351,6 +5881,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 10
   },
   {
@@ -5361,6 +5892,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 28
   },
   {
@@ -5371,6 +5903,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 15
   },
   {
@@ -5381,6 +5914,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 21
   },
   {
@@ -5391,6 +5925,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -5401,6 +5936,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 64
   },
   {
@@ -5411,6 +5947,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 14
   },
   {
@@ -5421,6 +5958,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 47
   },
   {
@@ -5431,6 +5969,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -5441,6 +5980,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 33
   },
   {
@@ -5451,6 +5991,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 27
   },
   {
@@ -5461,6 +6002,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -5471,6 +6013,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -5481,6 +6024,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -5491,6 +6035,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 6
   },
   {
@@ -5501,6 +6046,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 11
   },
   {
@@ -5511,6 +6057,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -5521,6 +6068,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 34
   },
   {
@@ -5531,6 +6079,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 55
   },
   {
@@ -5541,6 +6090,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 38
   },
   {
@@ -5551,6 +6101,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 52
   },
   {
@@ -5561,6 +6112,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -5571,6 +6123,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 9
   },
   {
@@ -5581,6 +6134,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 10
   },
   {
@@ -5591,6 +6145,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -5601,6 +6156,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 26
   },
   {
@@ -5611,6 +6167,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 44
   },
   {
@@ -5621,6 +6178,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 44
   },
   {
@@ -5631,6 +6189,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -5641,6 +6200,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 6
   },
   {
@@ -5651,6 +6211,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -5661,6 +6222,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 13
   },
   {
@@ -5671,6 +6233,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 11
   },
   {
@@ -5681,6 +6244,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 114
   },
   {
@@ -5691,6 +6255,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -5701,6 +6266,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -5711,6 +6277,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 6
   },
   {
@@ -5721,6 +6288,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -5731,6 +6299,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 128
   },
   {
@@ -5741,6 +6310,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 42
   },
   {
@@ -5751,6 +6321,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 32
   },
   {
@@ -5761,6 +6332,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 32
   },
   {
@@ -5771,6 +6343,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 13
   },
   {
@@ -5781,6 +6354,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -5791,6 +6365,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 32
   },
   {
@@ -5801,6 +6376,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 9
   },
   {
@@ -5811,6 +6387,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -5821,6 +6398,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 15
   },
   {
@@ -5831,6 +6409,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 18
   },
   {
@@ -5841,6 +6420,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 16
   },
   {
@@ -5851,6 +6431,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -5861,6 +6442,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 31
   },
   {
@@ -5871,6 +6453,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -5881,6 +6464,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 29
   },
   {
@@ -5891,6 +6475,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 22
   },
   {
@@ -5901,6 +6486,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -5911,6 +6497,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 28
   },
   {
@@ -5921,6 +6508,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -5931,6 +6519,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 12
   },
   {
@@ -5941,6 +6530,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 15
   },
   {
@@ -5951,6 +6541,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 20
   },
   {
@@ -5961,6 +6552,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 17
   },
   {
@@ -5971,6 +6563,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 12
   },
   {
@@ -5981,6 +6574,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -5991,6 +6585,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 21
   },
   {
@@ -6001,6 +6596,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -6011,6 +6607,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 8
   },
   {
@@ -6021,6 +6618,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -6031,6 +6629,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 34
   },
   {
@@ -6041,6 +6640,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 24
   },
   {
@@ -6051,6 +6651,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -6061,6 +6662,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 13
   },
   {
@@ -6071,6 +6673,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -6081,6 +6684,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 9
   },
   {
@@ -6091,6 +6695,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 8
   },
   {
@@ -6101,6 +6706,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 21
   },
   {
@@ -6111,6 +6717,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 34
   },
   {
@@ -6121,6 +6728,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 10
   },
   {
@@ -6131,6 +6739,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 14
   },
   {
@@ -6141,6 +6750,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 6
   },
   {
@@ -6151,6 +6761,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 8
   },
   {
@@ -6161,6 +6772,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 32
   },
   {
@@ -6171,6 +6783,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 43
   },
   {
@@ -6181,6 +6794,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -6191,6 +6805,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 27
   },
   {
@@ -6201,6 +6816,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 37
   },
   {
@@ -6211,6 +6827,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 10
   },
   {
@@ -6221,6 +6838,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 14
   },
   {
@@ -6231,6 +6849,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 18
   },
   {
@@ -6241,6 +6860,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 7
   },
   {
@@ -6251,6 +6871,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 32
   },
   {
@@ -6261,6 +6882,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 19
   },
   {
@@ -6271,6 +6893,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 8
   },
   {
@@ -6281,6 +6904,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -6291,6 +6915,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 15
   },
   {
@@ -6301,6 +6926,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -6311,6 +6937,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 103
   },
   {
@@ -6321,6 +6948,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 37
   },
   {
@@ -6331,6 +6959,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -6341,6 +6970,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 6
   },
   {
@@ -6351,6 +6981,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 24
   },
   {
@@ -6361,6 +6992,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 11
   },
   {
@@ -6371,6 +7003,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 25
   },
   {
@@ -6381,6 +7014,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -6391,6 +7025,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 12
   },
   {
@@ -6401,6 +7036,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -6411,6 +7047,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 8
   },
   {
@@ -6421,6 +7058,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -6431,6 +7069,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 4
   },
   {
@@ -6441,6 +7080,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -6451,6 +7091,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -6461,6 +7102,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -6471,6 +7113,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 38
   },
   {
@@ -6481,6 +7124,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -6491,6 +7135,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 9
   },
   {
@@ -6501,6 +7146,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 27
   },
   {
@@ -6511,6 +7157,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 18
   },
   {
@@ -6521,6 +7168,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 30
   },
   {
@@ -6531,6 +7179,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 25
   },
   {
@@ -6541,6 +7190,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 6
   },
   {
@@ -6551,6 +7201,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 9
   },
   {
@@ -6561,6 +7212,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 9
   },
   {
@@ -6571,6 +7223,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 20
   },
   {
@@ -6581,6 +7234,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 56
   },
   {
@@ -6591,6 +7245,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -6601,6 +7256,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 18
   },
   {
@@ -6611,6 +7267,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 43
   },
   {
@@ -6621,6 +7278,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 26
   },
   {
@@ -6631,6 +7289,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 42
   },
   {
@@ -6641,6 +7300,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 6
   },
   {
@@ -6651,6 +7311,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 17
   },
   {
@@ -6661,6 +7322,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 39
   },
   {
@@ -6671,6 +7333,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -6681,6 +7344,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 60
   },
   {
@@ -6691,6 +7355,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -6701,6 +7366,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 33
   },
   {
@@ -6711,6 +7377,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -6721,6 +7388,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -6731,6 +7399,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -6741,6 +7410,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 33
   },
   {
@@ -6751,6 +7421,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 29
   },
   {
@@ -6761,6 +7432,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 8
   },
   {
@@ -6771,6 +7443,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -6781,6 +7454,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 10
   },
   {
@@ -6791,6 +7465,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -6801,6 +7476,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 15
   },
   {
@@ -6811,6 +7487,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -6821,6 +7498,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 15
   },
   {
@@ -6831,6 +7509,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 33
   },
   {
@@ -6841,6 +7520,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 29
   },
   {
@@ -6851,6 +7531,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 8
   },
   {
@@ -6861,6 +7542,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 34
   },
   {
@@ -6871,6 +7553,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 26
   },
   {
@@ -6881,6 +7564,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 5
   },
   {
@@ -6891,6 +7575,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -6901,6 +7586,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 2
   },
   {
@@ -6911,6 +7597,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 9
   },
   {
@@ -6921,6 +7608,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 43
   },
   {
@@ -6931,6 +7619,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 14
   },
   {
@@ -6941,6 +7630,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -6951,6 +7641,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 26
   },
   {
@@ -6961,6 +7652,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 13
   },
   {
@@ -6971,6 +7663,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 1
   },
   {
@@ -6981,6 +7674,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 42
   },
   {
@@ -6991,6 +7685,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 16
   },
   {
@@ -7001,6 +7696,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 17
   },
   {
@@ -7011,6 +7707,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 11
   },
   {
@@ -7021,6 +7718,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 15
   },
   {
@@ -7031,6 +7729,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 3
   },
   {
@@ -7041,6 +7740,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 19
   },
   {
@@ -7051,6 +7751,7 @@
    "color": null,
    "analysisId": null,
    "analysisName": null,
+   "analysisCode": null,
    "count": 104
   }
  ],

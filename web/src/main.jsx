@@ -88,7 +88,7 @@ function App(){
     {page==='institutions'&&<InstitutionPage {...{catalog,bankId}} onSelect={openInstitution} onStatementSelect={selectStatementInstitution} statementIndex={statements} onRetryStatements={()=>setStatementsRetry(value=>value+1)}/>}
     {['sfn','imob','payments'].includes(page)&&<>
       {page==='imob'&&housingError?<div className="tc-app-error" role="alert"><span>{housingError}</span><button type="button" onClick={()=>setHousingRetry(value=>value+1)}>Tentar novamente</button></div>:null}
-      <SeriesPages key={page} {...{page,manifest,sfn,extra,imob,uf,setUf}} loading={housingLoading} onError={setError}/>
+      <SeriesPages key={page} {...{page,manifest,sfn,extra,imob,uf,setUf}} loading={housingLoading} onError={setError} onNavigate={navigate}/>
     </>}
     {page==='update'&&<UpdatePage {...{manifest,catalog,imob,uf,setUf,publication}} statementIndex={statements} onImobChange={updateHousing} onError={setError}/>}
     </Suspense></SectionBoundary>
