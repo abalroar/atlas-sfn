@@ -2,6 +2,9 @@
 // Vetores mudam de nível de zoom sem troca de imagem, o que mantém a aproximação contínua.
 export const INK = '#203f50', PAPER = '#eaefed', LAND = '#f8faf8', WATER = '#d3e1e4';
 // Mesma escala fixa de inadimplência do site (web/src/AtlasScene.jsx, ATLAS_RATE_SCALE).
+// Adoção do Pix: pessoas físicas pagadoras no mês / população, em milésimos.
+export const PIX_STOPS = [[0, '#e8f0f1'], [200, '#c7dfe7'], [400, '#9ac4d4'], [500, '#6ba5bd'], [600, '#47869f'], [700, '#2c657f']];
+export const PIX_FILL = ['step', ['coalesce', ['feature-state', 'pix'], -1], '#e1e7e8', ...PIX_STOPS.flat()];
 export const RATE_FILL = ['step', ['coalesce', ['feature-state', 'rate'], -1], '#e1e7e8', 0, '#e0ecef', 3, '#c7dfe7', 5, '#9ac4d4', 7, '#6ba5bd', 10, '#47869f', 15, '#2c657f'];
 const font = ['Noto Sans Regular'], bold = ['Noto Sans Bold'];
 const road = (minzoom, classes, width, color = '#ffffff') => ({
@@ -18,12 +21,13 @@ export function baseStyle(states, municipalities) {
     sources: {
       omt: { type: 'vector', url: 'https://tiles.openfreemap.org/planet', attribution: '<a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank">OpenMapTiles</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> · IBGE' },
       states: { type: 'geojson', data: states, promoteId: 'uf' },
-      municipalities: { type: 'geojson', data: municipalities, tolerance: 0.6 },
+      municipalities: { type: 'geojson', data: municipalities, tolerance: 0.6, promoteId: 'codarea' },
     },
     layers: [
       { id: 'paper', type: 'background', paint: { 'background-color': PAPER } },
       { id: 'brasil', type: 'fill', source: 'states', paint: { 'fill-color': LAND } },
       { id: 'uf-fill', type: 'fill', source: 'states', paint: { 'fill-color': RATE_FILL, 'fill-opacity': 1 } },
+      { id: 'muni-pix', type: 'fill', source: 'municipalities', paint: { 'fill-color': PIX_FILL, 'fill-opacity': 0 } },
       { id: 'landuse', type: 'fill', source: 'omt', 'source-layer': 'landuse', minzoom: 11,
         filter: ['in', ['get', 'class'], ['literal', ['residential', 'commercial', 'retail']]],
         paint: { 'fill-color': '#eef1ee', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 13, 0.8] } },

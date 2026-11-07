@@ -4,5 +4,5 @@
 set -eu
 dest=../../web/public/data/territorio
 mkdir -p "$dest"
-for name in points.json places.json details.json meta.json municipalities.json; do cp "data/$name" "$dest/$name"; done
+for name in points.json places.json details.json meta.json municipalities.json pix-adocao.json; do cp "data/$name" "$dest/$name"; done
 shasum -a 256 "$dest"/*

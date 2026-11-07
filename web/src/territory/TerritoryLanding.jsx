@@ -10,7 +10,7 @@ import { makeCube, rate, percent, monthLabel as siteMonth } from '../atlas-data.
 import { loadAtlasAsset } from '../atlas-publication.js';
 import { BASE, json } from '../data.js';
 import { APP_NAVIGATION } from '../AppShell.jsx';
-import { baseStyle } from './map-style.js';
+import { baseStyle, PIX_STOPS } from './map-style.js';
 import { toView, fromView, interpolateZoom, clamp, smooth, lerp } from './flight.js';
 
 const ANALYSIS = BASE + '?view=institutions&bank=';
@@ -19,7 +19,7 @@ const territoryJSON = name => fetch(BASE + 'data/territorio/' + name).then(r => 
 const KIND_COLOR = { agencia: '#1f4e63', cooperativa: '#1d8a5c', posto: '#86aab0', ouro: '#a8740f' };
 const KIND_LABEL = { agencia: 'Agência', cooperativa: 'Posto de cooperativa', pab: 'Posto de atendimento bancário', paa: 'Posto avançado', cambio: 'Posto de câmbio', ouro: 'Posto de compra de ouro', outro_posto: 'Posto' };
 const PRECISION_LABEL = { numero: 'Endereço localizado pelo número', numero_aproximado: 'Endereço localizado por número próximo', logradouro: 'Endereço localizado pela rua', cep: 'Localização aproximada pelo CEP', localidade: 'Localização aproximada pelo bairro', municipio: 'Localização aproximada pelo município' };
-const LAYERS = ['pts-inst', 'pts-gold', 'pts-exact', 'pts-loose'];
+const LAYERS = ['pts-inst', 'pts-exact', 'pts-loose'];
 // Limites da malha de UFs usada pela cena do site; o mapa vetorial repete o mesmo enquadramento.
 const BR_BOUNDS = [[-73.9856, -33.7439], [-34.7932, 5.2673]];
 const PAD = { top: 24, bottom: 24, left: 22, right: 22 };
@@ -31,14 +31,16 @@ const pretty = s => String(s || '').toLocaleLowerCase('pt-BR').replace(/(^|[\s/(
 const kindGroup = k => k === 'agencia' ? 'agencia' : k === 'cooperativa' ? 'cooperativa' : k === 'ouro' ? 'ouro' : 'posto';
 const compactSegment = (text, kind) => kind === 'size' ? text : text === 'Sem rendimento' ? 'Sem renda' : text === 'Indisponível' ? 'N/D' : text.replace(/^Mais de /, '').replace(/ salários? mínimos?/, '').replace(/ a /, '–').replace('Acima de 20', '20+');
 
-// Passos: 0 inadimplência no mapa, 1 distribuição por renda, 2 agências e postos, 3 ouro em Peixoto de Azevedo.
+// Passos: 0 inadimplência no mapa, 1 distribuição por renda, 2 agências e postos, 3 adoção do Pix, 4 município com a maior razão.
 const LOOK = [
-  { scene: 1, choro: 1, base: 0, gold: 0 },
-  { scene: 1, choro: 1, base: 0, gold: 0 },
-  { scene: 0, choro: 0.35, base: 1, gold: 0 },
-  { scene: 0, choro: 0, base: 0.55, gold: 1 },
+  { scene: 1, choro: 1, base: 0, pix: 0 },
+  { scene: 1, choro: 1, base: 0, pix: 0 },
+  { scene: 0, choro: 0.35, base: 1, pix: 0 },
+  { scene: 0, choro: 0, base: 0, pix: 1 },
+  { scene: 0, choro: 0, base: 0.7, pix: 0.85 },
 ];
-const EXPLORE_LOOK = { scene: 0, choro: 0, base: 1, gold: 0 };
+const EXPLORE_LOOK = { scene: 0, choro: 0, base: 1, pix: 0 };
+const PIX_STEP = 3;
 const mix = (a, b, t) => Object.fromEntries(Object.keys(a).map(k => [k, lerp(a[k], b[k], t)]));
 
 function useLoad(load, onError) {
@@ -52,6 +54,8 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
   const meta = useLoad(() => territoryJSON('meta.json'), setFailure), pointData = useLoad(() => territoryJSON('points.json'), setFailure), places = useLoad(() => territoryJSON('places.json'), setFailure);
   const states = useLoad(() => json('data/bank-network-ufs.geojson'), setFailure), municipalities = useLoad(() => territoryJSON('municipalities.json'), setFailure);
   const pf = useLoad(() => loadAtlasAsset('atlas-pf.json').then(r => r.source), setFailure), pj = useLoad(() => loadAtlasAsset('atlas-pj.json').then(r => r.source), setFailure);
+  const pix = useLoad(() => territoryJSON('pix-adocao.json'), setFailure);
+  const [pixMonth, setPixMonth] = useState(null), [pixPlaying, setPixPlaying] = useState(false);
   const [details, setDetails] = useState(null), [menu, setMenu] = useState(false);
   const detailsRequested = useRef(false);
   const loadDetails = useCallback(() => { if (detailsRequested.current) return; detailsRequested.current = true; territoryJSON('details.json').then(setDetails).catch(() => { detailsRequested.current = false; }); }, []);
@@ -86,8 +90,22 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
     ds.ufs.forEach((s, i) => m.setFeatureState({ source: 'states', id: s.uf }, { rate: series[month]?.[i] ?? null }));
   }, [ready, ds, series, month]);
 
+  // Adoção do Pix no mapa municipal; o play percorre os meses de nov/2020 a out/2026.
+  const pixIndex = pix ? (pixMonth ?? pix.months.length - 1) : 0;
   useEffect(() => {
-    if (!meta || !rows || !states || !municipalities || !places || !cubes || !host.current || map.current) return;
+    const m = map.current; if (!ready || !pix) return;
+    for (const [code, values] of Object.entries(pix.municipalities)) m.setFeatureState({ source: 'municipalities', id: code }, { pix: values[pixIndex] });
+  }, [ready, pix, pixIndex]);
+  useEffect(() => {
+    if (!pixPlaying || !pix) return;
+    const last = pix.months.length - 1;
+    const timer = setInterval(() => setPixMonth(i => { const next = (i == null || i >= last ? 0 : i + 1); if (next >= last) setPixPlaying(false); return next; }), 170);
+    return () => clearInterval(timer);
+  }, [pixPlaying, pix]);
+  useEffect(() => { if (step !== PIX_STEP) setPixPlaying(false); }, [step]);
+
+  useEffect(() => {
+    if (!meta || !rows || !states || !municipalities || !places || !cubes || !pix || !host.current || map.current) return;
     const kindIdx = k => meta.kinds.indexOf(k);
     const features = rows.map(r => ({ type: 'Feature', id: r[7], geometry: { type: 'Point', coordinates: [r[0], r[1]] }, properties: { k: r[2], g: kindGroup(meta.kinds[r[2]]), i: r[3], p: r[4] } }));
     let m;
@@ -102,7 +120,6 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
       const radius = ['interpolate', ['linear'], ['zoom'], 3, 1.15, 6, 1.9, 9, 3, 12, 4.6, 16, 7];
       m.addLayer({ id: 'pts-loose', type: 'circle', source: 'pts', filter: ['>=', ['get', 'p'], 3], paint: { 'circle-color': color, 'circle-radius': radius, 'circle-opacity': 0 } });
       m.addLayer({ id: 'pts-exact', type: 'circle', source: 'pts', filter: ['<', ['get', 'p'], 3], paint: { 'circle-color': color, 'circle-radius': radius, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 8, 0, 11, 1], 'circle-opacity': 0, 'circle-stroke-opacity': 0 } });
-      m.addLayer({ id: 'pts-gold', type: 'circle', source: 'pts', filter: ['==', ['get', 'k'], kindIdx('ouro')], paint: { 'circle-color': KIND_COLOR.ouro, 'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 2.4, 10, 6, 15, 9], 'circle-stroke-color': '#3d2a05', 'circle-stroke-width': 1.1, 'circle-opacity': 0, 'circle-stroke-opacity': 0 } });
       m.addLayer({ id: 'pts-inst', type: 'circle', source: 'pts', filter: ['==', ['get', 'i'], -1], paint: { 'circle-color': KIND_COLOR.agencia, 'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 2, 8, 3.4, 12, 6, 16, 8.5], 'circle-stroke-color': '#ffffff', 'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 3, 0.3, 10, 1.2] } });
       m.addLayer({ id: 'pts-selected', type: 'circle', source: 'pts', filter: ['==', ['id'], -1], paint: { 'circle-color': 'rgba(0,0,0,0)', 'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 6, 14, 13], 'circle-stroke-color': '#0f2633', 'circle-stroke-width': 2.2 } });
       for (const id of LAYERS) { m.on('mouseenter', id, () => { if (chapterRef.current >= 2) m.getCanvas().style.cursor = 'pointer'; }); m.on('mouseleave', id, () => { m.getCanvas().style.cursor = ''; }); }
@@ -119,7 +136,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
     m.on('zoomstart', e => { if (e.originalEvent) takeControl(); });
     m.getCanvasContainer().addEventListener('wheel', () => takeControl(), { passive: true });
     return () => { cancelAnimationFrame(frame.current); m.remove(); map.current = null; };
-  }, [meta, rows, states, municipalities, places, cubes]);
+  }, [meta, rows, states, municipalities, places, cubes, pix]);
 
   // Câmeras das paradas no tamanho real do mapa. As três primeiras repetem o enquadramento da cena do site.
   const computeStops = useCallback(() => {
@@ -127,14 +144,15 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
     const c = m.cameraForBounds(BR_BOUNDS, { padding: PAD });
     const brasil = { center: [c.center.lng, c.center.lat], zoom: c.zoom };
     const w = m.getCanvas().clientWidth, h = m.getCanvas().clientHeight, span = Math.min(w, h * 1.25);
-    const gold = { center: meta.story.goldCenter || [-54.99, -10.24], zoom: 10.9 + Math.log2(span / 1000) };
-    stops.current = [brasil, brasil, brasil, gold];
-  }, [meta]);
+    const top = places && pix ? places.find(p => p.ibge === pix.facts.highest.ibge) : null;
+    const highest = { center: top ? (top.visit || [top.lon, top.lat]) : brasil.center, zoom: 7.3 + Math.log2(span / 1000) };
+    stops.current = [brasil, brasil, brasil, brasil, highest];
+  }, [meta, places, pix]);
 
   function applyLook(L) {
     const m = map.current; if (!m?.getLayer('pts-exact')) return;
     const base = instRef.current != null ? 0.12 : L.base;
-    const key = [L.scene, L.choro, base, L.gold].map(v => v.toFixed(3)).join();
+    const key = [L.scene, L.choro, base, L.pix].map(v => v.toFixed(3)).join();
     if (key === lastLook.current) return; lastLook.current = key;
     if (sceneLayer.current) { sceneLayer.current.style.opacity = L.scene; sceneLayer.current.style.visibility = L.scene > 0.01 ? 'visible' : 'hidden'; sceneLayer.current.style.pointerEvents = L.scene > 0.5 ? 'auto' : 'none'; }
     if (veil.current) veil.current.style.opacity = L.scene;
@@ -143,8 +161,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
     m.setPaintProperty('pts-exact', 'circle-opacity', base);
     m.setPaintProperty('pts-exact', 'circle-stroke-opacity', base);
     m.setPaintProperty('pts-loose', 'circle-opacity', ['interpolate', ['linear'], ['zoom'], 10.5, base, 12.5, base * 0.18]);
-    m.setPaintProperty('pts-gold', 'circle-opacity', Math.max(L.gold, base > 0.5 ? 1 : 0) * (1 - L.scene));
-    m.setPaintProperty('pts-gold', 'circle-stroke-opacity', L.gold);
+    m.setPaintProperty('muni-pix', 'fill-opacity', L.pix);
   }
 
   const measure = useCallback(() => {
@@ -280,7 +297,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
     if (r.type === 'unit') choosePoint(r.j, true);
   }
 
-  if (!meta || !rows || !places || !cubes || !states) return <main className="territory loading"><p role={failure ? 'alert' : 'status'}>{failure || 'Carregando…'}</p>{failure && <button onClick={() => location.reload()}>Recarregar</button>}</main>;
+  if (!meta || !rows || !places || !cubes || !states || !pix) return <main className="territory loading"><p role={failure ? 'alert' : 'status'}>{failure || 'Carregando…'}</p>{failure && <button onClick={() => location.reload()}>Recarregar</button>}</main>;
   const c = meta.counts, instInfo = inst != null ? meta.institutions[inst] : null;
   const selIdx = ufIndex(uf);
   const scope = segment < 0 ? (person === 'PF' ? 'Todas as rendas' : 'Todos os portes') : ds.segments[segment];
@@ -290,8 +307,11 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
   const muni = view?.muni ? placeByCode.get(view.muni) : null;
   const sel = selected != null ? rows[selected] : null, selD = selected != null && details ? details[selected] : null, selInst = sel ? meta.institutions[sel[3]] : null;
   const highlights = step === 1 && selIdx < 0 ? ['AM', 'SP'].map((s, i) => ({ index: ufIndex(s), color: i ? '#ec7000' : '#315f78' })) : [];
-  const gold = c.goldByMunicipality[0];
-  const sourceLine = step <= 1 ? 'BCB / SCR.data' : 'BCB / cadastro de agências e postos · IBGE / CNEFE 2022 · © OpenStreetMap';
+  const top = placeByCode.get(pix.facts.highest.ibge), pixLast = pix.months.length - 1;
+  const pixLabel = i => siteMonth(String(pix.months[i]).replace(/(\d{4})(\d{2})/, '$1-$2'));
+  const pixPct = v => v == null ? 'N/D' : nf(v / 10, 1).replace(',0', '') + '%';
+  const muniPix = muni ? pix.municipalities[muni.ibge] : null;
+  const sourceLine = step <= 1 ? 'BCB / SCR.data' : step <= 2 ? 'BCB / cadastro de agências e postos · IBGE / CNEFE 2022 · © OpenStreetMap' : 'BCB / Pix por município · IBGE / população 2025 · © OpenStreetMap';
   const setSegment = i => { setSegments(s => ({ ...s, [person]: i })); setMotion(true); };
   const segmentControl = <div className="atlas-segment-control">
     <label>{person === 'PF' ? 'Renda mensal' : 'Porte da empresa'}<span>{person === 'PF' ? 'salários mínimos' : ''}</span></label>
@@ -343,8 +363,17 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
             <p className="legend"><span><i style={{ background: KIND_COLOR.agencia }} />agências</span><span><i style={{ background: KIND_COLOR.cooperativa }} />cooperativas</span><span><i style={{ background: KIND_COLOR.posto }} />outros postos</span></p>
           </article>
           <article className="step" ref={el => stepRefs.current[3] = el}>
-            <h2>Ouro em {gold ? gold[0] : 'Mato Grosso'}</h2>
-            <p><b>{nf(gold?.[2])}</b> dos {nf(c.kinds.ouro)} postos de compra de ouro do país ficam aqui.</p>
+            <h2>Pix</h2>
+            <div className="atlas-reading small"><strong>{pixPct(pix.national[pixIndex])}</strong><span>{pixLabel(pixIndex)}</span></div>
+            <p>Pessoas que pagaram com Pix no mês, em proporção da população de cada município.</p>
+            <div className="time">
+              <button className="atlas-play" aria-label={pixPlaying ? 'Pausar' : 'Reproduzir desde ' + pixLabel(0)} onClick={() => { if (!pixPlaying && pixIndex >= pixLast) setPixMonth(0); setPixPlaying(v => !v); }}>{pixPlaying ? <svg viewBox="0 0 20 20"><path d="M7 5v10M13 5v10" /></svg> : <svg viewBox="0 0 20 20"><path d="M7 5l8 5-8 5z" /></svg>}</button>
+              <div className="atlas-rate-legend" aria-label="Escala de adoção do Pix">{PIX_STOPS.map(([min, color], i) => <span key={min}><i style={{ background: color }} />{min / 10}{i === PIX_STOPS.length - 1 ? '%+' : ''}</span>)}</div>
+            </div>
+          </article>
+          <article className="step" ref={el => stepRefs.current[4] = el}>
+            <h2>{top ? top.name : 'Fronteira'}</h2>
+            <p>{pix.facts.highest.ibge === '1400456' ? 'Na fronteira com a Venezuela, ' : ''}<b>{nf(pix.facts.highest.payers)}</b> pessoas pagaram com Pix em {pixLabel(pixLast)}. A população estimada é de {nf(pix.facts.highest.population)}.</p>
           </article>
         </section>
 
@@ -359,7 +388,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
             {selInst.analysisId && <a className="analyze" href={ANALYSIS + selInst.analysisId} onClick={e => openAnalysis(e, selInst.analysisId)}>Analisar {selInst.name}</a>}
           </div>}
           <div className="place"><h2>{muni ? muni.name : viewIdx >= 0 ? ds.ufs[viewIdx].name : 'Brasil'}</h2>{muni && <span>{muni.uf}</span>}</div>
-          {view && <p className="counts">{nf(view.counts.agencia)} agências · {nf(view.counts.postos)} postos</p>}
+          {view && <p className="counts">{nf(view.counts.agencia)} agências · {nf(view.counts.postos)} postos{muniPix ? ` · Pix: ${pixPct(muniPix[pixLast])} da população pagou em ${pixLabel(pixLast)}` : ''}</p>}
           {instInfo && <div className="inst-chip"><i style={{ background: instInfo.color || KIND_COLOR.agencia }} /><span>{instInfo.name}</span><button aria-label="Todas as instituições" onClick={clearInst}>×</button>{instInfo.analysisId && <a className="analyze" href={ANALYSIS + instInfo.analysisId} onClick={e => openAnalysis(e, instInfo.analysisId)}>Analisar</a>}</div>}
           {view?.topInst.length > 0 && !instInfo && <ol className="insts">{view.topInst.map(([i, n]) => { const x = meta.institutions[i]; return <li key={i}><button onClick={() => chooseInst(i)}>
             <span className="bar" style={{ width: (100 * n / view.topInst[0][1]) + '%', background: x.color || (x.segment === 'Cooperativa de Crédito' ? KIND_COLOR.cooperativa : KIND_COLOR.agencia) }} /><span className="name">{x.name}</span><span className="n">{nf(n)}</span></button></li>; })}</ol>}
@@ -384,6 +413,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
         {info && <aside className="atlas-data-info"><button aria-label="Fechar" onClick={() => setInfo(false)}>×</button>
           <p>Inadimplência: saldo com parcela vencida há mais de 90 dias / carteira ativa (SCR.data). UF de residência do tomador PF ou informada para o PJ; não há recorte municipal público.</p>
           <p>Agências e postos: cadastro BCB de 05/11/2026, geocodificado pelo CNEFE 2022 (geocodebr/Ipea). {nf(100 * ((c.precision.numero || 0) + (c.precision.numero_aproximado || 0) + (c.precision.logradouro || 0)) / c.located, 0)}% localizados pelo número ou pela rua; os demais, por CEP, bairro ou município, quase somem na escala de rua. Saldos por agência: ESTBAN jun/2026, onde a operação é contabilizada.</p>
+          <p>Pix: pessoas físicas pagadoras no mês (BCB, Pix por município) divididas pela população estimada de 2025 (IBGE) em todos os meses. O BCB não publica como atribui o município ao pagador; a razão pode passar de 100%. Mês corrente excluído por estar incompleto.</p>
           <p>Mapa de base <a href="https://openfreemap.org" target="_blank" rel="noreferrer">OpenFreeMap</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap</a> · malhas IBGE.</p>
         </aside>}
       </div>

@@ -76,6 +76,10 @@ Abra `http://127.0.0.1:8781/`. O geocodebr baixa o CNEFE na primeira execução;
 
 A landing do site (`?view=overview`) usa esta composição desde 07/11/2026: `web/src/territory/TerritoryLanding.jsx`, com `flight.js`, `map-style.js` e `territory.css`. Os dados ficam em `web/public/data/territorio/`, copiados por `pipeline/05_publish.sh`, e são lidos da publicação estática (não fazem parte das revisões compartilhadas). A série SCR vem de `loadAtlasAsset`, como na landing anterior, que continua em `?view=credito`.
 
+### Pix
+
+`pipeline/06_pix.py` gera `pix-adocao.json`: pessoas físicas pagadoras no mês (BCB, `QT_PES_PagadorPF`) divididas pela população estimada de 2025 (IBGE, tabela 6579), de nov/2020 a out/2026. O passo da landing anima essa razão por município e termina em Pacaraima (RR), onde 179.432 pessoas pagaram com Pix em out/2026 para uma população estimada de 23.112. O BCB não documenta como atribui o município; a interface descreve o dado sem explicar a causa. O passo do ouro saiu.
+
 ## Limites para publicação
 
 - O OpenFreeMap público serve bem a um estudo. Em produção, convém hospedar um PMTiles recortado para o Brasil no R2.

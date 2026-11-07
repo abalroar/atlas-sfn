@@ -11,3 +11,4 @@ curl -sfS -m 300 "https://www.bcb.gov.br/content/estatisticas/estatistica_bancar
 curl -sfS -m 600 "$O/Pix_DadosAbertos/versao/v1/odata/TransacoesPixPorMunicipio(DataBase=@DataBase)?@DataBase='202011'&\$format=json" -o raw/pix-municipios.json
 # Gabarito de coordenadas: raw/bb-open-finance.geojson vem do estudo anterior (764 agências BB com coordenadas do Open Finance).
 shasum -a 256 raw/*
+curl -sfS -m 120 "https://servicodados.ibge.gov.br/api/v3/agregados/6579/periodos/2025/variaveis/9324?localidades=N6%5Ball%5D" -o raw/ibge-populacao-2025.json
