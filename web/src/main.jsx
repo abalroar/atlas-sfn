@@ -12,13 +12,15 @@ import './style.css';
 const InstitutionPage=lazy(()=>import('./InstitutionPage.jsx'));
 const SeriesPages=lazy(()=>import('./SeriesPages.jsx'));
 const UpdatePage=lazy(()=>import('./UpdatePage.jsx'));
+const TerritoryLanding=lazy(()=>import('./territory/TerritoryLanding.jsx'));
 class SectionBoundary extends React.Component{
   state={error:false};
   static getDerivedStateFromError(){return {error:true};}
   render(){return this.state.error?<div className="tc-boot"><p>Não foi possível abrir esta seção.</p><button type="button" onClick={()=>location.reload()}>Recarregar</button></div>:this.props.children;}
 }
 
-const PAGES=new Set(['overview','institutions','sfn','imob','payments','update']);
+// overview: landing territorial; credito: landing anterior de crédito e agências, mantida por endereço direto.
+const PAGES=new Set(['overview','credito','institutions','sfn','imob','payments','update']);
 const route=()=>{const query=new URLSearchParams(location.search);return {page:PAGES.has(query.get('view'))?query.get('view'):'overview',bank:query.get('bank')};};
 function defaultBank(catalog,id){return catalog.institutions.find(bank=>bank.id===id)||catalog.institutions.find(bank=>bank.key==='ITAU PRUDENCIAL')||catalog.institutions[0];}
 
@@ -77,7 +79,8 @@ function App(){
   function updateHousing(charts,selectedUf){if(activeUf.current===(selectedUf||uf))setHousing({uf:selectedUf||uf,charts});}
 
   if(!manifest||!catalog)return <div className="tc-boot"><strong>Atlas SFN</strong><p role={error?'alert':'status'}>{error||'Carregando dados…'}</p>{error&&<button type="button" onClick={()=>setRetry(value=>value+1)}>Tentar novamente</button>}</div>;
-  if(page==='overview')return <SectionBoundary key="overview"><Landing catalog={catalog} sfn={sfn} onNavigate={navigate} onOpenInstitution={openInstitution}/></SectionBoundary>;
+  if(page==='overview')return <SectionBoundary key="overview"><Suspense fallback={<div className="tc-boot"><p role="status">Carregando o mapa…</p></div>}><TerritoryLanding catalog={catalog} onNavigate={navigate} onOpenInstitution={openInstitution}/></Suspense></SectionBoundary>;
+  if(page==='credito')return <SectionBoundary key="credito"><Landing catalog={catalog} sfn={sfn} onNavigate={navigate} onOpenInstitution={openInstitution}/></SectionBoundary>;
   const imob=housing.uf===uf?housing.charts:[];
   return <AppShell page={page} onNavigate={navigate}>
     {error&&<div className="tc-app-error" role="alert"><span>{error}</span><button type="button" onClick={()=>setError('')}>Fechar</button></div>}

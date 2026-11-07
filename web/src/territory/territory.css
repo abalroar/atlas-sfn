@@ -1,0 +1,104 @@
+/* Landing territorial. Usa os estilos da landing do site (atlas-landing.css) e só acrescenta o layout coluna + mapa. */
+
+.territory { --ink: #203f50; --muted: #496978; --line: #c2d2d5; --ice: #f3f6f4; --col: 340px; font-family: 'Hanken Grotesk Variable', 'Hanken Grotesk', Arial, sans-serif; color: var(--ink); background: var(--ice); font-synthesis: none; -webkit-font-smoothing: antialiased; }
+.territory .search svg, .territory .atlas-play svg, .territory .map-zoom svg, .territory .atlas-source svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+.territory { position: fixed; inset: 0; z-index: 1; display: flex; flex-direction: column; padding: 0 38px; min-height: 0; }
+.territory.loading { display: grid; place-items: center; color: var(--muted); }
+.territory .body { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--col) 1fr; gap: 28px; }
+
+/* Coluna */
+.territory .column { overflow-y: auto; scrollbar-width: none; overscroll-behavior: contain; position: relative; }
+.territory .column::-webkit-scrollbar { display: none; }
+.territory .column-head { position: sticky; top: 0; z-index: 5; background: var(--ice); padding: 16px 0 10px; }
+.territory .search { position: relative; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #829da9; }
+.territory .search svg { width: 17px; height: 17px; color: var(--muted); flex-shrink: 0; }
+.territory .search:focus-within { border-color: #ec7000; }
+.territory .search input { border: 0; background: none; outline: none; width: 100%; min-height: 34px; font-size: 15px; caret-color: #ec7000; }
+.territory .search input::placeholder { color: var(--muted); opacity: 1; }
+.territory .results { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #bdcfd4; max-height: 50vh; overflow: auto; z-index: 10; }
+.territory .results button { display: flex; flex-direction: column; align-items: start; width: 100%; padding: 11px 14px; gap: 3px; font-size: 14px; text-align: left; }
+.territory .results button[aria-selected="true"] { background: #e6eef0; }
+.territory .results small { font-size: 11px; color: var(--muted); }
+.territory .results p { margin: 0; padding: 14px; font-size: 13px; color: var(--muted); }
+
+.territory .story { padding-bottom: 8px; }
+.territory .step { min-height: 72vh; padding-top: 14px; }
+.territory .step:last-child { min-height: 64vh; }
+.territory .step h2 { font-size: 27px; font-weight: 550; letter-spacing: -.025em; line-height: 1.15; margin: 0 0 10px; }
+.territory .step p { font-size: 15px; line-height: 1.5; margin: 0 0 10px; max-width: 34ch; }
+.territory .step b { font-weight: 650; }
+.territory .step .atlas-person-switch { margin: 0 0 14px; }
+.territory .atlas-product h1 { margin-bottom: 4px; }
+.territory .atlas-reading { margin-top: 18px; }
+.territory .atlas-reading.small { margin: 4px 0 18px; }
+.territory .atlas-reading.small strong { font-size: 32px; }
+.territory .atlas-location button { font-size: 18px; line-height: 1; color: var(--muted); padding: 0 4px; }
+.territory .time { display: flex; align-items: center; gap: 18px; margin-top: 22px; }
+.territory .atlas-play svg { width: 16px; height: 16px; }
+.territory .atlas-play svg path { fill: currentColor; stroke-width: 1.2; }
+.territory .atlas-play[aria-label="Pausar"] svg path { fill: none; stroke-width: 2.2; }
+.territory .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; white-space: nowrap; font-size: 13px !important; color: var(--muted); }
+.territory .legend i, .territory .kicker i, .territory .inst-chip i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+
+/* Exploração */
+.territory .explore { min-height: 100%; padding: 16px 0 40px; border-top: 1px solid var(--line); }
+.territory .place { display: flex; align-items: baseline; gap: 8px; }
+.territory .place h2 { font-size: 27px; font-weight: 550; letter-spacing: -.025em; margin: 0; line-height: 1.15; }
+.territory .place span { font-size: 14px; color: var(--muted); }
+.territory .counts { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+.territory .insts { list-style: none; padding: 0; margin: 14px 0 0; }
+.territory .insts button { position: relative; display: flex; width: 100%; padding: 6px 0 9px; font-size: 14px; gap: 10px; text-align: left; }
+.territory .insts .bar { position: absolute; left: 0; bottom: 3px; height: 2px; }
+.territory .insts .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.territory .insts .n { color: var(--muted); }
+@media (hover: hover) { .territory .insts button:hover .name { text-decoration: underline; text-underline-offset: 3px; } }
+.territory .inst-chip { display: flex; align-items: center; gap: 6px; margin-top: 14px; font-weight: 650; font-size: 15px; }
+.territory .inst-chip button { font-size: 18px; color: var(--muted); padding: 0 4px; }
+.territory .inst-chip .analyze { margin: 0 0 0 auto; }
+.territory .credit-block { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line); }
+.territory .credit-block h3 { font-size: 15px; font-weight: 650; margin: 0 0 8px; }
+.territory .credit-block .atlas-person-switch { margin: 0 0 4px; }
+.territory .analyze { color: var(--ink); font-weight: 650; font-size: 14px; text-decoration: underline; text-decoration-color: #ec7000; text-underline-offset: 5px; text-decoration-thickness: 1.5px; }
+.territory .analyze:hover { color: #ec7000; }
+.territory .unit { position: relative; padding-bottom: 18px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
+.territory .unit .close { position: absolute; right: -4px; top: -6px; font-size: 22px; color: var(--muted); padding: 2px 6px; }
+.territory .kicker { margin: 0; font-size: 12px; color: var(--muted); padding-right: 24px; }
+.territory .unit h2 { font-size: 22px; font-weight: 550; letter-spacing: -.02em; margin: 6px 0 0; line-height: 1.2; }
+.territory .address { font-size: 14px; line-height: 1.45; margin: 8px 0 0; }
+.territory .balances { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 0; }
+.territory .balances dt { font-size: 11px; color: var(--muted); }
+.territory .balances dd { margin: 2px 0 0; font-size: 19px; font-weight: 550; font-variant-numeric: tabular-nums; }
+.territory .note { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+.territory .unit .analyze { display: inline-block; margin-top: 14px; }
+
+/* Palco: mapa vetorial, véu da cena do site e a cena SVG por cima */
+.territory .stage { position: relative; min-height: 0; margin-bottom: 0; }
+.territory .map { position: absolute; inset: 0 0 44px 0; }
+.territory .veil { position: absolute; inset: 0 0 44px 0; background: var(--ice); pointer-events: none; }
+.territory .scene-layer { position: absolute; inset: 0 0 44px 0; }
+.territory .scene-layer > .atlas-scene { position: absolute; inset: 0; width: 100%; height: 100%; }
+.territory .scene-layer .atlas-scene-camera { display: none; }
+.territory .stage .map-zoom { position: absolute; right: 10px; bottom: 56px; display: flex; gap: 7px; z-index: 3; }
+.territory .search input:focus-visible { outline: none; }
+.territory .stage > .atlas-source { position: absolute; left: 0; right: 0; bottom: 0; height: 44px; padding: 0; border-top: 1px solid var(--line); }
+.territory .stage > .atlas-source svg { width: 15px; height: 15px; }
+.territory .stage > .atlas-data-info { bottom: 50px; }
+.territory .stage > .atlas-data-info > button { font-size: 20px; line-height: 1; }
+
+@media (max-width: 1050px) { .territory { padding: 0 28px; --col: 300px; } }
+@media (max-width: 760px) {
+  .territory { padding: 0 18px; }
+  .territory .body { grid-template-columns: 1fr; grid-template-rows: 52% 1fr; gap: 0; }
+  .territory .stage { grid-row: 1; }
+  .territory .column { grid-row: 2; border-top: 1px solid var(--line); }
+  .territory .step { min-height: 46vh; }
+  .territory .column .atlas-reading { flex-direction: row; align-items: baseline; margin-top: 10px; }
+  .territory .column .atlas-reading strong { font-size: 30px; }
+  .territory .step h2, .territory .place h2 { font-size: 22px; }
+  .territory .map, .territory .veil, .territory .scene-layer { bottom: 34px; }
+  .territory .stage > .atlas-source { height: 34px; }
+}
+
+.territory .atlas-menu svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.territory.loading button { margin-top: 12px; text-decoration: underline; }

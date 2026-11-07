@@ -72,6 +72,10 @@ npm run preview
 
 Abra `http://127.0.0.1:8781/`. O geocodebr baixa o CNEFE na primeira execução; a geocodificação completa levou cerca de 7 minutos.
 
+## Publicação
+
+A landing do site (`?view=overview`) usa esta composição desde 07/11/2026: `web/src/territory/TerritoryLanding.jsx`, com `flight.js`, `map-style.js` e `territory.css`. Os dados ficam em `web/public/data/territorio/`, copiados por `pipeline/05_publish.sh`, e são lidos da publicação estática (não fazem parte das revisões compartilhadas). A série SCR vem de `loadAtlasAsset`, como na landing anterior, que continua em `?view=credito`.
+
 ## Limites para publicação
 
 - O OpenFreeMap público serve bem a um estudo. Em produção, convém hospedar um PMTiles recortado para o Brasil no R2.

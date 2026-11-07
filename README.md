@@ -76,7 +76,7 @@ npm run preview
 
 Abra `http://127.0.0.1:8779/`. São 764 coordenadas de agências BB, uma amostra parcial de 19,5% da rede cadastrada do banco. Os dados brutos, recibos e conferência geográfica acompanham o estudo. Esse mapa não representa a densidade nacional completa.
 
-`experiments/atlas-explorer/` reúne as 35.862 agências e postos do cadastro BCB, geocodificados pelo CNEFE 2022, com saldos ESTBAN por agência, Pix por município e a câmera conduzida pela rolagem. Veja `experiments/atlas-explorer/EXPERIMENT.md`.
+A landing publicada é a composição territorial (`web/src/territory/`), com dados em `web/public/data/territorio/`; a landing anterior de crédito e agências continua em `?view=credito`. `experiments/atlas-explorer/` reúne as 35.862 agências e postos do cadastro BCB, geocodificados pelo CNEFE 2022, com saldos ESTBAN por agência, Pix por município e a câmera conduzida pela rolagem. Veja `experiments/atlas-explorer/EXPERIMENT.md`.
 
 ## Organização
 
