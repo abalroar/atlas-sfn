@@ -5,6 +5,8 @@ import InstitutionSearch from './InstitutionSearch.jsx';
 import Chart,{ExportMenu} from './Chart.jsx';
 import Statements from './Statements.jsx';
 import {tabNavigation} from './tab-navigation.js';
+import {institutionDeckCharts,institutionSnapshotCharts,rankingExportCharts} from './institution-export-data.js';
+import {positionRulers} from './institution-profile.js';
 import {ANALYSIS_GROUPS,metricLabel,metricNote,metricUnit,metricNumber,quarterLabel,validateInstitutionHistory,observationAt,previousObservation,institutionChart,institutionExportCharts,comparisonChart,institutionRanking,trimChartStart,capitalCompositionChart} from './institution-data.js';
 import './institutions.css';
 
@@ -39,10 +41,29 @@ function Analysis({bank,payload,metrics,period,window}){
   })}</div>;
 }
 
+function PositionRulers({rows,bank,period}){
+  if(!rows.length)return null;
+  return <section className="institution-rulers" aria-labelledby="institution-rulers-title">
+    <div className="institution-section-title"><h2 id="institution-rulers-title">Posição no perímetro {bank.perimeter}</h2><span>{rows[0].periodLabel}{period!==rows[0].period?' · última competência publicada':''}</span></div>
+    <ol>{rows.map(row=><li key={row.key}>
+      <div className="institution-ruler-head"><span>{row.label}<small>{row.unit}</small></span><strong>{row.valueText}</strong></div>
+      <div className="institution-ruler-track" role="img" aria-label={`${row.label}: ${row.valueText}. ${row.rank?row.rank+'ª de '+row.count:'Sem dado'} no perímetro.`}>
+        <svg viewBox="0 0 300 22" preserveAspectRatio="none" aria-hidden="true">
+          <line x1="0" x2="300" y1="11" y2="11" className="institution-ruler-axis"/>
+          {row.positions.map((position,index)=><line key={index} x1={position*300} x2={position*300} y1="5" y2="17" className="institution-ruler-tick"/>)}
+        </svg>
+        {row.position!=null&&<span className="institution-ruler-own" style={{left:`${row.position*100}%`}}/>}
+      </div>
+      <div className="institution-ruler-foot"><span>{row.minText}</span><span>{row.rank?`${row.rank}ª de ${row.count} · mediana ${row.medianText}`:'Sem dado nesta competência'}</span><span>{row.maxText}</span></div>
+    </li>)}</ol>
+    <p className="institution-footnote">Cada traço é uma instituição do perímetro com dado na competência; a posição segue a ordem decrescente do valor. Ativo e carteira em escala logarítmica, com zero na ponta esquerda; índices entre os percentis 2 e 98, com os extremos nas pontas.</p>
+  </section>;
+}
+
 function Source({catalog,bank,period,tab,peers=[]}){
   return <details className="institution-source"><summary>Fonte: BCB / IFData</summary>
     <p>{tab==='ranking'?'Perímetro '+bank.perimeter:tab==='compare'?peers.map(entry=>entry.name).join('; ')+' · '+bank.perimeter:bank.name+' · '+bank.perimeter} · {quarterLabel(tab==='ranking'?catalog.latestPeriod:period,true)}.</p>
-    <p>Valores monetários dos gráficos em R$ bilhões; percentuais na escala publicada. N/D indica ausência. Dados mostra os valores nas unidades originais. Conceitos e mudanças de metodologia acompanham os gráficos.</p>
+    <p>Gráficos em R$ bilhões e %. Dados conserva as unidades originais. N/D indica ausência. As notas de cada indicador registram conceitos e mudanças de metodologia.</p>
     <p>Publicação {catalog.source.publicationId}. <a href={catalog.source.url} target="_blank" rel="noreferrer">Consultar IFData no Banco Central</a>.</p>
   </details>;
 }
@@ -85,7 +106,7 @@ function Data({catalog,payload,period}){
 }
 
 export default function InstitutionPage({catalog,bankId,onSelect,onStatementSelect,statementIndex,onRetryStatements}){
-  const initial=useRef(parseContext()),[tab,setTab]=useState(initial.current.tab),[asOf,setAsOf]=useState(initial.current.period),[window,setWindow]=useState(initial.current.window),[payload,setPayload]=useState(null),[error,setError]=useState(''),[retry,setRetry]=useState(0),[metric,setMetric]=useState('roe'),[peerIds,setPeerIds]=useState([bankId]),[peerHistories,setPeerHistories]=useState([]),[peerError,setPeerError]=useState(''),[peerLoading,setPeerLoading]=useState(false),[exportHost,setExportHost]=useState(null);
+  const initial=useRef(parseContext()),[tab,setTab]=useState(initial.current.tab),[asOf,setAsOf]=useState(initial.current.period),[window,setWindow]=useState(initial.current.window),[payload,setPayload]=useState(null),[error,setError]=useState(''),[retry,setRetry]=useState(0),[metric,setMetric]=useState('roe'),[peerIds,setPeerIds]=useState([bankId]),[peerHistories,setPeerHistories]=useState([]),[peerError,setPeerError]=useState(''),[peerLoading,setPeerLoading]=useState(false);
   const previousBank=useRef(bankId),cache=useRef(new Map()),tabPrefix=useId(),bank=catalog.institutions.find(entry=>entry.id===bankId)||catalog.institutions[0],period=asOf||bank.latestPeriod;
   const peers=useMemo(()=>peerIds.map(id=>catalog.institutions.find(entry=>entry.id===id)).filter(entry=>entry&&entry.perimeter===bank.perimeter),[catalog,peerIds,bank.perimeter]);
   const perimeters=useMemo(()=>[...new Set(catalog.institutions.map(entry=>entry.perimeter))],[catalog]);
@@ -110,31 +131,33 @@ export default function InstitutionPage({catalog,bankId,onSelect,onStatementSele
   useEffect(()=>{const back=()=>{const context=parseContext();setTab(context.tab);setAsOf(context.period);setWindow(context.window);};globalThis.addEventListener('popstate',back);return()=>globalThis.removeEventListener('popstate',back);},[]);
 
   const ready=payload?.id===bank.id&&payload?.perimeter===bank.perimeter;
-  const exportCharts=useMemo(()=>ready?institutionExportCharts({bank,payload,metrics:catalog.metrics,period,window}):[],[ready,bank,payload,catalog.metrics,period,window]);
+  const exportCharts=useMemo(()=>ready?institutionDeckCharts(institutionExportCharts({bank,payload,metrics:catalog.metrics,period,window})):[],[ready,bank,payload,catalog.metrics,period,window]);
+  const snapshotCharts=useMemo(()=>ready?institutionSnapshotCharts({bank,payload,metrics:catalog.metrics,period}):[],[ready,bank,payload,catalog.metrics,period]);
+  const rulers=useMemo(()=>positionRulers(catalog,bank),[catalog,bank]);
   const compare=useMemo(()=>comparisonChart({banks:peers,histories:peerHistories,metrics:catalog.metrics,key:metric,period,window,perimeter:bank.perimeter}),[peers,peerHistories,catalog.metrics,metric,period,window,bank.perimeter]);
   function choose(entry){onSelect(entry);setTab('analysis');setAsOf(entry.latestPeriod);setPeerIds([entry.id]);}
   const statementContext=useCallback(context=>{
     if(context?.analysisBank&&context.analysisBank.id!==bank.id)onStatementSelect?.(context.analysisBank,context,context.periods);
   },[bank.id,onStatementSelect]);
   function changePerimeter(value){const next=catalog.institutions.filter(entry=>entry.perimeter===value).slice().sort((a,b)=>(b.latest.assets??-Infinity)-(a.latest.assets??-Infinity))[0];if(next)choose(next);}
-  function exportRanking(){const rows=catalog.institutions.filter(entry=>entry.perimeter===bank.perimeter&&entry.latestPeriod===catalog.latestPeriod).map(entry=>({title:entry.name,unit:catalog.metrics[metric].unit,source:'BCB / IFData · '+entry.perimeter,series:[{name:catalog.metrics[metric].label,data:[[entry.latestPeriod,entry.latest[metric]]]}]}));csvDownload(rows,'Ranking_'+metric+'_'+catalog.latestPeriod);}
+  function exportRanking(){csvDownload(rankingExportCharts(catalog,bank.perimeter,metric),'Atlas_Ranking_'+metric+'_'+catalog.latestPeriod);}
   const statementActive=tab==='statements',title=groupName(bank);
   return <div className="institution-page">
-    <header className="institution-header tc-page-header">
+    <header className={'institution-header tc-page-header'+(statementActive?' is-statements':'')}>
       <div className="institution-identity"><div><h1>{title}</h1>{statementActive&&<p>Demonstrações contábeis</p>}</div><InstitutionSearch catalog={catalog} suggested={suggested} onSelect={choose} placeholder="Trocar instituição" label="Trocar instituição"/></div>
-      <div className="institution-toolbar">
+      {!statementActive&&<div className="institution-toolbar">
         {!statementActive&&<div className="institution-filters"><label>Perímetro <select value={bank.perimeter} onChange={event=>changePerimeter(event.target.value)}>{perimeters.map(value=><option key={value} value={value}>{value==='Prudencial'?value:'Financeiro / independente'}</option>)}</select></label>
           {tab!=='ranking'&&<label>Competência <select aria-label="Competência" value={period} disabled={!ready} onChange={event=>setAsOf(event.target.value)}>{(ready?payload.history:[{period:bank.latestPeriod}]).slice().reverse().map(row=><option key={row.period} value={row.period}>{quarterLabel(row.period,true)}</option>)}</select></label>}
           {['analysis','compare'].includes(tab)&&<label>Histórico <select aria-label="Janela histórica" value={window} onChange={event=>setWindow(event.target.value)}><option value="12">3 anos</option><option value="all">Completo</option></select></label>}
         </div>}
-        {tab==='ranking'?<details className="institution-export"><summary>Exportar</summary><div><button type="button" onClick={exportRanking}>Ranking · CSV</button></div></details>:!statementActive&&<ExportMenu charts={tab==='compare'?[compare]:exportCharts} title={tab==='compare'?'Comparação de instituições · '+bank.perimeter:bank.name} disabled={!ready||(tab==='compare'&&(peerLoading||!!peerError||!peers.length))} onError={setError}/>}
-        <div className="institution-export-host" ref={setExportHost}/>
-      </div>
+        {tab==='ranking'?<details className="tc-export-menu"><summary>Exportar</summary><div className="tc-export-options"><strong>{metricLabel(metric,catalog.metrics)} · {bank.perimeter}</strong><button type="button" onClick={exportRanking}>Ranking completo · CSV</button><p>Valores nas unidades originais. {quarterLabel(catalog.latestPeriod,true)}.</p></div></details>:<ExportMenu charts={tab==='compare'?[compare]:tab==='data'?snapshotCharts:exportCharts} title={tab==='compare'?'Comparação · '+bank.perimeter:tab==='data'?`Dados · ${title} · ${bank.perimeter} · ${quarterLabel(period,true)}`:`${title} · ${bank.perimeter}`} deck={tab==='analysis'?{profile:{title,perimeter:bank.perimeter,rows:rulers}}:{}} disabled={!ready||(tab==='compare'&&(peerLoading||!!peerError||!peers.length))} onError={setError}/>}
+      </div>}
       <div className="institution-tabs" role="tablist" aria-label="Análise da instituição">{TABS.map(([id,label])=><button type="button" id={`${tabPrefix}-${id}`} key={id} role="tab" aria-selected={tab===id} tabIndex={tab===id?0:-1} aria-controls={`${tabPrefix}-panel`} onKeyDown={tabNavigation} onClick={()=>{setTab(id);setError('');}}>{label}</button>)}</div>
     </header>
     <div className="tc-page-content institution-content" role="tabpanel" id={`${tabPrefix}-panel`} aria-labelledby={`${tabPrefix}-${tab}`}>
-      {statementActive?<Statements index={statementIndex} {...{catalog,bank,exportHost}} onContextChange={statementContext} onRetryIndex={onRetryStatements}/>:<>
+      {statementActive?<Statements index={statementIndex} {...{catalog,bank}} onContextChange={statementContext} onRetryIndex={onRetryStatements}/>:<>
         {error&&ready&&<p className="institution-inline-error" role="alert">{error}</p>}
+        {tab==='analysis'&&ready&&<PositionRulers rows={rulers} bank={bank} period={period}/>}
         {tab==='analysis'&&(ready?<Analysis {...{bank,payload,period,window}} metrics={catalog.metrics}/>:<HistoryMessage error={error} onRetry={()=>setRetry(value=>value+1)}/>)}
         {tab==='compare'&&<Comparison {...{catalog,metric,setMetric,period,window}} banks={peers} histories={peerHistories} perimeter={bank.perimeter} onAdd={entry=>setPeerIds(ids=>ids.length<4&&!ids.includes(entry.id)?[...ids,entry.id]:ids)} onRemove={id=>setPeerIds(ids=>ids.filter(value=>value!==id))} loading={peerLoading} error={peerError}/>}
         {tab==='ranking'&&<Ranking {...{catalog,bank,metric,setMetric}} onSelect={choose}/>}

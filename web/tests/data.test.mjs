@@ -154,9 +154,11 @@ test('partialexportsreportcoverageincoverfilenameandmissingsectionannex',async()
  const {presentation,coverage,fileName}=buildPptx([present,absent],'Mercado Imobiliário',PptxGenJS);
  assert.equal(coverage.total,2);assert.equal(coverage.ready.length,1);assert.equal(coverage.complete,false);assert.deepEqual(coverage.missing,[absent]);assert.match(fileName,/Parcial/);
  const zip=await JSZip.loadAsync(await presentation.write({outputType:'nodebuffer'}));
- const cover=await zip.file('ppt/slides/slide1.xml').async('string');const panel=await zip.file('ppt/slides/slide2.xml').async('string');const annex=await zip.file('ppt/slides/slide3.xml').async('string');
+ const slides=await Promise.all(zip.file(/^ppt\/slides\/slide\d+\.xml$/).sort((a,b)=>Number(a.name.match(/\d+/)[0])-Number(b.name.match(/\d+/)[0])).map(entry=>entry.async('string')));
+ const cover=slides[0],panel=slides.find(xml=>/<c:chart\b|graphicFrame/.test(xml)),annex=slides.at(-1);
  assert.match(cover,/Exportação parcial/);assert.match(cover,/1 de 2 gráficos/);assert.match(panel,/Valor contratado · Contratação · PF/);
- assert.match(annex,/Estoque · PF · Risco da operação/);assert.equal(chartTitleForPptx(present),'Valor contratado · Contratação · PF');
+ assert.match(annex,/Cobertura da exportação parcial/);assert.match(annex,/Estoque · PF · Risco da operação/);assert.equal(chartTitleForPptx(present),'Valor contratado · Contratação · PF');
+ assert.equal(chartTitleForPptx({...present,title:'Valor contratado · PF'}),'Valor contratado · Contratação · PF');
 });
 
 test('emptyexportsabortandzeroisavalidobservation',()=>{

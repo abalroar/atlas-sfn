@@ -1,7 +1,7 @@
 import React,{useEffect,useId,useMemo,useRef,useState} from 'react';
-import {createPortal} from 'react-dom';
 import {ChevronDown} from 'lucide-react';
 import {download,json} from './data.js';
+import {brandOfficeBlob} from './export.js';
 import {groupName,searchInstitutions} from './landing-data.js';
 import InstitutionSearch from './InstitutionSearch.jsx';
 import {tabNavigation} from './tab-navigation.js';
@@ -36,12 +36,12 @@ function StatementExport({entity,periods,packet,disabled,onStatus,onError}){
   async function run(format){
     if(disabled||busy||!entity)return;const selectedKey=key,abort=new AbortController();controller.current=abort;setBusy(true);setStatus('Preparando arquivo…');
     const progress=message=>{if(!abort.signal.aborted&&context.current===selectedKey){setStatus(message);onStatus?.(message);}};
-    try{const blob=await exportStatement(entity,periods,format,progress,{signal:abort.signal});if(abort.signal.aborted||context.current!==selectedKey)return;download(blob,statementFileName(packet,entity,periods,format));setStatus(format==='xlsx'?'Excel preparado.':'PowerPoint preparado.');}
+    try{const original=await exportStatement(entity,periods,format,progress,{signal:abort.signal});if(abort.signal.aborted||context.current!==selectedKey)return;const blob=await brandOfficeBlob(original);if(abort.signal.aborted||context.current!==selectedKey)return;download(blob,statementFileName(packet,entity,periods,format));setStatus(format==='xlsx'?'Excel preparado.':'PowerPoint preparado.');}
     catch(error){if(error.name!=='AbortError'&&context.current===selectedKey){setStatus(error.message);onError?.(error.message);}}
     finally{if(context.current===selectedKey)setBusy(false);}
   }
   return <details ref={node} className="tc-export-menu"><summary>Exportar</summary><div className="tc-export-options"><strong>{entity?groupName(entity):'Demonstrações'}</strong>{entity&&<p>{SCOPE_LABELS[entity.scope]} · {periods.map(period=>statementPeriodLabel(period)).join(', ')}</p>}
-    <button type="button" disabled={disabled||busy||!entity} onClick={()=>run('xlsx')}>Excel da análise</button><button type="button" disabled={disabled||busy||!entity} onClick={()=>run('pptx')}>{periods.length>3?'PPTX · últimas 3 competências':'PPTX da análise'}</button>
+    <button type="button" disabled={disabled||busy||!entity} onClick={()=>run('xlsx')}>Excel</button><button type="button" disabled={disabled||busy||!entity} onClick={()=>run('pptx')}>{periods.length>3?'PowerPoint · últimas 3 competências':'PowerPoint'}</button>
     {status&&<p role="status" aria-live="polite">{status}</p>}
   </div></details>;
 }
@@ -55,7 +55,7 @@ function StatementTable({table,periods,detail,shares}){
   </table>;
 }
 
-export default function Statements({index,catalog,bank,exportHost,onContextChange,onRetryIndex}){
+export default function Statements({index,catalog,bank,onContextChange,onRetryIndex}){
   const [crosswalk,setCrosswalk]=useState(null),[crosswalkReady,setCrosswalkReady]=useState(false),[entityId,setEntityId]=useState(''),[scope,setScope]=useState('prudential'),[periods,setPeriods]=useState([]),[periodNotice,setPeriodNotice]=useState(''),[tableName,setTableName]=useState('Balanço'),[packet,setPacket]=useState(null),[loading,setLoading]=useState(false),[status,setStatus]=useState(''),[error,setError]=useState(''),[retry,setRetry]=useState(0),[detail,setDetail]=useState(false),[shares,setShares]=useState(false),[page,setPage]=useState(0);
   const defaults=useRef(selectedFromUrl()),boundBank=useRef(''),remembered=useRef({}),snapshotCache=useRef(new Map()),small=useSmallTable(),id=useId();
   const entity=index?.institutions.find(entry=>entry.id===entityId)||null;
@@ -106,8 +106,7 @@ export default function Statements({index,catalog,bank,exportHost,onContextChang
 
   const exportMenu=<StatementExport {...{entity,periods}} packet={ready?packet:null} disabled={!ready||loading} onError={setError}/>;
   return <section className="statements-page" aria-labelledby={`${id}-heading`}>
-    {exportHost?createPortal(exportMenu,exportHost):<div className="statements-local-export">{exportMenu}</div>}
-    <div className="statements-toolbar"><div className="statements-tabs" role="tablist" aria-label="Demonstração">{TABLES.map((name,index)=><button type="button" role="tab" id={`${id}-tab-${index}`} key={name} aria-selected={name===tableName} tabIndex={name===tableName?0:-1} aria-controls={`${id}-table`} onKeyDown={tabNavigation} onClick={()=>setTableName(name)}>{name}</button>)}</div><label>Perímetro <select value={scope} onChange={event=>changeScope(event.target.value)}><option value="prudential">Prudencial</option><option value="individual">Individual</option></select></label></div>
+    <div className="statements-toolbar"><div className="statements-tabs" role="tablist" aria-label="Demonstração">{TABLES.map((name,index)=><button type="button" role="tab" id={`${id}-tab-${index}`} key={name} aria-selected={name===tableName} tabIndex={name===tableName?0:-1} aria-controls={`${id}-table`} onKeyDown={tabNavigation} onClick={()=>setTableName(name)}>{name}</button>)}</div><label>Perímetro <select value={scope} onChange={event=>changeScope(event.target.value)}><option value="prudential">Prudencial</option><option value="individual">Individual</option></select></label>{exportMenu}</div>
     <div className="statements-selection"><InstitutionSearch catalog={searchable} suggested={suggested} onSelect={select} placeholder={scope==='individual'?'Buscar pessoa jurídica ou CNPJ-base':'Buscar conglomerado ou código'} label="Selecionar instituição das demonstrações"/>{entity&&<PeriodPicker {...{entity,periods}} onChange={selected=>{setPeriodNotice('');setPeriods(selected);}}/>}</div>
     {!entity?<p className="institution-empty">{!crosswalkReady?'Identificando a instituição…':scope==='individual'?'Escolha a pessoa jurídica no perímetro individual.':'Selecione um conglomerado para consultar Balanço e DRE.'}</p>:<>
       <div className="statements-identity"><div><strong>{entity.name}</strong><p>{scope==='individual'?`CNPJ-base ${entity.code} · COSIF 4010`:`Conglomerado ${entity.code} · COSIF 4060 / 4066`}</p></div><span>R$ milhões · índices em %</span></div>

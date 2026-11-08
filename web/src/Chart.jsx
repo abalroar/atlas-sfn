@@ -4,86 +4,249 @@ import {axisUnits, chartOption, csvDownload, dateLabel, number, periodOf, series
 import {exportPptx} from './export.js';
 import {chartLabel, chartTick, chartValue, showInnerLabel} from './chart-format.js';
 import {WEB_CHART_COLORS} from './chart-palette.js';
+import {displayScale, quantity, readable, recessionsIn, seriesColors} from './editorial.js';
+import {bandCategories, dateCategories, dumbbellRows, ufTiles} from './chart-views.js';
+import SmallMultiples from './SmallMultiples.jsx';
 
 export {WEB_CHART_COLORS};
 export const plainText = value => String(value ?? '').replace(/<[^>]*>/g, '').replaceAll('&amp;', '&');
+const FONT = 'Hanken Grotesk Variable, Hanken Grotesk, Arial, sans-serif';
+const INK = '#213e50', MUTED = '#506a76', RULE = '#e0e8eb';
+const finite = value => typeof value === 'number' && Number.isFinite(value);
+const isLevelUnit = unit => !/%|Δ|variação|meses|p\.p\./i.test(unit || '');
 
-export default function Chart({chart, height = 280, colors, compact = false, showLegend = true, valueLabels}) {
+/** Unidade como aparece no gráfico: a escala de exibição troca só o rótulo. */
+export function shownUnits(chart) {
+  return axisUnits(chart).map((unit, axis) => displayScale(unit, chart.series.filter(series => seriesAxis(chart, series) === axis).flatMap(series => series.data.map(point => point[1]))).unit);
+}
+const unitCaption = chart => chart.view === 'matrix' ? `% do total de transações do produto · ${chart.matrix.label}` : chart.view === 'dumbbell' ? `${shownUnits(chart)[0]} · ${dumbbellRows(chart).label} contra 12 meses antes` : [...new Set(shownUnits(chart))].join(' / ');
+
+export default function Chart(props) {
+  const {chart} = props;
+  if (chart.view === 'matrix') return <ChannelMatrix chart={chart}/>;
+  if (chart.view === 'tiles' && !props.compact) return <UfTiles chart={chart}/>;
+  if (chart.smallMultiples) return <SmallMultiples chart={chart}/>;
+  return <StandardChart {...props}/>;
+}
+
+/* ---------- Opções ECharts ---------- */
+
+function axisLabel(chart, axis) {
+  const values = chart.series.filter(series => seriesAxis(chart, series) === axis).flatMap(series => series.data.map(point => point[1]));
+  const scale = displayScale(axisUnits(chart)[axis], values);
+  return {scale, formatter: value => chartTick(value / scale.factor)};
+}
+
+function standardOption(chart, {colors, compact, showLegend, width}) {
+  const option = chartOption(chart);
+  option.color = colors;
+  option.textStyle = {...option.textStyle, color: INK, fontSize: 11};
+  option.legend = {...option.legend, show: showLegend, pageIconColor: INK, pageIconInactiveColor: '#b8c4c6', pageIconSize: 10, pageTextStyle: {color: MUTED, fontSize: 11}, textStyle: {...option.legend.textStyle, color: MUTED, fontFamily: FONT}};
+  option.tooltip = {...option.tooltip, backgroundColor: '#fff', borderColor: '#bdced3', textStyle: {color: INK, fontFamily: FONT, fontSize: 12}};
+  option.xAxis = {...option.xAxis, axisLabel: {...option.xAxis.axisLabel, color: MUTED, fontSize: 11, showMinLabel: true, showMaxLabel: true}, axisLine: {lineStyle: {color: '#ccdadd'}}};
+  const shown = shownUnits(chart);
+  option.yAxis = option.yAxis.map((axis, index) => {
+    const values = chart.series.filter(series => seriesAxis(chart, series) === index).flatMap(series => series.data.map(point => point[1])).filter(finite);
+    const bars = chart.series.some(series => series.type === 'bar' && seriesAxis(chart, series) === index);
+    // Volumes começam no zero; taxas e variações seguem a escala dos dados.
+    const zeroBase = bars || (isLevelUnit(axisUnits(chart)[index]) && values.length && values.every(value => value >= 0));
+    const {formatter} = axisLabel(chart, index);
+    return {...axis, name: shown[index], scale: zeroBase ? false : axis.scale, nameTextStyle: {...axis.nameTextStyle, color: MUTED}, axisLabel: {...axis.axisLabel, color: MUTED, fontSize: 11, formatter}, splitLine: {...axis.splitLine, lineStyle: {color: RULE}}};
+  });
+  option.series = option.series.map((series, index) => ({...series, itemStyle: {color: colors[index % colors.length]}, label: {...series.label, show: false},
+    tooltip: {...series.tooltip, valueFormatter: value => quantity(value, seriesUnit(chart, chart.series[index]))},
+    ...(series.type === 'line' ? {lineStyle: {...series.lineStyle, width: index === 0 || chart.series.length < 4 ? 2.6 : 2, color: colors[index % colors.length], type: chart.series[index].name === 'CDI' ? 'dashed' : 'solid'}} : {})}));
+  // Rótulo direto no fim da linha quando há poucas séries e espaço.
+  const dates = dateCategories(chart), lines = chart.series.every(series => (series.type || 'line') === 'line');
+  const names = chart.series.map(series => series.name);
+  if (!compact && lines && dates.length && axisUnits(chart).length === 1 && chart.series.length > 1 && chart.series.length <= 5 && width >= 520 && Math.max(...names.map(name => name.length)) <= 26) {
+    option.legend = {...option.legend, show: false};
+    option.grid = {...option.grid, bottom: 32, right: Math.min(190, 18 + 6.4 * Math.max(...names.map(name => name.length)))};
+    option.series = option.series.map((series, index) => ({...series, endLabel: {show: true, formatter: '{a}', color: colors[index % colors.length], fontFamily: FONT, fontSize: 11, fontWeight: 500, distance: 6}, labelLayout: {moveOverlap: 'shiftY'}}));
+  }
+  // Faixas de recessão (CODACE/FGV) ao fundo de séries mensais e trimestrais.
+  const bands = dates.length ? bandCategories(recessionsIn(dates), dates) : [];
+  if (bands.length && option.series[0]) option.series[0] = {...option.series[0], markArea: {silent: true, itemStyle: {color: 'rgba(80,106,118,.09)'}, label: {show: true, position: 'insideTop', color: MUTED, fontSize: 10, fontFamily: FONT, formatter: 'recessão'}, data: bands.map(band => [{xAxis: band.start}, {xAxis: band.end}])}};
+  if (compact) {
+    option.legend = {...option.legend, bottom: undefined, top: 0, left: 0};
+    option.grid = {...option.grid, left: 48, right: option.yAxis.length > 1 ? 48 : 12, top: showLegend ? 46 : 28, bottom: 28};
+  }
+  return option;
+}
+
+function areaOption(chart, context) {
+  const option = standardOption({...chart, series: chart.series.map(series => ({...series, type: 'line'}))}, {...context, width: 0});
+  const share = chart.view === 'area-share';
+  option.series = option.series.map((series, index) => ({...series, stack: 'area', areaStyle: {color: context.colors[index % context.colors.length], opacity: .92}, lineStyle: {width: .6, color: '#fff'}, symbol: 'none', showSymbol: false, emphasis: {focus: 'series'}, endLabel: undefined}));
+  option.yAxis = option.yAxis.map(axis => ({...axis, scale: false, ...(share ? {max: 100, min: 0} : {})}));
+  option.tooltip = {...option.tooltip, order: 'seriesDesc'};
+  option.legend = {...option.legend, show: true};
+  option.grid = {...option.grid, bottom: 65, right: 20};
+  return option;
+}
+
+function splitOption(chart, {colors}) {
+  const dates = dateCategories(chart), bars = chart.series.filter(series => seriesAxis(chart, series) === 0), lines = chart.series.filter(series => seriesAxis(chart, series) === 1);
+  const units = axisUnits(chart), at = series => dates.map(date => series.data.find(point => point[0] === date)?.[1] ?? null);
+  const label = {color: MUTED, fontSize: 11, fontFamily: FONT};
+  return {animation: false, textStyle: {fontFamily: FONT, color: INK, fontSize: 11}, color: colors,
+    tooltip: {trigger: 'axis', confine: true, backgroundColor: '#fff', borderColor: '#bdced3', textStyle: {color: INK, fontFamily: FONT, fontSize: 12}},
+    axisPointer: {link: [{xAxisIndex: 'all'}]},
+    grid: [{left: 62, right: 20, top: 26, height: '48%'}, {left: 62, right: 20, top: '68%', bottom: 30}],
+    xAxis: [0, 1].map(gridIndex => ({type: 'category', gridIndex, data: dates, axisTick: {show: false}, axisLine: {lineStyle: {color: '#ccdadd'}}, axisLabel: {...label, show: gridIndex === 1, formatter: dateLabel, hideOverlap: true, showMinLabel: true, showMaxLabel: true}})),
+    yAxis: [0, 1].map(gridIndex => ({type: 'value', gridIndex, name: units[gridIndex], nameTextStyle: {color: MUTED, fontSize: 10, align: 'left'}, scale: gridIndex === 1, splitNumber: gridIndex ? 2 : 4, axisLabel: {...label, formatter: value => chartTick(value)}, splitLine: {lineStyle: {color: RULE}}})),
+    series: [...bars.map((series, index) => ({name: series.name, type: 'bar', xAxisIndex: 0, yAxisIndex: 0, data: at(series), barMaxWidth: 18, itemStyle: {color: colors[index]}, tooltip: {valueFormatter: value => quantity(value, units[0])}})),
+      ...lines.map(series => ({name: series.name, type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: at(series), showSymbol: false, lineStyle: {width: 2.2, color: INK}, itemStyle: {color: INK}, tooltip: {valueFormatter: value => quantity(value, units[1])}}))]};
+}
+
+function dumbbellOption(chart, {colors}) {
+  const {rows, label, earlierLabel} = dumbbellRows(chart), unit = axisUnits(chart)[0], ordered = rows.slice().reverse();
+  const accent = colors.find(color => color === '#ec7000') || '#ec7000';
+  return {animation: false, textStyle: {fontFamily: FONT, color: INK, fontSize: 11},
+    tooltip: {trigger: 'axis', axisPointer: {type: 'shadow'}, confine: true, backgroundColor: '#fff', borderColor: '#bdced3', textStyle: {color: INK, fontFamily: FONT, fontSize: 12}},
+    legend: {bottom: 0, data: [label, earlierLabel], textStyle: {color: MUTED, fontSize: 11, fontFamily: FONT}, itemWidth: 10, itemHeight: 10},
+    grid: {left: 8, right: 54, top: 8, bottom: 36, containLabel: true},
+    xAxis: {type: 'value', scale: true, axisLabel: {color: MUTED, fontSize: 11, formatter: value => chartTick(value) + (/%/.test(unit) ? '%' : '')}, splitLine: {lineStyle: {color: RULE}}},
+    yAxis: {type: 'category', data: ordered.map(row => row.name), axisTick: {show: false}, axisLine: {show: false}, axisLabel: {color: INK, fontSize: 11, width: 150, overflow: 'truncate'}},
+    series: [
+      {type: 'custom', silent: true, tooltip: {show: false}, renderItem: (params, api) => {
+        const index = api.value(0), a = api.coord([api.value(1), index]), b = api.coord([api.value(2), index]);
+        return {type: 'line', shape: {x1: a[0], y1: a[1], x2: b[0], y2: b[1]}, style: {stroke: '#b8c4c6', lineWidth: 2}};
+      }, encode: {x: [1, 2], y: 0}, data: ordered.map((row, index) => [index, row.before ?? row.now, row.now]), z: 1},
+      {name: earlierLabel, type: 'scatter', symbolSize: 9, itemStyle: {color: '#fff', borderColor: '#8a9aa2', borderWidth: 1.5}, data: ordered.map(row => row.before), tooltip: {valueFormatter: value => quantity(value, unit)}, z: 2},
+      {name: label, type: 'scatter', symbolSize: 10, itemStyle: {color: accent}, data: ordered.map(row => row.now), z: 3, tooltip: {valueFormatter: value => quantity(value, unit)},
+        label: {show: true, position: 'right', color: INK, fontSize: 11, fontFamily: FONT, formatter: params => readable(params.value) + (/%/.test(unit) ? '%' : '')}},
+    ]};
+}
+
+function StandardChart({chart, height = 280, colors, compact = false, showLegend = true, valueLabels}) {
   const node = useRef(null);
+  const palette = colors || chart.colors || seriesColors(chart, 'web');
   useEffect(() => {
     if (!node.current) return;
-    const instance = echarts.init(node.current, null, {renderer: 'svg'});
-    const option = chartOption(chart);
-    const ink = '#213e50', muted = '#506a76';
-    option.color = colors || chart.colors || WEB_CHART_COLORS;
-    option.textStyle = {...option.textStyle, color: ink, fontSize: 11};
-    option.legend = {...option.legend, show: showLegend, pageIconColor: ink, pageIconInactiveColor: '#b8c4c6', pageIconSize: 10, pageTextStyle: {color: muted, fontSize: 11}, textStyle: {...option.legend.textStyle, color: muted, fontFamily: 'Hanken Grotesk Variable, Hanken Grotesk, Arial, sans-serif'}};
-    option.tooltip = {...option.tooltip, backgroundColor: '#fff', borderColor: '#bdced3', textStyle: {color: ink, fontFamily: 'Hanken Grotesk Variable, Hanken Grotesk, Arial, sans-serif', fontSize: 12}};
-    option.xAxis = {...option.xAxis, axisLabel: {...option.xAxis.axisLabel, color: muted, fontSize: 11, showMinLabel:true,showMaxLabel:true}, axisLine: {lineStyle: {color: '#ccdadd'}}};
-    option.yAxis = option.yAxis.map((axis, index) => ({...axis, scale:chart.series.some(series=>series.type==='bar'&&seriesAxis(chart,series)===index)?false:axis.scale, nameTextStyle: {...axis.nameTextStyle, color: muted}, axisLabel: {...axis.axisLabel, color: muted, fontSize: 11, formatter: value => chartTick(value)}, splitLine: {...axis.splitLine, lineStyle: {color: '#e0e8eb'}}}));
+    const host = node.current, instance = echarts.init(host, null, {renderer: 'svg'});
     const labelSettings = valueLabels === undefined ? chart.valueLabels : valueLabels;
-    const totals = new Map(chart.totalData || []);
-    const lastBar = option.series.findLastIndex(series => series.type === 'bar');
-    option.series = option.series.map((series, index) => {
-      const presented = {...series, label: {...series.label, show: false}, tooltip: {...series.tooltip, valueFormatter: value => chartValue(value, seriesUnit(chart, chart.series[index]))}};
-      if (series.type === 'line') presented.lineStyle = {...series.lineStyle, width: 3};
-      if (labelSettings && series.type === 'bar') {
-        const total = labelSettings.total && index === lastBar;
-        const inner = labelSettings.innerSeries === index;
-        if (total || inner) {
-          presented.label = {show: true, position: total ? 'top' : 'inside', color: total ? ink : '#fff', fontSize: 11, fontFamily: 'Hanken Grotesk Variable, Hanken Grotesk, Arial, sans-serif', ...(total ? {} : {backgroundColor: series.itemStyle?.color || option.color[index % option.color.length], padding: [1, 2], align: 'center'}), formatter: params => {
+    function build() {
+      const context = {colors: palette, compact, showLegend, width: host.clientWidth};
+      if (!compact && chart.view === 'split') return splitOption(chart, context);
+      if (!compact && chart.view === 'dumbbell') return dumbbellOption(chart, context);
+      if (!compact && (chart.view === 'area-share' || chart.view === 'area-stack')) return areaOption(chart, context);
+      const option = standardOption(chart, context);
+      if (labelSettings) {
+        const totals = new Map(chart.totalData || []), lastBar = option.series.findLastIndex(series => series.type === 'bar');
+        option.series = option.series.map((series, index) => {
+          if (series.type !== 'bar') return series;
+          const total = labelSettings.total && index === lastBar, inner = labelSettings.innerSeries === index;
+          if (!total && !inner) return series;
+          return {...series, labelLayout: {hideOverlap: true}, label: {show: true, position: total ? 'top' : 'inside', color: total ? INK : '#fff', fontSize: 11, fontFamily: FONT, ...(total ? {} : {backgroundColor: palette[index % palette.length], padding: [1, 2], align: 'center'}), formatter: params => {
             if (!total) {
-              const plotWidth = Math.max(0, (node.current?.clientWidth || 0) - Number(option.grid.left || 0) - Number(option.grid.right || 0));
+              const plotWidth = Math.max(0, host.clientWidth - Number(option.grid.left || 0) - Number(option.grid.right || 0));
               if (!showInnerLabel(params.dataIndex, option.xAxis.data.length, plotWidth)) return '';
             }
             return chartLabel(total ? totals.get(params.name ?? option.xAxis.data[params.dataIndex]) : params.value);
-          }};
-          presented.labelLayout = {hideOverlap: true};
-        }
+          }}};
+        });
       }
-      return presented;
-    });
-    if (compact) {
-      option.legend = {...option.legend, bottom: undefined, top: 0, left: 0};
-      option.grid = {...option.grid, left: 48, right: option.yAxis.length > 1 ? 48 : 12, top: showLegend ? 46 : 28, bottom: 28};
+      return option;
     }
-    instance.setOption(option);
-    let lastWidth = node.current.clientWidth;
+    instance.setOption(build());
+    let lastWidth = host.clientWidth;
     const resize = new ResizeObserver(() => {
-      const width = node.current?.clientWidth || 0;
+      const width = host.clientWidth;
+      if (width !== lastWidth) instance.setOption(build(), true);
       instance.resize();
-      if (labelSettings && width !== lastWidth) instance.setOption({series: option.series});
       lastWidth = width;
     });
-    resize.observe(node.current);
+    resize.observe(host);
     return () => {resize.disconnect(); instance.dispose();};
-  }, [chart, colors, compact, showLegend, valueLabels]);
-  return <div className="tc-chart" style={{height}} ref={node} role="img" aria-label={`${plainText(chart.title)}. ${axisUnits(chart).join(' / ')}. ${periodOf(chart)}.`}/>;
+  }, [chart, palette.join(), compact, showLegend, valueLabels]);
+  const rows = chart.view === 'dumbbell' && !compact ? dumbbellRows(chart).rows.length : 0;
+  return <div className="tc-chart" style={{height: rows ? Math.max(height, 46 + rows * 30) : height}} ref={node} role="img" aria-label={`${plainText(chart.title)}. ${shownUnits(chart).join(' / ')}. ${periodOf(chart)}.`}/>;
 }
 
-export function ChartPanel({chart}) {
-  const [table, setTable] = useState(false);
+/* ---------- Grade de UFs ---------- */
+
+function UfTiles({chart}) {
+  const {tiles, min, max, ramp, cols, rows} = ufTiles(chart, 'web'), unit = chart.unit || '';
+  const size = 44, gap = 4, width = cols * (size + gap), height = rows * (size + gap);
+  return <figure className="tc-tiles">
+    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${plainText(chart.title)} por UF. ${tiles.filter(tile => tile.value != null).map(tile => `${tile.uf} ${readable(tile.value)}`).join(', ')}.`}>
+      {tiles.map(tile => <g key={tile.uf} transform={`translate(${tile.col * (size + gap)} ${tile.row * (size + gap)})`}>
+        <rect width={size} height={size} rx="2" fill={tile.color}><title>{`${tile.uf}: ${tile.value == null ? 'N/D' : quantity(tile.value, unit)}`}</title></rect>
+        <text x="5" y="15" className="tc-tile-uf" fill={tile.dark ? '#fff' : INK}>{tile.uf}</text>
+        <text x={size - 5} y={size - 7} textAnchor="end" className="tc-tile-value" fill={tile.dark ? '#fff' : INK}>{tile.value == null ? 'N/D' : readable(tile.value)}</text>
+      </g>)}
+    </svg>
+    <figcaption><span>{quantity(min, unit)}</span><span className="tc-tile-ramp" aria-hidden="true">{ramp.map(color => <i key={color} style={{background: color}}/>)}</span><span>{quantity(max, unit)}</span></figcaption>
+  </figure>;
+}
+
+/* ---------- Matriz produto × canal ---------- */
+
+function ChannelMatrix({chart}) {
+  const {matrix} = chart;
+  const shade = value => value == null ? 'transparent' : `rgba(236,112,0,${Math.min(1, .06 + value / 100 * .94).toFixed(3)})`;
+  return <div className="tc-matrix-scroll"><table className="tc-matrix">
+    <thead><tr><th scope="col">Produto</th>{matrix.channels.map(channel => <th scope="col" key={channel}>{matrix.short[channel] || channel}</th>)}<th scope="col">Total no trimestre</th></tr></thead>
+    <tbody>{matrix.rows.map(row => <tr key={row.id}><th scope="row">{row.product}</th>{matrix.channels.map(channel => {
+      const value = row.shares[channel];
+      return <td key={channel} style={{background: shade(value), color: value != null && value >= 55 ? '#fff' : INK}}>{value == null ? 'N/D' : value < .5 && value > 0 ? '<1%' : `${Math.round(value)}%`}</td>;
+    })}<td className="tc-matrix-total">{quantity(row.total, matrix.unit)}</td></tr>)}</tbody>
+  </table></div>;
+}
+
+/* ---------- Painel ---------- */
+
+export function ChartPanel({chart, showNotes = true, lead = false}) {
+  const [mode, setMode] = useState('chart');
   const [tablePage, setTablePage] = useState(0);
   const rows = useMemo(() => chart.series.flatMap((series, index) => series.data.map(([date, value]) => ({date, value, name: series.name, unit: seriesUnit(chart, series), key: `${index}-${date}`}))).reverse(), [chart]);
-  useEffect(() => setTablePage(0), [chart]);
+  useEffect(() => {setTablePage(0); setMode('chart');}, [chart.id]);
   const size = 50;
   const visibleRows = rows.slice(tablePage * size, (tablePage + 1) * size);
   const hasValues = rows.some(row => row.value != null && Number.isFinite(Number(row.value)));
-  return <article className="tc-chart-panel">
+  const title = plainText(chart.title), reading = chart.reading?.text;
+  const original = chart.view === 'dumbbell' ? {...chart, view: undefined, smallMultiples: false} : null;
+  return <article className={'tc-chart-panel' + (lead ? ' is-lead' : '')}>
     <header className="tc-chart-panel-heading">
-      <div><h2>{plainText(chart.title)}</h2><p>{axisUnits(chart).join(' / ')}</p></div>
-      <button type="button" className="tc-text-action" aria-label={`${table ? 'Ver gráfico' : 'Ver tabela'} de ${plainText(chart.title)}`} aria-pressed={table} onClick={() => setTable(!table)}>{table ? 'Gráfico' : 'Tabela'}</button>
+      <div>{reading ? <><p className="tc-chart-kicker">{title}</p><h2>{reading}</h2></> : <h2>{title}</h2>}<p>{unitCaption(chart)}{chart.smallMultiples ? ' · escala própria por série' : ''}</p></div>
+      <div className="tc-chart-modes">
+        {original && <button type="button" className="tc-text-action" aria-pressed={mode === 'series'} onClick={() => setMode(mode === 'series' ? 'chart' : 'series')}>{mode === 'series' ? 'Comparação' : 'Série'}</button>}
+        <button type="button" className="tc-text-action" aria-label={`${mode === 'table' ? 'Ver gráfico' : 'Ver tabela'} de ${title}`} aria-pressed={mode === 'table'} onClick={() => setMode(mode === 'table' ? 'chart' : 'table')}>{mode === 'table' ? 'Gráfico' : 'Tabela'}</button>
+      </div>
     </header>
-    {table ? <>
+    {mode === 'table' ? <>
       <div className="tc-table-scroll"><table className="tc-data-table"><thead><tr><th>Data / categoria</th><th>Série</th><th>Valor</th><th>Unidade</th></tr></thead><tbody>{visibleRows.map(row => <tr key={row.key}><td>{dateLabel(row.date)}</td><td>{row.name}</td><td>{number(row.value, 2)}</td><td>{row.unit}</td></tr>)}</tbody></table></div>
       {rows.length > size && <div className="tc-table-pagination"><span>{tablePage * size + 1}–{Math.min(rows.length, (tablePage + 1) * size)} de {rows.length}</span><div><button type="button" disabled={!tablePage} onClick={() => setTablePage(tablePage - 1)}>Anterior</button><button type="button" disabled={(tablePage + 1) * size >= rows.length} onClick={() => setTablePage(tablePage + 1)}>Próximas</button></div></div>}
-    </> : hasValues ? <Chart chart={chart}/> : <p className="tc-empty">Sem observações neste intervalo. Escolha outro período para consultar a série.</p>}
-    <footer className="tc-chart-source"><span>Fonte: {chart.source} · {periodOf(chart)}</span>{chart.historical && <span>Série encerrada</span>}</footer>
-    {chart.note && <details className="tc-chart-note"><summary>Conceito e abrangência</summary><p>{plainText(chart.note)}</p></details>}
+    </> : hasValues ? <Chart chart={mode === 'series' && original ? original : chart} height={lead ? 340 : 280}/> : <p className="tc-empty">Sem observações neste intervalo. Escolha outro período para consultar a série.</p>}
+    <footer className="tc-chart-source"><span>Fonte: {chart.source} · {chart.view === 'matrix' ? chart.matrix.label : periodOf(chart)}</span>{chart.historical && <span>Série encerrada</span>}</footer>
+    {showNotes && chart.note && <details className="tc-chart-note"><summary>Notas</summary><p>{plainText(chart.note)}</p></details>}
   </article>;
 }
 
-export function ExportMenu({charts = [], title, allCharts, collection, onError, disabled = false}) {
+/* ---------- Números-chave ---------- */
+
+function Spark({points}) {
+  const values = points.map(point => point[1]).filter(finite);
+  if (values.length < 2) return null;
+  const min = Math.min(...values), max = Math.max(...values), width = 120, height = 30;
+  const path = points.map((point, index) => finite(point[1]) ? `${index ? 'L' : 'M'}${(index / (points.length - 1) * width).toFixed(1)},${(height - 2 - (point[1] - min) / (max - min || 1) * (height - 4)).toFixed(1)}` : '').join('');
+  return <svg className="tc-spark" viewBox={`0 0 ${width} ${height}`} aria-hidden="true"><path d={path}/></svg>;
+}
+
+export function KeyFigures({figures}) {
+  if (!figures?.length) return null;
+  return <dl className="tc-key-figures">{figures.map(figure => <div key={figure.label + figure.chart}>
+    <dt>{figure.label}</dt>
+    <dd className="tc-key-value">{figure.text}</dd>
+    <dd className="tc-key-context">{figure.when || 'N/D'}{figure.deltaText ? ` · ${figure.deltaText} em 12 meses` : ''}</dd>
+    <dd><Spark points={figure.spark}/></dd>
+  </div>)}</dl>;
+}
+
+/* ---------- Exportação ---------- */
+
+export function ExportMenu({charts = [], title, allCharts, collection, collectionTitle = 'Todos os gráficos', deck = {}, onError, disabled = false}) {
   const node = useRef(null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
@@ -99,7 +262,7 @@ export function ExportMenu({charts = [], title, allCharts, collection, onError, 
     setBusy(true);
     setStatus('Preparando PPTX…');
     try {
-      const result = await exportPptx(items, name);
+      const result = await exportPptx(items, name, deck);
       setStatus(result.complete ? 'PPTX preparado.' : `PPTX parcial: ${result.exported} de ${result.total} gráficos com observações. As ausências constam do arquivo.`);
     } catch (error) {
       setStatus(error.message);
@@ -113,10 +276,10 @@ export function ExportMenu({charts = [], title, allCharts, collection, onError, 
     <summary>Exportar</summary>
     <div className="tc-export-options">
       <strong>{title}</strong>
-      <button type="button" disabled={busy || disabled || !charts.length} onClick={csv}>CSV do recorte</button>
-      <button type="button" disabled={busy || disabled || !charts.length} onClick={() => pptx(charts, title)}>PPTX do recorte</button>
-      {collection && <button type="button" disabled={busy || disabled || !collection.length} onClick={() => pptx(collection, 'Mercado Imobiliário')}>Mercado imobiliário completo</button>}
-      {allCharts && <button type="button" disabled={busy || disabled || !allCharts.length} onClick={() => pptx(allCharts, 'Estatísticas do Sistema Financeiro Nacional')}>Deck completo do SFN</button>}
+      <button type="button" disabled={busy || disabled || !charts.length} onClick={csv}>Seleção · CSV</button>
+      <button type="button" disabled={busy || disabled || !charts.length} onClick={() => pptx(charts, title)}>Seleção · PowerPoint</button>
+      {collection && <button type="button" disabled={busy || disabled || !collection.length} onClick={() => pptx(collection, collectionTitle)}>{collectionTitle} · {collection.length} gráficos</button>}
+      {allCharts && <button type="button" disabled={busy || disabled || !allCharts.length} onClick={() => pptx(allCharts, 'Crédito e mercado imobiliário')}>Crédito e imobiliário · {allCharts.length} gráficos</button>}
       {status && <p role="status" aria-live="polite">{status}</p>}
     </div>
   </details>;

@@ -50,9 +50,12 @@ export const axisUnits=chart=>chart.axes?.length?chart.axes.map(unit=>unit||char
 export const seriesAxis=(chart,series)=>series.axis===1&&axisUnits(chart).length>1?1:0;
 export const seriesUnit=(chart,series)=>axisUnits(chart)[seriesAxis(chart,series)];
 export const percentAxis=(chart,axis=0)=>axisUnits(chart)[axis].includes('%')||(!chart.axes?.length&&axis===0&&chart.percent);
-export function csvDownload(charts,name='tomaconta'){
+export function csvRows(charts){
+ return [['Gráfico','Série','Data / categoria','Valor','Unidade','Fonte','Seção','Critério','Estado','ID do gráfico','Posição'],...charts.flatMap(c=>c.series.flatMap(s=>s.data.map(([d,v])=>[c.title,s.name,d,v,seriesUnit(c,s),c.source,c.section||'',c.note||'',v==null?'N/D':'Observado',c.id||'',c.rank??''])))];
+}
+export function csvDownload(charts,name='Atlas'){
  const escape=v=>'"'+String(v??'').replaceAll('"','""')+'"';
- const rows=[['Gráfico','Série','Data / categoria','Valor','Unidade','Fonte'],...charts.flatMap(c=>c.series.flatMap(s=>s.data.map(([d,v])=>[c.title,s.name,d,v,seriesUnit(c,s),c.source])))];
+ const rows=csvRows(charts);
  download(new Blob(['\ufeff'+rows.map(r=>r.map(escape).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'}),name+'.csv');
 }
 export function download(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);}

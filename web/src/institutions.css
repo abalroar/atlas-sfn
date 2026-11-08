@@ -72,14 +72,20 @@
 .institution-ranking .institution-unit{display:block;margin:3px 0 0}
 .institution-data table th:first-child{max-width:65ch;padding-right:20px}
 .institution-data table td.institution-data-unit,.institution-data table thead th:last-child{color:#506a76;font-size:11px;padding-left:20px;width:65px}
-.institution-export{margin-left:auto;position:relative;font-size:13px}
-.institution-export summary{list-style:none;padding:7px 0;cursor:pointer;text-decoration:underline;text-decoration-color:#a4b7bf;text-underline-offset:5px}
-.institution-export summary::-webkit-details-marker{display:none}
-.institution-export>div{position:absolute;right:0;top:calc(100% + 8px);z-index:35;background:#fff;border:1px solid #bdced3;padding:8px 12px;width:220px;max-width:calc(100vw - 40px)}
-.institution-export>div button{padding:8px 0;text-align:left;width:100%;font-size:12px}
-.institution-export-host{margin-left:auto}
-.institution-export-host:empty{display:none}
+.institution-header.is-statements .institution-tabs{margin-top:20px}
 @media(max-width:1000px){.institution-filters{gap:14px}.institution-toolbar{gap:14px}.institution-metrics .institution-unit{display:block;margin-left:0}.institution-metrics td{min-width:69px}.institution-dashboard{column-gap:25px}}
 @media(max-width:680px){.institution-identity{flex-direction:column;align-items:stretch;gap:18px}.institution-identity h1{font-size:36px;max-width:none}.institution-identity>.institution-search{width:100%}.institution-toolbar{padding-top:18px}.institution-filters{gap:13px}.institution-filters label:first-child{flex-basis:100%}.institution-filters select{max-width:100%}.institution-tabs{gap:20px}.institution-tabs button{font-size:13px;padding-bottom:11px}.institution-dashboard{grid-template-columns:minmax(0,1fr);gap:32px}.institution-metrics .institution-unit{display:inline-block;margin-left:4px}.institution-comparison-controls{align-items:stretch}.institution-comparison-controls .institution-search{width:100%}.institution-page .institution-comparison-values td{white-space:normal;min-width:70px}.institution-data table{table-layout:fixed}.institution-data table th:first-child{width:43%;padding-right:10px}.institution-data table td{font-size:12px;overflow-wrap:anywhere;white-space:normal}.institution-data table td.institution-data-unit,.institution-data table thead th:last-child{width:42px;padding-left:8px}.institution-ranking-search{align-items:flex-start;flex-direction:column;gap:5px}}
 @media(max-width:390px){.institution-tabs{gap:14px}.institution-tabs button{font-size:12px}.institution-page label{gap:6px}.institution-metrics button{font-size:12px}.institution-metrics .institution-unit{display:block;margin-left:0}.institution-metrics td{min-width:60px;font-size:12px}.institution-ranking table thead th:last-child{max-width:100px}.institution-ranking table tbody th{padding-right:10px}}
 @media(pointer:coarse){.institution-tabs button,.institution-metrics button,.institution-peer button,.institution-text-action,.institution-ranking table th button{min-height:44px}.institution-page input,.institution-page select{font-size:16px;min-height:44px}.institution-metrics button{font-size:13px}.institution-tabs{gap:16px}}
+.institution-rulers{margin-bottom:44px}
+.institution-rulers ol{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:22px 34px}
+.institution-ruler-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:12px;color:#506a76}
+.institution-ruler-head small{margin-left:6px;font-size:11px}
+.institution-ruler-head strong{font-size:20px;font-weight:600;color:#213e50;font-variant-numeric:tabular-nums}
+.institution-ruler-track{position:relative;margin:6px 0 4px}
+.institution-rulers svg{display:block;width:100%;height:22px;overflow:visible}
+.institution-ruler-axis{stroke:#cfd8d6;stroke-width:1;vector-effect:non-scaling-stroke}
+.institution-ruler-tick{stroke:#506a76;stroke-opacity:.28;stroke-width:1;vector-effect:non-scaling-stroke}
+.institution-ruler-own{position:absolute;top:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;background:#ec7000;box-shadow:0 0 0 2px #f3f2ec}
+.institution-ruler-foot{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#506a76;font-variant-numeric:tabular-nums}
+.institution-ruler-foot span:nth-child(2){color:#213e50;text-align:center}

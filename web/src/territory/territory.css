@@ -170,11 +170,17 @@
 @media (max-width: 760px) {
   .territory.mode-film .body { grid-template-columns: 1fr; grid-template-rows: 1fr 0; }
   .territory { --band: 236px; }
-  .territory .caption { left: 14px; right: 14px; bottom: 62px; height: calc(var(--band) - 76px); grid-template-columns: 1fr; }
+  .territory .caption { left: 14px; right: 14px; bottom: 62px; height: calc(var(--band) - 76px); grid-template-columns: minmax(0, 1fr); row-gap: 6px; }
   .territory .caption > .src, .territory .caption > .note, .territory .caption > .atlas-rate-legend { grid-column: 1; }
   .territory .caption h2 { font-size: 21px; }
+  .territory .caption .atlas-reading { flex-wrap: wrap; gap: 4px 8px; }
+  .territory .caption .atlas-reading strong { font-size: 28px; }
+  .territory .caption .atlas-reading > span { flex: 1; min-width: 0; font-size: 13px; line-height: 1.4; white-space: normal; }
+  .territory .caption .atlas-rate-legend { width: 100%; max-width: 220px; margin: 2px 0 0; }
+  .territory .caption .src { margin: 0 !important; line-height: 1.5 !important; }
   .territory .film-bar { left: 14px; right: 14px; bottom: 16px; gap: 10px; }
   .territory .film-bar .label { display: none; }
 }
+@media (max-width: 380px) { .territory { --band: 260px; } .territory .caption { row-gap: 4px; } }
 
 .territory .film-loading { position: absolute; left: 32px; top: 24px; margin: 0; z-index: 5; font-size: 13px; color: var(--muted); }
