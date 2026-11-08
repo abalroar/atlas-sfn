@@ -82,7 +82,7 @@ A landing do site (`?view=overview`) usa esta composição desde 07/11/2026: `we
 
 ### Versão em filme (07/11/2026)
 
-A landing abre como filme: o mapa ocupa a tela, o percurso começa sozinho (com movimento reduzido, abre direto na exploração; `?filme` força o percurso) e, ao fim ou a qualquer gesto, a coluna de busca entra pela esquerda. Capítulos: Brasil, agências e postos (redes acendem banco a banco, nas cores próprias), inadimplência, por renda, Pix, Pacaraima, poupança e crédito rural. Mapa de base com tintas hipsométricas, batimetria e sombreamento (Terrain Tiles), que se apagam na escala de rua.
+A landing abre como filme: o mapa ocupa a tela, o percurso começa sozinho ao carregar, inclusive com movimento reduzido, e, ao fim ou a qualquer gesto, a coluna de busca entra pela esquerda. Capítulos: Brasil, agências e postos (redes acendem banco a banco, nas cores próprias), inadimplência, por renda, Pix, Pacaraima, poupança e crédito rural. Mapa de base com tintas hipsométricas, batimetria e sombreamento (Terrain Tiles), que se apagam na escala de rua.
 
 - `07_rural.py`: crédito rural 2025 por mês e município (SICOR, operações com município informado).
 - `08_poupanca.py`: poupança ESTBAN por agência somada em células de 0,4° × 0,25°, desenhada como linhas de relevo com altura proporcional à raiz do saldo.

@@ -165,10 +165,8 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
         if (hit.length && m.getPaintProperty('pts-exact', 'circle-opacity') > 0.3) choosePoint(hit[0].id, false);
       });
       computeCameras(); setReady(true);
-      // O percurso começa sozinho; com movimento reduzido, a página abre direto na exploração.
-      // ?filme força o percurso mesmo com movimento reduzido (útil para conferir a montagem).
-      const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches && !new URLSearchParams(location.search).has('filme');
-      if (reduced) { converge(false); requestAnimationFrame(() => { const c = m.cameraForBounds(BR_BOUNDS, { padding: PAD }); m.jumpTo({ center: c.center, zoom: c.zoom }); }); } else { clock.current.playing = true; clock.current.last = 0; setPlaying(true); }
+      // O filme começa ao carregar, inclusive com movimento reduzido; um gesto no mapa interrompe o percurso.
+      clock.current.playing = true; clock.current.last = 0; setPlaying(true);
     };
     m.on('style.load', init); m.on('styledata', init); m.on('load', init);
     const poll = setInterval(() => { init(); if (started) clearInterval(poll); }, 100);
