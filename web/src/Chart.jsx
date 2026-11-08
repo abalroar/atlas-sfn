@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import * as echarts from 'echarts';
-import {axisUnits, chartOption, csvDownload, dateLabel, number, periodOf, seriesUnit, seriesAxis} from './data.js';
+import {axisUnits, chartOption, csvDownload, dateLabel, periodOf, seriesUnit, seriesAxis} from './data.js';
 import {exportPptx} from './export.js';
 import {chartLabel, chartTick, chartValue, showInnerLabel} from './chart-format.js';
 import {WEB_CHART_COLORS} from './chart-palette.js';
@@ -101,7 +101,7 @@ function splitOption(chart, {colors}) {
 
 function dumbbellOption(chart, {colors}) {
   const {rows, label, earlierLabel} = dumbbellRows(chart), unit = axisUnits(chart)[0], ordered = rows.slice().reverse();
-  const accent = colors.find(color => color === '#ec7000') || '#ec7000';
+  const accent = '#B07A1F';
   return {animation: false, textStyle: {fontFamily: FONT, color: INK, fontSize: 11},
     tooltip: {trigger: 'axis', axisPointer: {type: 'shadow'}, confine: true, backgroundColor: '#fff', borderColor: '#bdced3', textStyle: {color: INK, fontFamily: FONT, fontSize: 12}},
     legend: {bottom: 0, data: [label, earlierLabel], textStyle: {color: MUTED, fontSize: 11, fontFamily: FONT}, itemWidth: 10, itemHeight: 10},
@@ -185,7 +185,7 @@ function UfTiles({chart}) {
 
 function ChannelMatrix({chart}) {
   const {matrix} = chart;
-  const shade = value => value == null ? 'transparent' : `rgba(236,112,0,${Math.min(1, .06 + value / 100 * .94).toFixed(3)})`;
+  const shade = value => value == null ? 'transparent' : `rgba(44,101,127,${Math.min(1, .06 + value / 100 * .94).toFixed(3)})`;
   return <div className="tc-matrix-scroll"><table className="tc-matrix">
     <thead><tr><th scope="col">Produto</th>{matrix.channels.map(channel => <th scope="col" key={channel}>{matrix.short[channel] || channel}</th>)}<th scope="col">Total no trimestre</th></tr></thead>
     <tbody>{matrix.rows.map(row => <tr key={row.id}><th scope="row">{row.product}</th>{matrix.channels.map(channel => {
@@ -199,27 +199,17 @@ function ChannelMatrix({chart}) {
 
 export function ChartPanel({chart, showNotes = true, lead = false}) {
   const [mode, setMode] = useState('chart');
-  const [tablePage, setTablePage] = useState(0);
-  const rows = useMemo(() => chart.series.flatMap((series, index) => series.data.map(([date, value]) => ({date, value, name: series.name, unit: seriesUnit(chart, series), key: `${index}-${date}`}))).reverse(), [chart]);
-  useEffect(() => {setTablePage(0); setMode('chart');}, [chart.id]);
-  const size = 50;
-  const visibleRows = rows.slice(tablePage * size, (tablePage + 1) * size);
-  const hasValues = rows.some(row => row.value != null && Number.isFinite(Number(row.value)));
+  useEffect(() => setMode('chart'), [chart.id]);
+  const hasValues = chart.series.some(series => series.data.some(point => point[1] != null && Number.isFinite(Number(point[1]))));
   const title = plainText(chart.title), reading = chart.reading?.text;
   const original = chart.view === 'dumbbell' ? {...chart, view: undefined, smallMultiples: false} : null;
+  const period = chart.view === 'matrix' ? chart.matrix.label : periodOf(chart);
   return <article className={'tc-chart-panel' + (lead ? ' is-lead' : '')}>
     <header className="tc-chart-panel-heading">
-      <div>{reading ? <><p className="tc-chart-kicker">{title}</p><h2>{reading}</h2></> : <h2>{title}</h2>}<p>{unitCaption(chart)}{chart.smallMultiples ? ' · escala própria por série' : ''}</p></div>
-      <div className="tc-chart-modes">
-        {original && <button type="button" className="tc-text-action" aria-pressed={mode === 'series'} onClick={() => setMode(mode === 'series' ? 'chart' : 'series')}>{mode === 'series' ? 'Comparação' : 'Série'}</button>}
-        <button type="button" className="tc-text-action" aria-label={`${mode === 'table' ? 'Ver gráfico' : 'Ver tabela'} de ${title}`} aria-pressed={mode === 'table'} onClick={() => setMode(mode === 'table' ? 'chart' : 'table')}>{mode === 'table' ? 'Gráfico' : 'Tabela'}</button>
-      </div>
+      <div>{reading ? <><p className="tc-chart-kicker">{title}</p><h2>{reading}</h2></> : <h2>{title}</h2>}<p>{unitCaption(chart)}{chart.smallMultiples ? ' · escala própria por série' : ''}{chart.view === 'matrix' ? '' : ` · ${period}`}{chart.historical ? ' · série encerrada' : ''}</p></div>
+      {original && <div className="tc-chart-modes"><button type="button" className="tc-text-action" aria-pressed={mode === 'series'} onClick={() => setMode(mode === 'series' ? 'chart' : 'series')}>{mode === 'series' ? 'Comparação' : 'Série'}</button></div>}
     </header>
-    {mode === 'table' ? <>
-      <div className="tc-table-scroll"><table className="tc-data-table"><thead><tr><th>Data / categoria</th><th>Série</th><th>Valor</th><th>Unidade</th></tr></thead><tbody>{visibleRows.map(row => <tr key={row.key}><td>{dateLabel(row.date)}</td><td>{row.name}</td><td>{number(row.value, 2)}</td><td>{row.unit}</td></tr>)}</tbody></table></div>
-      {rows.length > size && <div className="tc-table-pagination"><span>{tablePage * size + 1}–{Math.min(rows.length, (tablePage + 1) * size)} de {rows.length}</span><div><button type="button" disabled={!tablePage} onClick={() => setTablePage(tablePage - 1)}>Anterior</button><button type="button" disabled={(tablePage + 1) * size >= rows.length} onClick={() => setTablePage(tablePage + 1)}>Próximas</button></div></div>}
-    </> : hasValues ? <Chart chart={mode === 'series' && original ? original : chart} height={lead ? 340 : 280}/> : <p className="tc-empty">Sem observações neste intervalo. Escolha outro período para consultar a série.</p>}
-    <footer className="tc-chart-source"><span>Fonte: {chart.source} · {chart.view === 'matrix' ? chart.matrix.label : periodOf(chart)}</span>{chart.historical && <span>Série encerrada</span>}</footer>
+    {hasValues ? <Chart chart={mode === 'series' && original ? original : chart} height={lead ? 340 : 280}/> : <p className="tc-empty">Sem observações neste intervalo. Escolha outro período para consultar a série.</p>}
     {showNotes && chart.note && <details className="tc-chart-note"><summary>Notas</summary><p>{plainText(chart.note)}</p></details>}
   </article>;
 }

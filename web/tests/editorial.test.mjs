@@ -127,12 +127,14 @@ test('the editorial deck has cover, contents with page numbers, dividers with ke
   const divider=await slide(3);
   assert.match(divider,/R\$ 7\.444 bi/);assert.match(divider,/Saldo de crédito do SFN/);
   const lead=await slide(4);
-  assert.match(lead,/R\$ 7\.444 bi em set\/2026, \+8,6% em 12 meses/);assert.match(lead,/PANORAMA/);assert.match(lead,/Fonte: BCB/);assert.match(lead,/Estatísticas de crédito · 4<\/a:t>/);
+  assert.match(lead,/R\$ 7\.444 bi em set\/2026, \+8,6% em 12 meses/);assert.match(lead,/<a:t>Panorama<\/a:t>/);assert.doesNotMatch(lead,/PANORAMA|Fonte/);assert.match(lead,/<a:t>4<\/a:t>/);
   const notes=await slide(9);
-  assert.match(notes,/Notas e fontes/);assert.match(notes,/zero é valor observado/);
+  assert.match(notes,/Notas e fontes/);assert.match(notes,/zero é valor observado/);assert.match(notes,/Fonte: Banco Central do Brasil, SGS\./);
+  for(let n=1;n<=8;n++)assert.doesNotMatch(await slide(n),/Fonte:|BCB/,`slide ${n} leaves the source to the notes page`);
   for(let n=1;n<=9;n++){
     const xml=await slide(n);
     assert.match(xml,/Calibri/);
+    assert.doesNotMatch(xml,/EC7000|F7AE62|A64A00/,'Atlas palette, not the bank palette');
     for(const [paragraph] of xml.matchAll(/<a:p>[\s\S]*?<\/a:p>/g))assert.ok((paragraph.match(/<a:pPr\b/g)||[]).length<=1,`slide ${n}: one paragraph style per paragraph`);
   }
 });

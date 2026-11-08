@@ -20,14 +20,14 @@ const CONCEPTS = [
   [/^Cartão de Crédito$|^Cartões$/, 'card'], [/^Cartão de Débito$/, 'debit'], [/^Telefone Celular$/, 'pix'], [/^Internet Banking$/, 'ted'], [/^Agências$/, 'boleto'], [/^ATM$/, 'cheque'],
   [/^SF público$|^Bancos públicos$|^Público$/, 'public'], [/^SF privado nacional$|^Privado nacional$/, 'national'], [/^SF privado estrangeiro$|^Privado estrangeiro$|^Estrangeiro$/, 'foreign'],
 ];
-export const CONCEPT_INK = {
-  web: {pfFree: '#ec7000', pfDirected: '#f2a65a', pfTotal: '#a64a00', pjFree: '#315f78', pjDirected: '#8fb0c4', pjTotal: '#1d3a4b', total: '#213e50', muted: '#8a9aa2', reference: '#8a4a36',
-    pix: '#ec7000', boleto: '#315f78', ted: '#15887c', cheque: '#8a4a36', retired: '#b8c4c6', card: '#137fb8', debit: '#6b92b3', public: '#c5534b', national: '#315f78', foreign: '#15887c'},
-  pptx: {pfFree: 'EC7000', pfDirected: 'F7AE62', pfTotal: 'A64A00', pjFree: '171717', pjDirected: '8B8C8D', pjTotal: '555759', total: '171717', muted: 'B0B1B2', reference: '8B8C8D',
-    pix: 'EC7000', boleto: '171717', ted: '8B8C8D', cheque: 'A64A00', retired: 'D1D2D3', card: '555759', debit: 'F7AE62', public: 'EC7000', national: '555759', foreign: 'B0B1B2'},
-};
-const FALLBACK = {web: ['#315f78', '#ec7000', '#137fb8', '#c5534b', '#15887c', '#56626c', '#6b92b3', '#8a4a36', '#a64a00', '#8fb0c4'],
-  pptx: ['EC7000', '171717', '8B8C8D', 'A64A00', 'F7AE62', '555759', 'D1D2D3', 'B56A20', '3F3F3F', 'FBD3A8']};
+// Paleta do Atlas: PF na família ocre, PJ na família azul-petróleo (as tintas do relevo e do mar do filme),
+// totais em tinta escura. Site e PPTX usam as mesmas cores.
+const ATLAS = {pfFree: '#B07A1F', pfDirected: '#D9B77A', pfTotal: '#7A5214', pjFree: '#2C657F', pjDirected: '#8FB3C4', pjTotal: '#47869F', total: '#16323F', muted: '#9AA9AE', reference: '#8A7560',
+  pix: '#B07A1F', boleto: '#2C657F', ted: '#6BA5BD', cheque: '#7A5214', retired: '#C9D1D0', card: '#47869F', debit: '#D9B77A', public: '#B07A1F', national: '#2C657F', foreign: '#9AC4D4'};
+const ATLAS_SERIES = ['#2C657F', '#B07A1F', '#6BA5BD', '#7A5214', '#16323F', '#D9B77A', '#9AC4D4', '#8A7560', '#47869F', '#E3D3AF'];
+const bare = color => color.slice(1);
+export const CONCEPT_INK = {web: ATLAS, pptx: Object.fromEntries(Object.entries(ATLAS).map(([key, color]) => [key, bare(color)]))};
+const FALLBACK = {web: ATLAS_SERIES, pptx: ATLAS_SERIES.map(bare)};
 export const conceptOf = name => CONCEPTS.find(([pattern]) => pattern.test(String(name || '').trim()))?.[1] || null;
 
 /** Uma cor por série: conceito conhecido primeiro, depois a paleta na ordem, sem repetir. */
@@ -284,4 +284,15 @@ export function recessionsIn(dates) {
   const first = dates[0], last = dates.at(-1);
   if (!isDate(first) || !isDate(last)) return [];
   return RECESSIONS.filter(band => band.to >= first && band.from <= last).map(band => ({...band, from: band.from < first ? first : band.from, to: band.to > last ? last : band.to}));
+}
+
+/* ---------- Fonte ---------- */
+
+const SOURCE_NAMES = [[/SCR\.data/, 'SCR.data'], [/SGS/, 'SGS'], [/MPV_DadosAbertos/, 'estatísticas de meios de pagamento'], [/MercadoImobiliario/, 'estatísticas do mercado imobiliário'], [/IF\.?data/i, 'IF.data'], [/COSIF/, 'COSIF']];
+/** Uma única menção de fonte para um conjunto de gráficos. */
+export function sourceLine(charts) {
+  const names = [];
+  for (const chart of charts) for (const [pattern, name] of SOURCE_NAMES) if (pattern.test(chart.source || '') && !names.includes(name)) names.push(name);
+  const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} e ${names.at(-1)}` : names[0];
+  return list ? `Banco Central do Brasil, ${list}` : 'Banco Central do Brasil';
 }

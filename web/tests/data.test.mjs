@@ -139,7 +139,7 @@ test('nativeOfficeXML contains actual combocharts and twovaluescales',async()=>{
  const xml=await zip.file('ppt/charts/chart1.xml').async('string');
  assert.match(xml,/<c:barChart>/);assert.match(xml,/<c:lineChart>/);assert.equal((xml.match(/<c:valAx>/g)||[]).length,2);
  assert.doesNotMatch(xml,/<c:title>/);assert.match(xml,/<c:axPos val="r"/);
- assert.match(xml,/<c:symbol val="none"/);assert.match(xml,/E5E5E5/);assert.match(xml,/CCCCCC/);
+ assert.match(xml,/<c:symbol val="none"/);assert.match(xml,/E0E6E3/);assert.match(xml,/CFD8D6/);
 });
 
 test('emptysecondaryunitfallstoexplicitprimarypercentageunit',()=>{

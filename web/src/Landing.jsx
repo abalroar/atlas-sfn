@@ -148,7 +148,7 @@ export default function Landing({catalog,sfn,onNavigate,onOpenInstitution}){
   const choose=useCallback(bank=>{setSelected(bank.id);setNetworkSelection(bank.id);document.getElementById('institution')?.scrollIntoView({behavior:'auto',block:'start'});},[]);
   function changeScene(id,event){setSceneMotion(!!event?.detail);setScene(id);const url=new URL(location.href);url.searchParams.set('scene',id);history.replaceState({},'',url);}
   function nextScene(offset,event){const index=SCENES.findIndex(([id])=>id===scene);changeScene(SCENES[(index+offset+SCENES.length)%SCENES.length][0],event);}
-  const links=[['institutions','Instituições'],['sfn','Sistema financeiro'],['imob','Mercado imobiliário'],['payments','Pagamentos'],['update','Atualizar base']];
+  const links=[['institutions','Instituições'],['sfn','Sistema financeiro'],['payments','Pagamentos'],['update','Atualizar base']];
   return <div className="tc-landing">
     <header className="tc-nav"><a className="tc-wordmark" href={BASE} onClick={event=>{event.preventDefault();onNavigate('overview');}}>Toma Conta</a><button className="tc-nav-toggle" type="button" aria-label="Abrir navegação" aria-expanded={menu} onClick={()=>setMenu(!menu)}><Menu size={22}/></button><nav className={menu?'is-open':''} aria-label="Navegação principal">{links.map(([id,label])=><a href={`${BASE}?view=${id}`} key={id} onClick={event=>{event.preventDefault();setMenu(false);onNavigate(id);}}>{label}</a>)}</nav></header>
     <main className="tc-explorer" aria-label="Explorar os dados do Toma Conta">

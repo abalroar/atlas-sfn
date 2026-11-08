@@ -1,6 +1,7 @@
-import {COLORS,dateLabel,periodOf,chartCategories,axisUnits,seriesAxis,percentAxis,download} from './data.js';
-import {displayScale,monthLabel,quantity,readable,retiredSeries,seriesColors} from './editorial.js';
+import {dateLabel,periodOf,chartCategories,axisUnits,seriesAxis,percentAxis,download} from './data.js';
+import {displayScale,monthLabel,quantity,readable,retiredSeries,seriesColors,sourceLine} from './editorial.js';
 import {dumbbellRows,ufTiles} from './chart-views.js';
+const ATLAS_FALLBACK=['2C657F','B07A1F','6BA5BD','7A5214','16323F','D9B77A','9AC4D4','8A7560'];
 
 const xmlText=value=>value.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,'&');
 const xmlAttribute=(tag,name)=>xmlText(tag.match(new RegExp(`\\b${name}="([^"]*)"`))?.[1]||'');
@@ -119,12 +120,12 @@ export function addChartForPptx(slide,types,chart,options={}){
  chart.series.forEach((series,index)=>{
   const axis=seriesAxis(chart,series),type=forced||(series.type==='bar'?'bar':'line');let group=groups.find(g=>g.axis===axis&&g.kind===type);
   if(!group){group={axis,kind:type,type:types[type],data:[],options:{secondaryValAxis:axis===1,secondaryCatAxis:axis===1,chartColors:[]}};groups.push(group);}
-  group.data.push(prepared[index]);group.options.chartColors.push(colors?.[index]||COLORS[index%COLORS.length].slice(1));
+  group.data.push(prepared[index]);group.options.chartColors.push(colors?.[index]||ATLAS_FALLBACK[index%ATLAS_FALLBACK.length]);
  });
  const axes=axisUnits(chart);
- const opts={...rest,dataLabelFontFace:'Calibri',valAxisLabelFormatCode:axisFormat(chart,0),showValAxisTitle:false,lineDataSymbol:chartCategories(chart).length===1?'circle':'none',lineDataSymbolSize:3,valGridLine:{color:'E5E5E5',size:.5},valAxisLineColor:'CCCCCC',catAxisLineColor:'CCCCCC',valAxisLineSize:.5,catAxisLineSize:.5};
+ const opts={...rest,dataLabelFontFace:'Calibri',valAxisLabelFormatCode:axisFormat(chart,0),showValAxisTitle:false,lineDataSymbol:chartCategories(chart).length===1?'circle':'none',lineDataSymbolSize:3,valGridLine:{color:'E0E6E3',size:.5},valAxisLineColor:'CFD8D6',catAxisLineColor:'CFD8D6',valAxisLabelColor:'4A6670',catAxisLabelColor:'4A6670',legendColor:'4A6670',valAxisLineSize:.5,catAxisLineSize:.5};
  if(colors&&groups.length===1)opts.chartColors=groups[0].options.chartColors;
- if(axes.length>1){delete opts.valAxisMinVal;opts.valAxes=axes.map((unit,axis)=>({showValAxisTitle:false,valAxisLabelFormatCode:axisFormat(chart,axis),valAxisLabelFontFace:'Calibri',valAxisLabelFontSize:7,valGridLine:axis===0?{color:'E5E5E5',size:.5}:{style:'none'},axisPos:axis===1?'r':'l'}));opts.catAxes=[{catAxisLabelPos:'low'},{catAxisHidden:true,catAxisLabelPos:'none'}];}
+ if(axes.length>1){delete opts.valAxisMinVal;opts.valAxes=axes.map((unit,axis)=>({showValAxisTitle:false,valAxisLabelFormatCode:axisFormat(chart,axis),valAxisLabelFontFace:'Calibri',valAxisLabelFontSize:7,valGridLine:axis===0?{color:'E0E6E3',size:.5}:{style:'none'},axisPos:axis===1?'r':'l'}));opts.catAxes=[{catAxisLabelPos:'low'},{catAxisHidden:true,catAxisLabelPos:'none'}];}
  const native=groups.map(({axis,kind,...group})=>group);
  if(native.length===1)slide.addChart(native[0].type,native[0].data,opts);else slide.addChart(native,opts);
 }
@@ -135,7 +136,8 @@ export function chartTitleForPptx(c){const title=c.title.replace(/<[^>]*>/g,'');
 
 // Slide 16:9 de 13,33 × 7,5 pol. Margens de 0,45 pol.; Calibri; fundo branco; laranja Itaú BBA.
 const W=13.333,M=.45,BODY=W-2*M;
-const ORANGE='EC7000',INK='171717',GREY='6D6E71',SOFT='9A9B9C',RULE='D9D9D9';
+// Paleta do Atlas: ocre como acento, tinta azul-petróleo escura no texto.
+const ORANGE='B07A1F',INK='16323F',GREY='4A6670',SOFT='8A9AA2';
 const font={fontFace:'Calibri'};
 const plain=value=>String(value??'').replace(/<[^>]*>/g,'').replaceAll('&amp;','&');
 const isLevel=unit=>!/%|Δ|variação|meses|p\.p\./i.test(unit||'');
@@ -147,7 +149,7 @@ function chartUnits(chart){
  return units.length>1?`${units[0]} (esq.) / ${units[1]} (dir.)`:units[0];
 }
 function chartPeriod(chart){return chart.view==='matrix'?chart.matrix.label:periodOf(chart);}
-function chartContext(chart){return `${chartUnits(chart)} · ${chart.source} · ${chartPeriod(chart)}`;}
+function chartContext(chart){return `${chartUnits(chart)} · ${chartPeriod(chart)}`;}
 function slideNotes(charts){return charts.map(chart=>[chartTitleForPptx(chart),chart.reading?.text||'',chartContext(chart),chart.note||'',chart.smallMultiples?'Escala própria por série.':''].filter(Boolean).join('\n')).join('\n\n');}
 
 const nativeOptions={showTitle:false,showLegend:true,legendPos:'b',legendFontSize:9,legendFontFace:'Calibri',catAxisLabelFontFace:'Calibri',catAxisLabelFontSize:9,valAxisLabelFontFace:'Calibri',valAxisLabelFontSize:9,showValue:false,lineSize:2,showCatName:false,catAxisLabelRotate:0,showBorder:false,showSerName:false,showLeaderLines:false,barDir:'col',displayBlanksAs:'gap',showLegendKey:false,showPercent:false};
@@ -174,13 +176,13 @@ function splitChart(slide,p,chart,box){
  slide.addText(units[0],{...font,x:box.x,y:box.y-.02,w:3,h:.2,fontSize:8,color:GREY});
  addChartForPptx(slide,p.ChartType,bars,{...nativeOptions,x:box.x,y:box.y+.15,w:box.w,h:top-.15,colors:[colors[chart.series.indexOf(chart.series.find(s=>seriesAxis(chart,s)===0))]],showLegend:false,catAxisHidden:true,valAxisMinVal:0,barGapWidthPct:40});
  slide.addText(`${lines.series[0]?.name||''} · ${units[1]}`,{...font,x:box.x,y:box.y+top+.02,w:4,h:.2,fontSize:8,color:GREY});
- addChartForPptx(slide,p.ChartType,lines,{...nativeOptions,x:box.x,y:box.y+top+.2,w:box.w,h:box.h-top-.2,colors:['171717'],showLegend:false,lineSize:1.75,catAxisLabelFrequency:frequency(chart,box.w)});
+ addChartForPptx(slide,p.ChartType,lines,{...nativeOptions,x:box.x,y:box.y+top+.2,w:box.w,h:box.h-top-.2,colors:['16323F'],showLegend:false,lineSize:1.75,catAxisLabelFrequency:frequency(chart,box.w)});
 }
 
 function dumbbellChart(slide,p,chart,box){
  const {rows,label,earlierLabel}=dumbbellRows(chart),ordered=rows.slice().reverse(),unit=axisUnits(chart)[0];
  const bars={...chart,axes:[unit],unit,stacked:false,series:[{name:earlierLabel,type:'bar',data:ordered.map(r=>[r.name,r.before])},{name:label,type:'bar',data:ordered.map(r=>[r.name,r.now])}]};
- addChartForPptx(slide,p.ChartType,bars,{...nativeOptions,...box,barDir:'bar',barGrouping:'clustered',barGapWidthPct:60,colors:['C9CACB',ORANGE],showLegend:true,legendPos:'b',showValue:true,dataLabelFontSize:8,dataLabelColor:'404040',dataLabelFormatCode:percentAxis(bars,0)?'0.0%':'#,##0.0',catAxisLabelFontSize:9,catAxisLabelPos:'low'});
+ addChartForPptx(slide,p.ChartType,bars,{...nativeOptions,...box,barDir:'bar',barGrouping:'clustered',barGapWidthPct:60,colors:['C9D1D0',ORANGE],showLegend:true,legendPos:'b',showValue:true,dataLabelFontSize:8,dataLabelColor:'404040',dataLabelFormatCode:percentAxis(bars,0)?'0.0%':'#,##0.0',catAxisLabelFontSize:9,catAxisLabelPos:'low'});
 }
 
 function tileMap(slide,chart,box){
@@ -199,7 +201,7 @@ function tileMap(slide,chart,box){
 }
 
 function matrixTable(slide,chart,box){
- const {matrix}=chart,shade=value=>{if(value==null)return 'FFFFFF';const t=Math.min(1,.06+value/100*.94),mix=(a,b)=>Math.round(a+(b-a)*t).toString(16).padStart(2,'0');return mix(255,236)+mix(255,112)+mix(255,0);};
+ const {matrix}=chart,shade=value=>{if(value==null)return 'FFFFFF';const t=Math.min(1,.06+value/100*.94),mix=(a,b)=>Math.round(a+(b-a)*t).toString(16).padStart(2,'0');return mix(255,44)+mix(255,101)+mix(255,127);};
  const head=[{text:'Produto',options:{bold:true,color:GREY}},...matrix.channels.map(c=>({text:matrix.short[c]||c,options:{color:GREY,align:'center'}})),{text:'Total no trimestre',options:{color:GREY,align:'right'}}];
  const body=matrix.rows.map(row=>[{text:row.product,options:{color:INK}},...matrix.channels.map(c=>{const v=row.shares[c];return {text:v==null?'N/D':v>0&&v<.5?'<1%':`${Math.round(v)}%`,options:{align:'center',fill:{color:shade(v)},color:v!=null&&v>=55?'FFFFFF':INK}};}),{text:quantity(row.total,matrix.unit),options:{align:'right',color:GREY}}]);
  const first=2.6,rest=(box.w-first-1.9)/matrix.channels.length;
@@ -212,7 +214,7 @@ function multiplesChart(slide,p,chart,box){
  active.forEach(({series,index},slot)=>{
   const x=box.x+(slot%columns)*width,y=box.y+Math.floor(slot/columns)*height,observed=series.data.some(([,v])=>v!=null&&Number.isFinite(v));
   const scale=displayScale(chart.unit,series.data.map(point=>point[1]));
-  slide.addText(`${series.name} · ${scale.unit}${observed?'':' · N/D'}`,{...font,x,y,w:width-gap,h:.25,fontSize:10,bold:true,color:'333333',margin:0});
+  slide.addText(`${series.name} · ${scale.unit}${observed?'':' · N/D'}`,{...font,x,y,w:width-gap,h:.25,fontSize:10,bold:true,color:INK,margin:0});
   const values=new Map(series.data),aligned={...series,data:chartCategories(chart).map(date=>[date,values.get(date)??null])};
   addChartForPptx(slide,p.ChartType,{...chart,series:[aligned]},{...nativeOptions,x,y:y+.27,w:width-gap,h:height-.37,showLegend:false,catAxisLabelFontSize:7,valAxisLabelFontSize:7,lineSize:1.5,catAxisLabelFrequency:Math.max(1,Math.ceil(chartCategories(chart).length/4)),colors:[colors[index]],...(series.data.every(([,v])=>v==null||v>=0)?{valAxisMinVal:0}:{})});
  });
@@ -261,17 +263,17 @@ export function deckPlan(charts,{figures={},profile=null}={}){
  return {topics,pages,sectioned};
 }
 
-function footer(slide,{source,page,title}){
- slide.addShape('line',{x:M,y:7.0,w:BODY,h:0,line:{color:RULE,width:.75}});
- slide.addText(source?`Fonte: ${source}`:'Banco Central do Brasil',{...font,x:M,y:7.05,w:BODY-2.2,h:.25,fontSize:8,color:SOFT,margin:0});
- // Uma corrida de texto por caixa: parágrafos com uma única definição de estilo.
- slide.addText(`${title} · ${page}`,{...font,x:W-M-4.45,y:7.05,w:4,h:.25,fontSize:8,color:SOFT,align:'right',margin:0});
- slide.addText('Atlas',{...font,x:W-M-.4,y:7.05,w:.4,h:.25,fontSize:8,bold:true,color:ORANGE,align:'right',margin:0});
+// Rodapé sem fonte: a fonte aparece uma vez, na página de notas.
+function footer(slide,{page,title}){
+ slide.addText('Atlas',{...font,x:M,y:7.05,w:.45,h:.25,fontSize:8,bold:true,color:ORANGE,margin:0});
+ slide.addText(title,{...font,x:M+.45,y:7.05,w:BODY-1.5,h:.25,fontSize:8,color:SOFT,margin:0});
+ slide.addText(String(page),{...font,x:W-M-1,y:7.05,w:1,h:.25,fontSize:8,color:SOFT,align:'right',margin:0});
 }
+
 // O PowerPoint não reduz a fonte ao abrir o arquivo: o tamanho sai do comprimento do texto.
 const fitSize=(text,width,size,min)=>{let s=size;while(s>min&&String(text).length*s*.0078>width*2)s-=1;return s;};
 function heading(slide,{kicker,title,subtitle,size=22}){
- if(kicker)slide.addText(kicker.toUpperCase(),{...font,x:M,y:.32,w:BODY,h:.25,fontSize:10,bold:true,color:ORANGE,charSpacing:1,margin:0});
+ if(kicker)slide.addText(kicker,{...font,x:M,y:.32,w:BODY,h:.25,fontSize:11,bold:true,color:ORANGE,margin:0});
  const fitted=fitSize(title,BODY,size,15),oneLine=String(title).length*fitted*.0078<=BODY;
  slide.addText(title,{...font,x:M,y:.58,w:BODY,h:.8,fontSize:fitted,bold:true,color:INK,valign:oneLine?'middle':'top',margin:0});
  if(subtitle)slide.addText(subtitle,{...font,x:M,y:1.4,w:BODY,h:.28,fontSize:11,color:GREY,margin:0});
@@ -293,7 +295,7 @@ export function buildPptx(charts,title,PptxGenJS,deck={}){
    slide.addText(title,{...font,x:M,y:2.2,w:BODY,h:1.3,fontSize:40,bold:true,color:INK,valign:'bottom',margin:0,fit:'shrink'});
    const count=coverage.complete?`${ready.length} gráficos`:`Exportação parcial · ${ready.length} de ${charts.length} gráficos`;
    slide.addText(`${count}${plan.topics.length>1?` · ${plan.topics.length} assuntos`:''}${latest?` · dados até ${monthLabel(latest+'-01')}`:''}`,{...font,x:M,y:3.65,w:BODY,h:.4,fontSize:16,color:GREY,margin:0});
-   slide.addText('Banco Central do Brasil. Gráficos nativos e editáveis: cada um traz leitura, unidade, período e fonte; as definições estão nas notas.'+(!coverage.complete?' Gráficos sem dados no intervalo constam do anexo.':''),{...font,x:M,y:6.55,w:BODY,h:.4,fontSize:10,color:SOFT,margin:0});
+   slide.addText('Gráficos nativos e editáveis, com leitura, unidade e período. Fonte e definições na página final.'+(!coverage.complete?' Gráficos sem dados no intervalo constam do anexo.':''),{...font,x:M,y:6.55,w:BODY,h:.4,fontSize:10,color:SOFT,margin:0});
    continue;
   }
   if(page.type==='profile'){
@@ -313,7 +315,7 @@ export function buildPptx(charts,title,PptxGenJS,deck={}){
     slide.addText(row.maxText,{...font,x:x+cw-1.6,y:track+.13,w:1.6,h:.22,fontSize:8,color:SOFT,align:'right',margin:0});
    });
    slide.addText('Ativo e carteira em escala logarítmica; índices entre os percentis 2 e 98, com os extremos encostados nas pontas.',{...font,x:M,y:6.7,w:BODY,h:.25,fontSize:8,color:SOFT,margin:0});
-   footer(slide,{source:'BCB / IFData',page:number,title:short});
+   footer(slide,{page:number,title:short});
    continue;
   }
   if(page.type==='contents'){
@@ -325,7 +327,6 @@ export function buildPptx(charts,title,PptxGenJS,deck={}){
     slide.addText(topic.label||title,{...font,x:x+.55,y,w:cw-2.9,h:.4,fontSize:13,bold:true,color:INK,margin:0});
     slide.addText(`${topic.charts.length} ${topic.charts.length===1?'gráfico':'gráficos'}`,{...font,x:x+cw-2.3,y,w:1.4,h:.4,fontSize:11,color:SOFT,align:'right',margin:0});
     slide.addText(String(topic.page),{...font,x:x+cw-.8,y,w:.8,h:.4,fontSize:13,color:GREY,align:'right',margin:0});
-    slide.addShape('line',{x,y:y+.45,w:cw,h:0,line:{color:RULE,width:.5}});
    });
    footer(slide,{page:number,title:short});
    continue;
@@ -338,7 +339,6 @@ export function buildPptx(charts,title,PptxGenJS,deck={}){
    const cw=BODY/3;
    list.forEach((entry,i)=>{
     const x=M+i*cw;
-    slide.addShape('line',{x,y:3.35,w:cw-.35,h:0,line:{color:INK,width:1.5}});
     slide.addText(entry.label,{...font,x,y:3.45,w:cw-.35,h:.5,fontSize:11,color:GREY,valign:'top',margin:0});
     slide.addText(entry.text,{...font,x,y:3.95,w:cw-.35,h:.7,fontSize:entry.text.length>18?22:entry.text.length>13?26:30,bold:true,color:INK,margin:0});
     slide.addText(`${entry.when}${entry.deltaText?` · ${entry.deltaText} em 12 meses`:''}`,{...font,x,y:4.7,w:cw-.35,h:.3,fontSize:11,color:GREY,margin:0});
@@ -346,7 +346,7 @@ export function buildPptx(charts,title,PptxGenJS,deck={}){
    // Índice do assunto: os gráficos na ordem em que aparecem.
    const names=topic.charts.map(chart=>plain(chart.title)),half=Math.ceil(names.length/2),lines=names.length>8?[names.slice(0,half),names.slice(half)]:[names];
    lines.forEach((column,i)=>slide.addText(column.map(name=>({text:name,options:{breakLine:true}})),{...font,x:M+i*(BODY/2),y:5.35,w:BODY/2-.3,h:1.5,fontSize:names.length>12?8:9,color:GREY,valign:'top',margin:0,paraSpaceAfter:1}));
-   footer(slide,{source:[...new Set(topic.charts.map(chart=>chart.source))].slice(0,2).join(' · '),page:number,title:short});
+   footer(slide,{page:number,title:short});
    continue;
   }
   if(page.type==='chart'){
@@ -357,7 +357,7 @@ export function buildPptx(charts,title,PptxGenJS,deck={}){
     heading(slide,{kicker,title:chart.reading?.text||chartTitleForPptx(chart),subtitle:`${chartTitleForPptx(chart)} · ${chartUnits(chart)}${chart.smallMultiples?' · escala própria por série':''} · ${chartPeriod(chart)}`});
     renderChart(slide,p,chart,{x:M,y:1.8,w:BODY,h:5.0});
    }else{
-    if(kicker)slide.addText(kicker.toUpperCase(),{...font,x:M,y:.32,w:BODY,h:.25,fontSize:10,bold:true,color:ORANGE,charSpacing:1,margin:0});
+    if(kicker)slide.addText(kicker,{...font,x:M,y:.32,w:BODY,h:.25,fontSize:11,bold:true,color:ORANGE,margin:0});
     const cw=(BODY-.5)/2;
     page.charts.forEach((chart,i)=>{
      const x=M+i*(cw+.5);
@@ -367,19 +367,19 @@ export function buildPptx(charts,title,PptxGenJS,deck={}){
      renderChart(slide,p,chart,{x,y:1.85,w:cw,h:4.95});
     });
    }
-   footer(slide,{source:[...new Set(page.charts.map(chart=>chart.source))].join(' · '),page:number,title:short});
+   footer(slide,{page:number,title:short});
    continue;
   }
   if(page.type==='notes'){
    const slide=add();heading(slide,{kicker:'Atlas',title:'Notas e fontes',size:24});
    const general=['N/D indica ausência de dado publicado; zero é valor observado.','Quando o rótulo indica bilhões ou milhões, a planilha de cada gráfico mantém a unidade publicada pelo Banco Central.','As leituras comparam o último dado com o mesmo período do ano anterior, quando ele existe.'];
    // Cada corrida fecha o próprio parágrafo (breakLine), como o OOXML exige.
-   const items=[...page.notes.flatMap(note=>[{text:note.charts.join(' · '),options:{bold:true,color:INK,fontSize:10,breakLine:true}},{text:note.text,options:{color:GREY,fontSize:10,breakLine:true,paraSpaceAfter:9}}]),{text:general.join(' '),options:{color:SOFT,fontSize:9,breakLine:true}}];
+   const items=[{text:`Fonte: ${sourceLine(ready)}.`,options:{bold:true,color:INK,fontSize:11,breakLine:true,paraSpaceAfter:12}},...page.notes.flatMap(note=>[{text:note.charts.join(' · '),options:{bold:true,color:INK,fontSize:10,breakLine:true}},{text:note.text,options:{color:GREY,fontSize:10,breakLine:true,paraSpaceAfter:9}}]),{text:general.join(' '),options:{color:SOFT,fontSize:9,breakLine:true}}];
    slide.addText(items,{...font,x:M,y:1.75,w:BODY,h:5.1,valign:'top',margin:0});
-   footer(slide,{source:[...new Set(ready.map(chart=>chart.source))].slice(0,3).join(' · '),page:number,title:short});
+   footer(slide,{page:number,title:short});
   }
  }
- for(let i=0;i<coverage.missing.length;i+=12){const slide=add();heading(slide,{kicker:'Atlas',title:'Cobertura da exportação parcial',subtitle:'Gráficos sem observações no intervalo selecionado:'});coverage.missing.slice(i,i+12).forEach((c,j)=>slide.addText(`${c.section||'Seção não informada'} · ${plain(c.title)}`,{...font,x:M,y:1.85+j*.4,w:BODY,h:.36,fontSize:12,color:'333333',margin:0}));footer(slide,{page:number,title:short});}
+ for(let i=0;i<coverage.missing.length;i+=12){const slide=add();heading(slide,{kicker:'Atlas',title:'Cobertura da exportação parcial',subtitle:'Gráficos sem observações no intervalo selecionado:'});coverage.missing.slice(i,i+12).forEach((c,j)=>slide.addText(`${c.section||'Seção não informada'} · ${plain(c.title)}`,{...font,x:M,y:1.85+j*.4,w:BODY,h:.36,fontSize:12,color:INK,margin:0}));footer(slide,{page:number,title:short});}
  const fileName='Atlas_'+(coverage.complete?'':'Parcial_')+title.replace(/[^\p{L}\p{N}]+/gu,'_')+'.pptx';
  return {presentation:p,coverage,fileName,plan};
 }

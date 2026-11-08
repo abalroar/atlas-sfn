@@ -40,7 +40,9 @@ export const isUfChart = chart => chart.series.length === 1 && chart.series[0].d
 
 /** Tinta sequencial (clara para escura) pela posição entre mínimo e máximo observados. */
 export function tileRamp(medium = 'web') {
-  return medium === 'web' ? ['#fbe3cc', '#f6bf8c', '#f09a4f', '#ec7000', '#a64a00'] : ['FBE3CC', 'F6BF8C', 'F09A4F', 'EC7000', 'A64A00'];
+  // A mesma rampa da inadimplência no mapa do filme.
+  const ramp = ['#E0ECEF', '#9AC4D4', '#6BA5BD', '#47869F', '#2C657F'];
+  return medium === 'web' ? ramp : ramp.map(color => color.slice(1));
 }
 export function ufTiles(chart, medium = 'web') {
   const values = chart.series[0].data.filter(([, value]) => finite(value)).map(([, value]) => value);
@@ -48,7 +50,7 @@ export function ufTiles(chart, medium = 'web') {
   const tiles = Object.entries(UF_TILES).map(([uf, [col, row]]) => {
     const value = chart.series[0].data.find(([key]) => key === uf)?.[1];
     const step = finite(value) && max > min ? Math.min(ramp.length - 1, Math.floor((value - min) / (max - min) * ramp.length)) : finite(value) ? ramp.length - 1 : -1;
-    return {uf, col, row, value: finite(value) ? value : null, color: step < 0 ? (medium === 'web' ? '#e5e9e6' : 'EEEEEE') : ramp[step], dark: step >= 3};
+    return {uf, col, row, value: finite(value) ? value : null, color: step < 0 ? (medium === 'web' ? '#ECEEEA' : 'ECEEEA') : ramp[step], dark: step >= 3};
   });
   return {tiles, min, max, ramp, cols: 6, rows: 8};
 }
