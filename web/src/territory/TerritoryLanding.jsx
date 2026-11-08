@@ -257,7 +257,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
       computeCameras(); setReady(true);
       // O filme começa ao carregar, inclusive com movimento reduzido; um gesto no mapa interrompe o percurso.
       // Se a pessoa já foi para a exploração antes de o mapa ficar pronto, aplica a exploração no lugar do filme.
-      if (modeRef.current === 'explore') { lastData.current.look = null; applyLook(EXPLORE); cancelAnim(); const b = m.cameraForBounds(BR_BOUNDS, { padding: PAD }); m.jumpTo({ center: b.center, zoom: b.zoom }); updateView(); }
+      if (modeRef.current === 'explore') { lastData.current.look = null; applyLook(EXPLORE); cancelAnim(); const b = m.cameraForBounds(BR_BOUNDS, { padding: PAD }); if (b) m.jumpTo({ center: b.center, zoom: b.zoom }); updateView(); }
       else { clock.current.playing = true; clock.current.last = 0; setPlaying(true); }
     };
     m.on('style.load', init); m.on('styledata', init); m.on('load', init);
@@ -276,6 +276,8 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
     const m = map.current; if (!m || !places || !pix) return;
     const film = modeRef.current === 'film';
     const c = m.cameraForBounds(BR_BOUNDS, { padding: film ? FILM_PAD : PAD });
+    // Sem área útil (aba oculta ou margem maior que o mapa) o MapLibre não devolve câmera; mantém a anterior.
+    if (!c) return;
     const w = m.getCanvas().clientWidth, h = m.getCanvas().clientHeight, k = Math.log2(Math.min(w, h * 1.25) / 1000);
     const top = places.find(pl => pl.ibge === pix.facts.highest.ibge);
     const brasil = { center: [c.center.lng, c.center.lat], zoom: c.zoom };
@@ -444,7 +446,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
   // Fim do percurso (ou qualquer gesto): o mapa abre espaço para a coluna e passa a mostrar as unidades.
   function converge(recenter) {
     modeRef.current = 'explore'; setMode('explore'); lastData.current.look = null; applyLook(EXPLORE);
-    if (recenter) setTimeout(() => { const m = map.current; if (!m) return; const c = m.cameraForBounds(BR_BOUNDS, { padding: PAD }); flyTo({ center: [c.center.lng, c.center.lat], zoom: c.zoom }, true); }, 720);
+    if (recenter) setTimeout(() => { const m = map.current; if (!m) return; const c = m.cameraForBounds(BR_BOUNDS, { padding: PAD }); if (c) flyTo({ center: [c.center.lng, c.center.lat], zoom: c.zoom }, true); }, 720);
     setTimeout(updateView, 800);
   }
   function takeControl() {
