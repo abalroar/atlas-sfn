@@ -1,4 +1,5 @@
 import React,{useCallback,useEffect,useId,useMemo,useRef,useState} from 'react';
+import {ChevronLeft,ChevronRight} from 'lucide-react';
 import {json,csvDownload} from './data.js';
 import {groupColor,groupName,selectLandingCohort} from './landing-data.js';
 import InstitutionSearch from './InstitutionSearch.jsx';
@@ -42,22 +43,29 @@ function Analysis({bank,payload,metrics,period,window}){
   })}</div>;
 }
 
+// Um indicador por vez: valor, posição e a régua com todas as instituições do perímetro.
 function PositionRulers({rows,bank,period}){
+  const [index,setIndex]=useState(0);
   if(!rows.length)return null;
-  return <section className="institution-rulers" aria-labelledby="institution-rulers-title">
-    <div className="institution-section-title"><h2 id="institution-rulers-title">Posição no perímetro {bank.perimeter}</h2><span>{rows[0].periodLabel}{period!==rows[0].period?' · última competência publicada':''}</span></div>
-    <ol>{rows.map(row=><li key={row.key}>
-      <div className="institution-ruler-head"><span>{row.label}<small>{row.unit}</small></span><strong>{row.valueText}</strong></div>
-      <div className="institution-ruler-track" role="img" aria-label={`${row.label}: ${row.valueText}. ${row.rank?row.rank+'ª de '+row.count:'Sem dado'} no perímetro.`}>
-        <svg viewBox="0 0 300 22" preserveAspectRatio="none" aria-hidden="true">
-          <line x1="0" x2="300" y1="11" y2="11" className="institution-ruler-axis"/>
-          {row.positions.map((position,index)=><line key={index} x1={position*300} x2={position*300} y1="5" y2="17" className="institution-ruler-tick"/>)}
-        </svg>
-        {row.position!=null&&<span className="institution-ruler-own" style={{left:`${row.position*100}%`}}/>}
+  const at=(index%rows.length+rows.length)%rows.length,row=rows[at],move=step=>setIndex(value=>value+step);
+  return <section className="institution-rulers" aria-labelledby="institution-rulers-title" aria-roledescription="carrossel">
+    <div className="institution-rulers-head"><h2 id="institution-rulers-title">Posição no perímetro {bank.perimeter}</h2><span>{row.periodLabel}{period!==row.period?' · última competência':''}</span></div>
+    <div className="institution-ruler-card" tabIndex={0} onKeyDown={event=>{if(event.key==='ArrowRight'){event.preventDefault();move(1);}if(event.key==='ArrowLeft'){event.preventDefault();move(-1);}}}>
+      <button type="button" className="institution-ruler-arrow" aria-label="Indicador anterior" onClick={()=>move(-1)}><ChevronLeft size={22} strokeWidth={1.6}/></button>
+      <div className="institution-ruler-body" aria-live="polite">
+        <div className="institution-ruler-title"><span>{row.label} <small>{row.unit}</small></span><span className="institution-ruler-rank">{row.rank?`${row.rank}º de ${row.count}`:'Sem dado'}</span></div>
+        <strong className="institution-ruler-value">{row.valueText}</strong>
+        <div className="institution-ruler-track" role="img" aria-label={`${row.label}: ${row.valueText}. ${row.rank?row.rank+'º de '+row.count:'Sem dado'}. Mediana ${row.medianText}.`}>
+          <svg viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true">
+            {row.positions.map((position,i)=><line key={i} x1={position*300} x2={position*300} y1="6" y2="34" className="institution-ruler-tick"/>)}
+          </svg>
+          {row.position!=null&&<span className="institution-ruler-own" style={{left:`${row.position*100}%`}}/>}
+        </div>
+        <div className="institution-ruler-foot"><span>{row.minText}</span><span>mediana {row.medianText}{row.scale==='log'?' · escala log':''}</span><span>{row.maxText}</span></div>
       </div>
-      <div className="institution-ruler-foot"><span>{row.minText}</span><span>{row.rank?`${row.rank}ª de ${row.count} · mediana ${row.medianText}`:'Sem dado nesta competência'}</span><span>{row.maxText}</span></div>
-    </li>)}</ol>
-    <p className="institution-footnote">Cada traço é uma instituição do perímetro com dado na competência; a posição segue a ordem decrescente do valor. Ativo e carteira em escala logarítmica, com zero na ponta esquerda; índices entre os percentis 2 e 98, com os extremos nas pontas.</p>
+      <button type="button" className="institution-ruler-arrow" aria-label="Próximo indicador" onClick={()=>move(1)}><ChevronRight size={22} strokeWidth={1.6}/></button>
+    </div>
+    <div className="institution-ruler-dots" role="group" aria-label="Indicadores">{rows.map((entry,i)=><button type="button" key={entry.key} aria-label={entry.label} aria-pressed={i===at} onClick={()=>setIndex(i)}/>)}</div>
   </section>;
 }
 

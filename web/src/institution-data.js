@@ -50,6 +50,8 @@ function metricSeries(payload,period,window,key,metrics){
   return result;
 }
 
+const BAR_METRICS=new Set(['profitYtd','profitQuarter']);
+
 /**
  * Até duas unidades por gráfico: a segunda vai para o eixo direito. Numa só unidade, o eixo direito
  * recebe os indicadores mais de seis vezes menores que o maior (mesma regra dos gráficos de séries).
@@ -57,7 +59,8 @@ function metricSeries(payload,period,window,key,metrics){
 export function institutionChart({bank,payload,metrics,keys,period,window='all',id}){
   validateInstitutionHistory(bank,payload);
   const units=[...new Set(keys.map(key=>metrics[key]?.unit))];if(units.length>2)throw Error('Escolha indicadores de no máximo duas unidades para este gráfico.');
-  const series=keys.map(key=>({key,name:keys.length===1?bank.name:chartMetricLabel(key,metrics),type:'line',data:metricSeries(payload,period,window,key,metrics)}));
+  // Lucro é fluxo do período (o acumulado reinicia a cada janeiro): barras. Saldos e índices seguem em linha.
+  const series=keys.map(key=>({key,name:keys.length===1?bank.name:chartMetricLabel(key,metrics),type:BAR_METRICS.has(key)?'bar':'line',data:metricSeries(payload,period,window,key,metrics)}));
   let right=new Set();
   if(units.length===2)right=new Set(series.filter(entry=>metrics[entry.key]?.unit===units[1]).map(entry=>entry.key));
   else if(series.length>1){
@@ -103,7 +106,7 @@ export function comparisonChart({banks,histories,metrics,key,period,window='all'
   if(banks.some(bank=>bank.perimeter!==perimeter))throw Error('Selecione instituições do mesmo perímetro.');
   const byId=new Map(histories.map(payload=>[payload.id,payload]));
   return {id:'institution-comparison-'+key,title:metrics[key]?.label||key,unit:metricUnit(key,metrics),percent:metrics[key]?.unit==='%',source:'BCB / IFData · '+perimeter,note:metricNote(key,metrics),
-    series:banks.map(bank=>{const payload=byId.get(bank.id);if(!payload)return {name:groupName(bank),type:'line',data:[]};validateInstitutionHistory(bank,payload);return {name:groupName(bank),type:'line',data:metricSeries(payload,period,window,key,metrics)};})};
+    series:banks.map(bank=>{const type=BAR_METRICS.has(key)?'bar':'line',payload=byId.get(bank.id);if(!payload)return {name:groupName(bank),type,data:[]};validateInstitutionHistory(bank,payload);return {name:groupName(bank),type,data:metricSeries(payload,period,window,key,metrics)};})};
 }
 
 /** Rank the whole observed perimeter before applying a name filter. Keep observed zero. */

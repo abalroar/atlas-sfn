@@ -153,3 +153,23 @@
 .tc-workspace .tc-chart-choice button{font-size:13px;color:var(--tc-muted);padding:2px 0;border-bottom:1.5px solid transparent}
 .tc-workspace .tc-chart-choice button[aria-pressed=true]{color:var(--tc-ink);border-color:var(--tc-petrol);font-weight:600}
 .tc-matrix-note{font-size:11px;color:var(--tc-muted);margin-top:8px}
+/* Botões de escolha: o selecionado é preenchido em azul-petróleo, com texto na cor do papel. Sem sublinhados nem marcadores. */
+.tc-workspace .tc-topic-tabs,.institution-tabs,.statements-tabs{gap:6px!important}
+.tc-workspace .tc-topic-tabs button,.tc-workspace .institution-tabs button,.tc-workspace .statements-tabs button,.tc-workspace .tc-chart-choice button,.tc-workspace .tc-chart-modes .tc-text-action{border:1px solid transparent!important;border-radius:999px;padding:6px 14px!important;color:var(--tc-ink);font-weight:500!important;text-decoration:none!important;line-height:1.2}
+.tc-workspace .tc-topic-tabs button[aria-selected=true],.tc-workspace .institution-tabs button[aria-selected=true],.tc-workspace .statements-tabs button[aria-selected=true],.tc-workspace .tc-chart-choice button[aria-pressed=true],.tc-workspace .tc-chart-modes .tc-text-action[aria-pressed=true]{background:var(--tc-petrol);border-color:var(--tc-petrol)!important;color:var(--tc-paper)!important;font-weight:600!important}
+@media(hover:hover){.tc-workspace .tc-topic-tabs button:not([aria-selected=true]):hover,.tc-workspace .institution-tabs button:not([aria-selected=true]):hover,.tc-workspace .statements-tabs button:not([aria-selected=true]):hover,.tc-workspace .tc-chart-choice button:not([aria-pressed=true]):hover,.tc-workspace .tc-chart-modes .tc-text-action:not([aria-pressed=true]):hover{border-color:#a4bdc4!important;color:var(--tc-ink)}}
+.tc-workspace .tc-chart-choice{gap:2px}
+.tc-workspace .tc-chart-choice button,.tc-workspace .tc-chart-modes .tc-text-action{font-size:12px!important;padding:4px 11px!important}
+.tc-workspace .tc-chart-modes .tc-text-action{border-color:#a4bdc4!important}
+.tc-workspace .tc-topic-tabs button{font-size:14px!important}
+.tc-workspace .tc-topic-tabs{margin-left:-14px}
+.tc-workspace .institution-tabs{margin-left:-14px;padding:10px 0 14px}
+.tc-workspace .statements-tabs{margin-left:-14px}
+.tc-app-nav nav a[aria-current=page]{text-decoration:none;background:var(--tc-petrol);color:var(--tc-paper);border-radius:999px;padding:5px 12px;margin:-5px -12px}
+.tc-page-header,.institution-header{border-bottom:0!important}
+.institution-block h2{border-bottom:0!important}
+.institution-metrics td,.institution-metrics tbody th{border-bottom:0!important}
+.institution-metrics button[aria-pressed=true]:before{content:none!important}
+.institution-metrics button{border-radius:999px;padding:3px 10px;margin-left:-10px}
+.institution-metrics button[aria-pressed=true]{background:var(--tc-petrol);color:var(--tc-paper)!important;font-weight:600}
+@media(max-width:760px){.tc-workspace .tc-topic-tabs{margin-left:0}.tc-app-nav nav a[aria-current=page]{margin:0;align-self:flex-start}}
