@@ -5,9 +5,9 @@ import './sections.css';
 
 // Mercado imobiliário vive dentro de Estatísticas de crédito; a atualização da base segue por endereço direto (?view=update).
 export const APP_NAVIGATION = [
-  ['institutions', 'Saúde das instituições'],
+  ['institutions', 'Saúde das instituições financeiras'],
   ['sfn', 'Estatísticas de crédito'],
-  ['payments', 'Pagamentos'],
+  ['payments', 'Estatísticas de pagamentos'],
 ];
 export const navigationSection = page => page === 'imob' ? 'sfn' : page;
 

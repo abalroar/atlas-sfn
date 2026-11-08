@@ -2,11 +2,12 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import * as maplibregl from 'maplibre-gl';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { geoArea, geoCentroid, geoMercator, geoPath } from 'd3-geo';
 import '../atlas-landing.css';
 import './territory.css';
-// Cena e cálculos de inadimplência do próprio site: mesma regra de taxa, escala e morfologia.
-import AtlasScene, { ATLAS_RATE_SCALE } from '../AtlasScene.jsx';
+// Cálculos de inadimplência do próprio site: mesma regra de taxa.
 import { makeCube, rate, percent, monthLabel as siteMonth } from '../atlas-data.js';
+import { WEB_CHART_COLORS } from '../chart-palette.js';
 import { loadAtlasAsset } from '../atlas-publication.js';
 import { BASE, json } from '../data.js';
 import { APP_NAVIGATION } from '../AppShell.jsx';
@@ -29,7 +30,8 @@ const LAYERS = ['pts-inst', 'pts-exact', 'pts-loose'];
 // Limites da malha de UFs usada pela cena do site; o mapa vetorial repete o mesmo enquadramento.
 const BR_BOUNDS = [[-73.9856, -33.7439], [-34.7932, 5.2673]];
 const PAD = { top: 24, bottom: 24, left: 22, right: 22 };
-const FILM_PAD = { top: 40, bottom: 150, left: 40, right: 40 };
+const FILM_PAD = { top: 40, bottom: 40, left: 40, right: 40 };
+const VEIL = .84;
 
 const nf = (v, d = 0) => v == null || Number.isNaN(v) ? 'N/D' : v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
 const money = v => v == null ? 'N/D' : Math.abs(v) >= 1e9 ? 'R$ ' + nf(v / 1e9, 1) + ' bi' : Math.abs(v) >= 1e6 ? 'R$ ' + nf(v / 1e6, 0) + ' mi' : 'R$ ' + nf(v / 1e3, 0) + ' mil';
@@ -42,17 +44,53 @@ const ym = v => siteMonth(String(v).replace(/(\d{4})(\d{2})/, '$1-$2'));
 // Capítulos. Um relógio único move câmera e dados; ao fim, o mapa abre espaço para a coluna de busca.
 const CHAPTERS = [
   { id: 'abertura', label: 'Brasil', ms: 6000 },
-  { id: 'rede', label: 'Agências e postos', ms: 13000 },
-  { id: 'inad', label: 'Inadimplência', ms: 8000 },
-  { id: 'renda', label: 'Por renda', ms: 11000 },
+  { id: 'rede', label: 'Agências', ms: 13000 },
   { id: 'pix', label: 'Pix', ms: 12000 },
   { id: 'fronteira', label: 'Pacaraima', ms: 6500 },
+  { id: 'inad', label: 'Inadimplência', ms: 16000 },
+  { id: 'renda', label: 'Por renda', ms: 20000 },
   { id: 'poupanca', label: 'Poupança', ms: 12000 },
   { id: 'rural', label: 'Crédito rural', ms: 12000 },
 ];
+const AT = Object.fromEntries(CHAPTERS.map((c, i) => [c.id, i]));
 const STARTS = CHAPTERS.reduce((a, c, i) => (a.push(i ? a[i - 1] + CHAPTERS[i - 1].ms : 0), a), []);
 const TOTAL = STARTS.at(-1) + CHAPTERS.at(-1).ms;
 const chapterAt = t => { const i = Math.max(0, STARTS.findLastIndex(s => s <= t)); return { i, p: clamp((t - STARTS[i]) / CHAPTERS[i].ms) }; };
+// Inadimplência em gráfico. Cada UF sai do mapa como ponto, vira o contorno do estado e se acomoda em eixos:
+// x pela longitude do centro da UF (oeste à esquerda), y pela taxa, com base em zero. Cor pela região.
+// Os valores vêm do relógio do filme: entre meses, spline de Catmull-Rom; entre faixas, uma onda de oeste a leste.
+// O eixo y acompanha a faixa mostrada; a linha do Brasil fica como referência.
+const REGION = { 1: ['Norte', WEB_CHART_COLORS[4]], 2: ['Nordeste', WEB_CHART_COLORS[1]], 5: ['Centro-Oeste', WEB_CHART_COLORS[7]], 3: ['Sudeste', WEB_CHART_COLORS[2]], 4: ['Sul', WEB_CHART_COLORS[0]] };
+const UF_REGION = { AC: 1, AM: 1, AP: 1, PA: 1, RO: 1, RR: 1, TO: 1, AL: 2, BA: 2, CE: 2, MA: 2, PB: 2, PE: 2, PI: 2, RN: 2, SE: 2, ES: 3, MG: 3, RJ: 3, SP: 3, PR: 4, RS: 4, SC: 4, DF: 5, GO: 5, MS: 5, MT: 5 };
+const easeInOut = t => t < .5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+const MONTHS_FROM = .42, MONTHS_TO = .96;
+const monthPos = (p, last) => clamp((p - MONTHS_FROM) / (MONTHS_TO - MONTHS_FROM)) * last;
+const MOVE = .58, WAVE = .14;
+const bandSlot = (p, n) => { const pos = clamp((p - .1) / .86) * n, j = Math.min(n - 1, Math.floor(pos)); return { j, raw: clamp((pos - j) / MOVE) }; };
+const bandPos = (p, n) => { const { j, raw } = bandSlot(p, n); return { j, u: easeInOut(raw) }; };
+const catmull = (a, b, c, d, t) => .5 * (2 * b + (c - a) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (3 * b - a - 3 * c + d) * t * t * t);
+function chartState(S, id, p) {
+  const last = S.months.length - 1;
+  if (id === 'inad') {
+    const pos = monthPos(p, last), a = Math.floor(pos), b = Math.min(last, a + 1), t = pos - a, A = S.months[Math.max(0, a - 1)], B = S.months[a], C = S.months[b], D = S.months[Math.min(last, b + 1)];
+    const rates = B.map((v, j) => v != null && C[j] != null ? Math.max(0, catmull(A[j] ?? v, v, C[j], D[j] ?? C[j], t)) : t < .5 ? v : C[j]);
+    const n = S.nationalMonths;
+    return { rates, national: catmull(n[Math.max(0, a - 1)], n[a], n[b], n[Math.min(last, b + 1)], t), month: Math.round(pos), band: -1, yMax: S.yMonths };
+  }
+  if (id === 'renda') {
+    const { j, raw } = bandSlot(p, S.seq.length - 1), from = S.seq[j], to = S.seq[j + 1], u = easeInOut(raw), F = S.byBand.get(from), T = S.byBand.get(to);
+    const rates = F.map((v, k) => { const w = easeInOut(clamp((raw - WAVE * S.wave[k]) / (1 - WAVE))); return v != null && T[k] != null ? v + (T[k] - v) * w : w < .5 ? v : T[k]; });
+    return { rates, national: lerp(S.nationalBand.get(from), S.nationalBand.get(to), u), month: last, band: u < .5 ? from : to, yMax: lerp(S.yBand.get(from), S.yBand.get(to), u) };
+  }
+  return { rates: S.byBand.get(-1), national: S.nationalBand.get(-1), month: last, band: -1, yMax: S.yBand.get(-1) };
+}
+// Contorno de cada UF em miniatura (26 px); d3 exige anéis no sentido horário.
+function upright(feature) {
+  if (geoArea(feature) <= 2 * Math.PI) return feature;
+  const flip = rings => rings.map(r => r.slice().reverse());
+  const g = feature.geometry;
+  return { ...feature, geometry: { ...g, coordinates: g.type === 'Polygon' ? flip(g.coordinates) : g.coordinates.map(flip) } };
+}
 
 function useLoad(load, onError) {
   const [v, setV] = useState(null);
@@ -77,7 +115,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
   };
   const go = (event, page) => { if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return; event.preventDefault(); setMenu(false); onNavigate(page); };
 
-  const host = useRef(null), sceneLayer = useRef(null), veil = useRef(null), ridges = useRef(null), map = useRef(null), cams = useRef(null), raf = useRef(0), anim = useRef(null);
+  const host = useRef(null), chart = useRef(null), veil = useRef(null), ridges = useRef(null), map = useRef(null), cams = useRef(null), raf = useRef(0), anim = useRef(null);
   const clock = useRef({ t: 0, playing: false, last: 0 }), lastData = useRef({}), lastUi = useRef(0), modeRef = useRef('film');
   const [ready, setReady] = useState(false), [mode, setMode] = useState('film'), [t, setT] = useState(0), [playing, setPlaying] = useState(false), [view, setView] = useState(null);
   const [selected, setSelected] = useState(null), [inst, setInst] = useState(null);
@@ -97,21 +135,73 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
   // Ordem das redes: posição de cada instituição na sequência em que acende (0 a 6).
   const networkRank = useMemo(() => meta ? meta.institutions.map(x => { const k = NETWORK_ORDER.indexOf(x.cnpjBase); return k >= 0 ? k : x.segment === 'Cooperativa de Crédito' ? 5 : 6; }) : [], [meta]);
   const networkCounts = useMemo(() => { const c = new Array(7).fill(0); if (rows) for (const r of rows) c[networkRank[r[3]]]++; return c; }, [rows, networkRank]);
-  const networkStep = chapter === 1 ? Math.min(6, Math.floor(clamp((p - .06) / .82) * 7)) : chapter > 1 ? 6 : -1;
-  const inadMonth = chapter === 2 ? Math.min(latest, Math.floor(clamp(p / .85) * (latest + 1))) : latest;
-  const filmSegment = chapter === 3 && p > .15 && p < .92 ? bands[Math.min(bands.length - 1, Math.floor((p - .15) / .77 * bands.length))] : -1;
+  const networkStep = chapter === AT.rede ? Math.min(6, Math.floor(clamp((p - .06) / .82) * 7)) : chapter > AT.rede ? 6 : -1;
+  const inadMonth = chapter === AT.inad ? Math.round(monthPos(p, latest)) : latest;
+  const filmSegment = chapter === AT.renda ? (() => { const seq = [-1, ...bands, -1], { j, u } = bandPos(p, seq.length - 1); return u < .5 ? seq[j] : seq[j + 1]; })() : -1;
   const segment = mode === 'explore' || manualSegment !== null ? (manualSegment ?? -1) : filmSegment;
-  const pixMonth = pix ? (chapter === 4 ? Math.min(pix.months.length - 1, Math.floor(clamp((p - .15) / .8) * pix.months.length)) : pix.months.length - 1) : 0;
-  const ruralMonth = rural ? (chapter === 7 ? clamp((p - .12) / .83) * (rural.months.length - 1) : rural.months.length - 1) : 0;
+  const pixMonth = pix ? (chapter === AT.pix ? Math.min(pix.months.length - 1, Math.floor(clamp((p - .15) / .8) * pix.months.length)) : pix.months.length - 1) : 0;
+  const ruralMonth = rural ? (chapter === AT.rural ? clamp((p - .12) / .83) * (rural.months.length - 1) : rural.months.length - 1) : 0;
   const series = useMemo(() => cube ? ds.months.map((_, m) => ds.ufs.map((__, s) => rate(cube.get(m, segment, -1, s)))) : [], [cube, segment]);
+  // Gráfico da inadimplência: taxa de cada UF por mês (todas as faixas) e, no último mês, por faixa. Lido pelo relógio do filme.
+  const chartRef = useRef(null), chartX = useRef(null), chartY = useRef(null), chartDom = useRef(null);
+  chartRef.current = useMemo(() => {
+    if (!cube || !states) return null;
+    const last = ds.months.length - 1, list = ds.segments.map((_, i) => i).filter(i => ds.segments[i] !== 'Indisponível');
+    const shapes = ds.ufs.map(u => {
+      const f = states.features.find(x => x.properties?.uf === u.uf); if (!f) return null;
+      const g = upright(f), path = geoPath(geoMercator().fitSize([26, 26], g)).digits(1), b = path.bounds(g);
+      return { center: geoCentroid(g), d: path(g), cx: (b[0][0] + b[1][0]) / 2, cy: (b[0][1] + b[1][1]) / 2, name: u.name, color: REGION[UF_REGION[u.uf]]?.[1] || '#16323f' };
+    });
+    const months = ds.months.map((_, m) => ds.ufs.map((__, s) => rate(cube.get(m, -1, -1, s))));
+    const byBand = new Map([-1, ...list].map(b => [b, ds.ufs.map((_, s) => rate(cube.get(last, b, -1, s)))]));
+    const top = rows => Math.max(...rows.flat().filter(v => v != null));
+    const lons = shapes.filter(Boolean).map(sh => sh.center[0]), lon0 = Math.min(...lons), lon1 = Math.max(...lons);
+    // Eixo: 12% acima da maior taxa mostrada, arredondado ao ponto percentual. "Todas" no último mês usa o eixo dos meses.
+    const yMonths = Math.ceil(top(months) * 1.12), yBand = new Map([...byBand].map(([b, row]) => [b, b < 0 ? yMonths : Math.ceil(top([row]) * 1.12)]));
+    return { shapes, months, byBand, yMonths, yBand, seq: [-1, ...list, -1], lon0, lon1, wave: shapes.map(sh => sh ? (sh.center[0] - lon0) / (lon1 - lon0) : 0),
+      nationalMonths: ds.months.map((_, m) => rate(cube.get(m, -1, -1))), nationalBand: new Map([-1, ...list].map(b => [b, rate(cube.get(last, b, -1))])) };
+  }, [cube, states]);
   const ruralPoints = useMemo(() => places && rural ? places.filter(pl => rural.municipalities[pl.ibge] && pl.lon != null).map(pl => ({ type: 'Feature', id: +pl.ibge, geometry: { type: 'Point', coordinates: pl.visit || [pl.lon, pl.lat] }, properties: {} })) : null, [places, rural]);
-  // Faixas do relevo da poupança: uma linha por faixa de latitude, uma amostra por célula de longitude.
+  // Relevo da poupança. As células do ESTBAN (0,4° × 0,25°) são somadas em faixas de 0,8° de latitude; ao longo de cada
+  // faixa, o saldo é suavizado por um núcleo gaussiano de 0,25° (cerca de 28 km), para que cada pico tenha encosta.
+  // Cada faixa só é desenhada sobre o território (ou onde há saldo junto à costa).
   const ridgeRows = useMemo(() => {
-    if (!savings) return null;
-    const byBand = new Map(); let max = 0;
-    for (const [a, b, v] of savings.cells) { if (!byBand.has(a)) byBand.set(a, new Map()); byBand.get(a).set(b, v); max = Math.max(max, v); }
-    return { max, rows: [...byBand.entries()].sort((x, y) => y[0] - x[0]).map(([a, cells]) => { const keys = [...cells.keys()]; const lo = Math.min(...keys) - 3, hi = Math.max(...keys) + 3; const pts = []; for (let b = lo; b <= hi; b++) pts.push([b * savings.lonStep, a * savings.latStep, cells.get(b) || 0]); return pts; }) };
-  }, [savings]);
+    if (!savings || !states) return null;
+    const polys = states.features.flatMap(f => f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates)
+      .map(rings => { const xs = rings[0].map(c => c[0]), ys = rings[0].map(c => c[1]); return { rings, box: [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)] }; });
+    const inside = (x, y) => polys.some(({ rings, box }) => {
+      if (x < box[0] || x > box[2] || y < box[1] || y > box[3]) return false;
+      let hit = false;
+      for (const ring of rings) for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [xi, yi] = ring[i], [xj, yj] = ring[j];
+        if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) hit = !hit;
+      }
+      return hit;
+    });
+    const bands = new Map();
+    for (const [a, b, v] of savings.cells) { const r = Math.floor(a / 2); if (!bands.has(r)) bands.set(r, new Map()); const row = bands.get(r); row.set(b, (row.get(b) || 0) + v); }
+    const r0 = Math.min(...bands.keys()), r1 = Math.max(...bands.keys()), lonStep = savings.lonStep, latStep = savings.latStep * 2;
+    const b0 = Math.floor(-74 / lonStep), b1 = Math.ceil(-34 / lonStep);
+    const kernel = [-3, -2, -1, 0, 1, 2, 3].map(k => [k, Math.exp(-k * k / 2)]), ksum = kernel.reduce((t, [, w]) => t + w, 0);
+    const rows = []; let max = 0;
+    for (let r = r1; r >= r0; r--) {
+      const raw = bands.get(r) || new Map(), lat = (r + .5) * latStep, samples = [];
+      for (let b = b0; b <= b1; b++) samples.push([(b + .5) * lonStep, kernel.reduce((t, [k, w]) => t + w * (raw.get(b + k) || 0), 0) / ksum, inside((b + .5) * lonStep, lat)]);
+      samples.forEach(([, v]) => { max = Math.max(max, v); });
+      rows.push({ lat, samples });
+    }
+    // Trechos contínuos sobre terra (ou com saldo), com uma amostra de folga em cada ponta.
+    const runs = [];
+    for (const { lat, samples } of rows) {
+      const keep = samples.map(([, v, land]) => land || v > max * .004);
+      let start = -1;
+      keep.forEach((k, i) => {
+        if (k && start < 0) start = i;
+        if ((!k || i === keep.length - 1) && start >= 0) { const end = k ? i : i - 1; if (end - start >= 1) runs.push({ lat, pts: samples.slice(Math.max(0, start - 1), Math.min(samples.length, end + 2)).map(([lon, v]) => [lon, v]) }); start = -1; }
+      });
+    }
+    return { max, runs };
+  }, [savings, states]);
 
   // Estado dos dados no mapa: UF, Pix, crédito rural e redes. Só reescreve quando o índice muda.
   useEffect(() => {
@@ -191,29 +281,30 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
   }
   function cameraAt(i, p) {
     const C = cams.current, w = map.current.getCanvas().clientWidth;
-    const legs = [[C.sea, C.brasil, 0, 1], [C.brasil, C.perto, 0, 1], [C.perto, C.brasil, 0, .3], [C.brasil, C.brasil, 0, 1], [C.brasil, C.brasil, 0, 1], [C.brasil, C.fronteira, 0, .55], [C.fronteira, C.brasil, 0, .35], [C.brasil, C.campo, 0, .4]][i];
+    const legs = { abertura: [C.sea, C.brasil, 0, 1], rede: [C.brasil, C.perto, 0, 1], pix: [C.perto, C.brasil, 0, .3], fronteira: [C.brasil, C.fronteira, 0, .55],
+      inad: [C.fronteira, C.brasil, 0, .3], renda: [C.brasil, C.brasil, 0, 1], poupanca: [C.brasil, C.brasil, 0, 1], rural: [C.brasil, C.campo, 0, .4] }[CHAPTERS[i].id];
     const u = smooth(clamp((p - legs[2]) / (legs[3] - legs[2])));
     return fromView(interpolateZoom(toView(legs[0], w), toView(legs[1], w))(u), w);
   }
   // Opacidade das camadas por capítulo, com as passagens no início de cada um.
   function lookAt(i, p) {
     const fadeIn = (a = .12) => clamp(p / a);
-    const L = { scene: 0, uf: 0, pts: 0, pix: 0, rural: 0, ridge: 0 };
-    if (i === 1) L.pts = 1;
-    if (i === 2) { L.pts = 1 - fadeIn(.2); L.uf = .85 * fadeIn(.2); }
-    if (i === 3) { L.scene = fadeIn(.1); L.uf = .85; }
-    if (i === 4) { L.scene = 1 - fadeIn(.1); L.uf = .85 * (1 - fadeIn(.15)); L.pix = fadeIn(.15) * .85; }
-    if (i === 5) { L.pix = .85; L.pts = clamp((p - .55) / .2) * .8; }
-    if (i === 6) { L.pix = .85 * (1 - fadeIn(.15)); L.pts = .8 * (1 - fadeIn(.15)); L.ridge = clamp((p - .3) / .1); }
-    if (i === 7) { L.ridge = 1 - fadeIn(.1); L.rural = clamp((p - .08) / .1); }
+    const L = { chart: 0, veil: 0, uf: 0, pts: 0, pix: 0, rural: 0, ridge: 0 }, id = CHAPTERS[i].id;
+    if (id === 'rede') L.pts = 1;
+    if (id === 'pix') { L.pts = 1 - fadeIn(.15); L.pix = fadeIn(.15) * .85; }
+    if (id === 'fronteira') { L.pix = .85; L.pts = clamp((p - .55) / .2) * .8; }
+    if (id === 'inad') { L.pix = .85 * (1 - fadeIn(.2)); L.pts = .8 * (1 - fadeIn(.2)); L.uf = .6 * clamp((p - .06) / .1); L.chart = clamp((p - .16) / .03); L.veil = VEIL * smooth(clamp((p - .22) / .16)); }
+    if (id === 'renda') { L.uf = .6; L.chart = 1; L.veil = VEIL; }
+    if (id === 'poupanca') { L.uf = .6 * (1 - fadeIn(.15)); L.chart = 1 - clamp((p - .12) / .05); L.veil = VEIL * (1 - smooth(clamp(p / .15))); L.ridge = clamp((p - .3) / .1); }
+    if (id === 'rural') { L.ridge = 1 - fadeIn(.1); L.rural = clamp((p - .08) / .1); }
     return L;
   }
   function applyLook(L) {
     const m = map.current; if (!m?.getLayer('pts-exact')) return;
     const pts = instRef.current != null ? .12 : L.pts;
-    const key = [L.scene, L.uf, pts, L.pix, L.rural, L.ridge].map(v => v.toFixed(3)).join(); if (key === lastData.current.look) return; lastData.current.look = key;
-    if (sceneLayer.current) { sceneLayer.current.style.opacity = L.scene; sceneLayer.current.style.visibility = L.scene > .01 ? 'visible' : 'hidden'; sceneLayer.current.style.pointerEvents = L.scene > .5 ? 'auto' : 'none'; }
-    if (veil.current) veil.current.style.opacity = L.scene;
+    const key = [L.chart, L.veil, L.uf, pts, L.pix, L.rural, L.ridge].map(v => v.toFixed(3)).join(); if (key === lastData.current.look) return; lastData.current.look = key;
+    if (chart.current) { chart.current.style.opacity = L.chart; chart.current.style.visibility = L.chart > .01 ? 'visible' : 'hidden'; }
+    if (veil.current) veil.current.style.opacity = L.veil;
     if (ridges.current) { ridges.current.style.opacity = L.ridge; ridges.current.style.visibility = L.ridge > .01 ? 'visible' : 'hidden'; }
     m.setPaintProperty('uf-fill', 'fill-opacity', L.uf);
     m.setPaintProperty('muni-pix', 'fill-opacity', L.pix);
@@ -223,34 +314,111 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
     m.setPaintProperty('rural', 'circle-opacity', L.rural * .62);
     m.setPaintProperty('rural', 'circle-stroke-opacity', L.rural * .9);
   }
-  const EXPLORE = { scene: 0, uf: 0, pts: 1, pix: 0, rural: 0, ridge: 0 };
+  const EXPLORE = { chart: 0, veil: 0, uf: 0, pts: 1, pix: 0, rural: 0, ridge: 0 };
 
   // Relevo da poupança: linhas desenhadas sobre o mapa, projetadas a cada quadro do capítulo.
   function drawRidges(grow) {
     const svg = ridges.current, m = map.current; if (!svg || !m || !ridgeRows) return;
-    const h = Math.min(170, m.getCanvas().clientHeight * .24), out = [];
-    for (const row of ridgeRows.rows) {
-      let d = '', x0 = 0, x1 = 0, yb = 0;
-      row.forEach(([lon, lat, v], j) => { const q = m.project([lon, lat]); const y = q.y - h * Math.sqrt(v / ridgeRows.max) * grow; d += (j ? 'L' : 'M') + q.x.toFixed(1) + ' ' + y.toFixed(1); if (!j) x0 = q.x; x1 = q.x; yb = q.y; });
-      out.push(`<path d="${d}L${x1.toFixed(1)} ${yb.toFixed(1)}L${x0.toFixed(1)} ${yb.toFixed(1)}Z" class="ridge-fill"/><path d="${d}" class="ridge-line"/>`);
+    if (svg.dataset.n !== String(ridgeRows.runs.length)) {
+      svg.textContent = ''; svg.dataset.n = ridgeRows.runs.length;
+      for (const run of ridgeRows.runs) { run.fill = document.createElementNS('http://www.w3.org/2000/svg', 'path'); run.fill.setAttribute('class', 'ridge-fill'); run.line = document.createElementNS('http://www.w3.org/2000/svg', 'path'); run.line.setAttribute('class', 'ridge-line'); svg.append(run.fill, run.line); }
     }
-    svg.innerHTML = out.join('');
+    const h = Math.min(150, m.getCanvas().clientHeight * .2);
+    for (const run of ridgeRows.runs) {
+      let d = '', x0 = 0, x1 = 0, yb = 0;
+      run.pts.forEach(([lon, v], j) => { const q = m.project([lon, run.lat]); const y = q.y - h * Math.sqrt(v / ridgeRows.max) * grow; d += (j ? 'L' : 'M') + q.x.toFixed(1) + ' ' + y.toFixed(1); if (!j) x0 = q.x; x1 = q.x; yb = q.y; });
+      run.line.setAttribute('d', d); run.fill.setAttribute('d', `${d}L${x1.toFixed(1)} ${yb.toFixed(1)}L${x0.toFixed(1)} ${yb.toFixed(1)}Z`);
+    }
+  }
+
+  // Gráfico da inadimplência, redesenhado a cada quadro. Contornos próximos se afastam só na horizontal;
+  // a altura de cada um segue a taxa. Posições amortecidas entre quadros para que nada salte.
+  function drawChart(id, p, dt) {
+    const svg = chart.current, m = map.current, S = chartRef.current; if (!svg || !m || !S) return;
+    const st = chartState(S, id, p), W = m.getCanvas().clientWidth, Hs = m.getCanvas().clientHeight, narrow = W < 760;
+    const F = { l: narrow ? 44 : 96, r: W - (narrow ? 58 : 110), t: narrow ? 70 : 72, b: Hs - (narrow ? 44 : 56) };
+    const morph = id === 'inad' ? smooth(clamp((p - .16) / .06)) : 1;
+    const travel = id === 'inad' ? easeInOut(clamp((p - .22) / .16)) : id === 'poupanca' ? 1 - easeInOut(clamp(p / .15)) : 1;
+    // Eixo e alturas amortecidos (constante de ~110 ms); um salto de capítulo se resolve em poucos quadros.
+    const k = 1 - Math.exp(-(dt || 16) / 110);
+    const Y = chartY.current && chartY.current.rates.length === st.rates.length ? chartY.current : (chartY.current = { yMax: st.yMax, rates: st.rates.slice(), national: st.national });
+    Y.yMax += (st.yMax - Y.yMax) * k; Y.national = Y.national == null ? st.national : Y.national + ((st.national ?? Y.national) - Y.national) * k;
+    st.rates.forEach((v, j) => { Y.rates[j] = v == null ? null : Y.rates[j] == null ? v : Y.rates[j] + (v - Y.rates[j]) * k; });
+    const y = v => F.b - (F.b - F.t) * clamp(v / Y.yMax, 0, 1.04);
+    const ax = S.shapes.map(sh => sh ? F.l + 14 + (sh.center[0] - S.lon0) / (S.lon1 - S.lon0) * (F.r - F.l - 28) : 0);
+    const ys = Y.rates.map(v => v == null ? null : y(v));
+    const X = chartX.current && chartX.current.length === ax.length ? chartX.current : (chartX.current = ax.slice());
+    const D = narrow ? 18 : 23;
+    for (let it = 0; it < 3; it++) {
+      X.forEach((x, j) => { X[j] = x + (ax[j] - x) * .06; });
+      for (let a = 0; a < X.length; a++) for (let b = a + 1; b < X.length; b++) {
+        if (ys[a] == null || ys[b] == null) continue;
+        const dy = Math.abs(ys[a] - ys[b]); if (dy >= D) continue;
+        const need = Math.sqrt(D * D - dy * dy), dx = X[b] - X[a]; if (Math.abs(dx) >= need) continue;
+        const dir = dx > 0 || (dx === 0 && ax[b] >= ax[a]) ? 1 : -1, push = (need - Math.abs(dx)) * .25;
+        X[a] -= push * dir; X[b] += push * dir;
+      }
+      X.forEach((x, j) => { X[j] = clamp(x, F.l + 8, F.r - 8); });
+    }
+    const N = chartNodes(svg, S), fx = v => v.toFixed(1), out = [];
+    N.axis.setAttribute('opacity', travel.toFixed(3)); N.axis.style.display = travel > .01 ? '' : 'none';
+    if (travel > .01) {
+      // Grade em 1, 5 e 10 pontos; cada nível aparece quando há espaço entre as linhas.
+      const per = (F.b - F.t) / Y.yMax;
+      for (let v = 0; v <= Math.floor(Y.yMax + .001); v++) {
+        const a = v === 0 || v % 10 === 0 ? 1 : v % 5 === 0 ? clamp((per * 5 - 26) / 24) : clamp((per - 26) / 16);
+        if (a <= .01) continue;
+        out.push(`<g opacity="${a.toFixed(2)}"><line x1="${fx(F.l)}" x2="${fx(F.r)}" y1="${fx(y(v))}" y2="${fx(y(v))}" class="${v ? 'chart-grid' : 'chart-base'}"/><text x="${fx(F.l - 12)}" y="${fx(y(v) + 4)}" text-anchor="end" class="chart-tick">${v}%</text></g>`);
+      }
+      out.push(`<text x="${fx(F.l)}" y="${fx(F.b + 24)}" class="chart-tick">oeste</text><text x="${fx(F.r)}" y="${fx(F.b + 24)}" text-anchor="end" class="chart-tick">leste</text>`);
+      const legend = narrow ? [[1, 2, 5], [3, 4]] : [[1, 2, 5, 3, 4]];
+      legend.forEach((line, n) => out.push(`<text x="${fx(narrow ? 14 : F.l)}" y="${fx(F.t - (narrow ? 38 : 26) + n * 17)}" class="chart-legend">${line.map((r, i) => `<tspan ${i ? 'dx="18"' : ''} fill="${REGION[r][1]}">● ${REGION[r][0]}</tspan>`).join('')}</text>`));
+      if (Y.national != null) out.push(`<line x1="${fx(F.l)}" x2="${fx(F.r)}" y1="${fx(y(Y.national))}" y2="${fx(y(Y.national))}" class="chart-national"/><text x="${fx(F.r + 10)}" y="${fx(y(Y.national) - 3)}" class="chart-national-label">Brasil</text><text x="${fx(F.r + 10)}" y="${fx(y(Y.national) + 13)}" class="chart-national-label">${percent(st.national)}</text>`);
+      N.axis.innerHTML = out.join('');
+    }
+    let hi = -1, lo = -1; st.rates.forEach((v, j) => { if (v == null || !S.shapes[j]) return; if (hi < 0 || v > st.rates[hi]) hi = j; if (lo < 0 || v < st.rates[lo]) lo = j; });
+    const stem = smooth(clamp((travel - .75) / .25)), shown = [];
+    S.shapes.forEach((sh, j) => {
+      const it = N.items[j]; if (!it) return;
+      const on = ys[j] != null; it.g.style.display = on ? '' : 'none'; if (!on) return;
+      const q = m.project(sh.center), x = lerp(q.x, X[j], travel), yy = lerp(q.y, ys[j], travel);
+      it.stem.setAttribute('x1', fx(x)); it.stem.setAttribute('x2', fx(x)); it.stem.setAttribute('y1', fx(F.b)); it.stem.setAttribute('y2', fx(yy)); it.stem.setAttribute('opacity', (stem * .55).toFixed(3));
+      it.dot.setAttribute('cx', fx(x)); it.dot.setAttribute('cy', fx(yy)); it.dot.setAttribute('r', (3.4 * (1 - morph)).toFixed(2));
+      it.shape.setAttribute('transform', `translate(${fx(x)} ${fx(yy)}) scale(${(morph * (narrow ? .78 : 1)).toFixed(3)}) translate(${fx(-sh.cx)} ${fx(-sh.cy)})`);
+      if (travel > .97 && (j === hi || j === lo)) shown.push([j, x, yy]);
+    });
+    N.labels.forEach((t, k) => {
+      const hit = shown[k]; t.style.display = hit ? '' : 'none'; if (!hit) return;
+      const [j, x, yy] = hit, end = x > F.r - 170;
+      t.setAttribute('x', fx(end ? x - 17 : x + 17)); t.setAttribute('y', fx(yy + 4)); t.setAttribute('text-anchor', end ? 'end' : 'start');
+      const html = `${S.shapes[j].name} <tspan>${percent(st.rates[j])}</tspan>`; if (t.dataset.html !== html) { t.innerHTML = html; t.dataset.html = html; }
+    });
+  }
+  // Elementos do gráfico criados uma vez por base; cada quadro só move atributos.
+  function chartNodes(svg, S) {
+    if (chartDom.current?.S === S && chartDom.current.svg === svg) return chartDom.current;
+    const el = (tag, cls, parent) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); if (cls) e.setAttribute('class', cls); parent.appendChild(e); return e; };
+    svg.textContent = '';
+    const axis = el('g', 'chart-axis', svg), body = el('g', '', svg), top = el('g', '', svg);
+    const items = S.shapes.map(sh => { if (!sh) return null; const g = el('g', '', body), stem = el('line', 'chart-stem', g), dot = el('circle', 'chart-dot', g), shape = el('path', 'chart-shape', g); shape.setAttribute('d', sh.d); for (const e of [dot, shape]) e.style.fill = sh.color; stem.style.stroke = sh.color; return { g, stem, dot, shape }; });
+    return chartDom.current = { S, svg, axis, items, labels: [el('text', 'chart-label', top), el('text', 'chart-label', top)] };
   }
 
   // Relógio do filme: câmera em todo quadro; a interface se atualiza a ~15 quadros por segundo.
   useEffect(() => {
     if (!ready) return;
     const tick = now => {
-      const c = clock.current;
+      const c = clock.current, dt = c.last ? Math.min(100, now - c.last) : 16;
       if (c.playing && modeRef.current === 'film') {
         c.t = Math.min(TOTAL, c.t + (c.last ? Math.min(400, now - c.last) : 0));
         if (c.t >= TOTAL) { c.playing = false; setPlaying(false); converge(true); }
       }
       c.last = now;
       if (modeRef.current === 'film') {
-        const { i, p } = chapterAt(c.t);
+        const { i, p } = chapterAt(c.t), id = CHAPTERS[i].id;
         map.current.jumpTo(cameraAt(i, p)); const L = lookAt(i, p); applyLook(L);
-        if (L.ridge > .01) drawRidges(i === 6 ? smooth(clamp((p - .3) / .5)) : 1);
+        if (L.ridge > .01) drawRidges(id === 'poupanca' ? smooth(clamp((p - .3) / .5)) : 1);
+        if (L.chart > .01) drawChart(id, p, dt);
         if (now - lastUi.current > 66) { lastUi.current = now; setT(c.t); }
       }
       raf.current = requestAnimationFrame(tick);
@@ -360,7 +528,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
   </header>;
   if (!meta || !rows || !places || !cubes || !states || !pix || !rural || !savings || !regions) return <main className="territory loading">{header}<p role={failure ? 'alert' : 'status'}>{failure || 'Carregando…'}</p>{failure && <button onClick={() => location.reload()}>Recarregar</button>}</main>;
   const c = meta.counts, instInfo = inst != null ? meta.institutions[inst] : null;
-  const scope = segment < 0 ? (person === 'PF' ? 'Todas as rendas' : 'Todos os portes') : ds.segments[segment];
+  const scope = segment < 0 ? (person === 'PF' ? 'Todas as faixas' : 'Todas as empresas') : ds.segments[segment];
   const viewIdx = mode === 'explore' ? ufIndex(view?.uf) : -1;
   const muni = view?.muni ? placeByCode.get(view.muni) : null;
   const sel = selected != null ? rows[selected] : null, selD = selected != null && details ? details[selected] : null, selInst = sel ? meta.institutions[sel[3]] : null;
@@ -368,8 +536,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
   const pixPct = v => v == null ? 'N/D' : nf(v / 10, 1).replace(',0', '') + '%';
   const muniPix = muni ? pix.municipalities[muni.ibge] : null;
   const rk = Math.round(ruralMonth);
-  const sceneLayout = chapter === 3 && p > .1 && p < .95 ? 'distribution' : 'map';
-  const highlights = chapter === 3 ? ['AM', 'SP'].map((s, i) => ({ index: ufIndex(s), color: i ? '#ec7000' : '#315f78' })) : [];
+  const chartNow = mode === 'film' && (chapter === AT.inad || chapter === AT.renda) && chartRef.current ? chartState(chartRef.current, CHAPTERS[chapter].id, p) : null;
   const networkNames = [...NETWORK_ORDER.map(k => meta.institutions.find(x => x.cnpjBase === k)), { name: 'Cooperativas', color: KIND_COLOR.cooperativa }, { name: 'Demais instituições', color: KIND_COLOR.agencia }];
   const regionLine = x => { const r = x?.analysisCode && regions.institutions[x.analysisCode]; if (!r || !r['Total Geral']) return null; return REGIONS.map(([k, label]) => [label, (r[k] || 0) / r['Total Geral']]).filter(([, v]) => v >= .005).sort((a, b) => b[1] - a[1]).map(([label, v]) => `${label} ${nf(v * 100, 0)}%`).join(' · '); };
   const personSwitch = <div className="atlas-person-switch" role="group" aria-label="Tipo de cliente"><button aria-pressed={person === 'PF'} onClick={() => setPerson('PF')}>Pessoas físicas</button><button aria-pressed={person === 'PJ'} onClick={() => setPerson('PJ')}>Pessoas jurídicas</button></div>;
@@ -378,25 +545,24 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
   // Legenda de cada capítulo, sobre o mapa: leitura, no máximo uma frase e a fonte.
   const caption = [
     null,
-    <><h2>Agências e postos</h2><p className="network-now">{networkStep >= 0 && <><i style={{ background: networkNames[networkStep].color }} />{networkNames[networkStep].name} <span>{nf(networkCounts[networkStep])} unidades</span></>}</p>
+    <><h2>Agências</h2><p className="network-now">{networkStep >= 0 && <><i style={{ background: networkNames[networkStep].color }} />{networkNames[networkStep].name} <span>{nf(networkCounts[networkStep])} unidades</span></>}</p>
       <p className="src">{nf(c.kinds.agencia)} agências e {nf(c.units - c.kinds.agencia)} postos no endereço cadastrado. BCB, 05/11/2026; CNEFE 2022 (IBGE).</p></>,
-    <><h2>Inadimplência</h2><div className="atlas-reading"><strong>{percent(rate(cube.get(inadMonth, -1, -1)))}</strong><span>{siteMonth(ds.months[inadMonth])}</span></div>
-      <div className="atlas-rate-legend">{ATLAS_RATE_SCALE.map((item, i) => <span key={item.min}><i style={{ background: item.color }} />{item.min}{i === 5 ? '%+' : ''}</span>)}</div>
-      <p className="src">Pessoas físicas, por UF do tomador. BCB, SCR.data.</p></>,
-    <><h2>{person === 'PF' ? 'Por renda' : 'Por porte'}</h2><div className="atlas-reading"><strong>{percent(rate(cube.get(latest, segment, -1)))}</strong><span>{scope}</span></div>
-      <p className="src">Cada ponto é uma UF, na posição da sua taxa. BCB, SCR.data, {siteMonth(ds.months[latest])}.</p></>,
-    <><h2>Pix</h2><div className="atlas-reading"><strong>{pixPct(pix.national[pixMonth])}</strong><span>da população pagou com Pix em {ym(pix.months[pixMonth])}</span></div>
+    <><h2>Pix</h2><div className="atlas-reading"><strong>{pixPct(pix.national[pixMonth])}</strong><span>da população pagou em {ym(pix.months[pixMonth])}</span></div>
       <div className="atlas-rate-legend">{PIX_STOPS.map(([v, col], i) => <span key={v}><i style={{ background: col }} />{v / 10}{i === PIX_STOPS.length - 1 ? '%+' : ''}</span>)}</div>
-      <p className="src">Por município. BCB, Pix por município; IBGE, população 2025.</p></>,
-    <><h2>{top ? top.name : 'Fronteira'}</h2><p>{pix.facts.highest.ibge === '1400456' ? 'Na fronteira com a Venezuela, ' : ''}{nf(pix.facts.highest.payers)} pessoas pagaram com Pix em {ym(pix.months[pixLast])}. A população estimada é de {nf(pix.facts.highest.population)}.</p>
+      <p className="src">Pessoas físicas pagadoras sobre a população, por município. BCB, dados abertos; IBGE, estimativa 2025.</p></>,
+    <><h2>{top ? top.name : 'Fronteira'}</h2><p className="note">{pix.facts.highest.ibge === '1400456' ? 'Na fronteira com a Venezuela, ' : ''}{nf(pix.facts.highest.payers)} pessoas pagaram com Pix em {ym(pix.months[pixLast])}. A população estimada é de {nf(pix.facts.highest.population)}.</p>
       <p className="src">O BCB não publica como atribui o município ao pagador.</p></>,
+    <><h2>Inadimplência</h2><div className="atlas-reading"><strong>{percent(chartNow?.national)}</strong><span>{siteMonth(ds.months[inadMonth])}</span></div>
+      <p className="src">{person === 'PF' ? 'Pessoas físicas' : 'Pessoas jurídicas'}, por UF do tomador. Cada contorno fica na longitude do centro da sua UF e na altura da sua taxa; cor pela região. BCB, SCR.data.</p></>,
+    <><h2>{person === 'PF' ? 'Por renda' : 'Por porte'}</h2><div className="atlas-reading"><strong>{percent(chartNow?.national)}</strong><span>{scope}</span></div>
+      <p className="src">O eixo acompanha cada faixa; a linha do Brasil é a referência. BCB, SCR.data, {siteMonth(ds.months[latest])}.</p></>,
     <><h2>Poupança</h2><div className="atlas-reading"><strong>R$ {nf(savings.totalBi, 0)} bi</strong><span>em {nf(savings.agencies)} agências, jun/2026</span></div>
-      <p className="src">Saldo somado em faixas de 0,4° de latitude por 0,25° de longitude; altura proporcional à raiz do saldo. BCB, ESTBAN. Cooperativas não entram.</p></>,
+      <p className="src">Saldo das agências somado em faixas de 0,8° de latitude e suavizado em cerca de 28 km; altura pela raiz do saldo. BCB, ESTBAN; sem cooperativas.</p></>,
     <><h2>Crédito rural</h2><div className="atlas-reading"><strong>R$ {nf(rural.totalBi[rk], 1)} bi</strong><span>contratados em {ym(rural.months[rk])}</span></div>
       <p className="src">Pelo município do empreendimento. BCB, SICOR; {nf(rural.coverage.operations * 100, 0)}% das operações e {nf(rural.coverage.value * 100, 0)}% do valor de 2025 trazem município.</p></>,
   ];
 
-  return <main className={'territory atlas-landing mode-' + mode + (mode === 'film' && (chapter === 3 || !ready) ? ' on-paper' : '')}>
+  return <main className={'territory atlas-landing mode-' + mode}>
     {header}
     <div className="body">
       <aside className="column" aria-hidden={mode === 'film'}>
@@ -430,9 +596,9 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
           {view?.topInst.length > 0 && !instInfo && <ol className="insts">{view.topInst.map(([i, n]) => { const x = meta.institutions[i]; return <li key={i}><button onClick={() => chooseInst(i)}>
             <span className="bar" style={{ width: (100 * n / view.topInst[0][1]) + '%', background: x.color || (x.segment === 'Cooperativa de Crédito' ? KIND_COLOR.cooperativa : KIND_COLOR.agencia) }} /><span className="name">{x.name}</span><span className="n">{nf(n)}</span></button></li>; })}</ol>}
           <div className="credit-block">
-            <h3>Inadimplência{viewIdx >= 0 ? ' em ' + ds.ufs[viewIdx].name : ' no Brasil'}</h3>
+            <h3>Inadimplência</h3>
             {personSwitch}
-            <div className="atlas-reading small"><strong>{percent(rate(cube.get(latest, segment, -1, viewIdx)))}</strong><span>{scope} · {siteMonth(ds.months[latest])}</span>{viewIdx >= 0 && <small>Brasil: {percent(rate(cube.get(latest, segment, -1)))}</small>}</div>
+            <div className="atlas-reading small"><strong>{percent(rate(cube.get(latest, segment, -1, viewIdx)))}</strong><span>{siteMonth(ds.months[latest])}</span>{viewIdx >= 0 && <small>Brasil: {percent(rate(cube.get(latest, segment, -1)))}</small>}</div>
             {ticks}
           </div>
           <div className="replay"><button className="atlas-play" onClick={play} aria-label="Rever o percurso"><svg viewBox="0 0 20 20"><path d="M7 5l8 5-8 5z" /></svg></button><span>Rever o percurso</span>
@@ -445,9 +611,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
         <div className="grain" aria-hidden="true" />
         <svg className="ridges" ref={ridges} aria-hidden="true" />
         <div className="veil" ref={veil} />
-        <div className="scene-layer" ref={sceneLayer}>
-          <AtlasScene geo={states} states={ds.ufs} series={series} month={latest} layout={sceneLayout} selected={-1} highlights={highlights} playing={false} onSelect={() => {}} onMonthChange={() => {}} onPlayingChange={() => {}} motionRequested />
-        </div>
+        <svg className="chart" ref={chart} aria-hidden="true" />
         {mode === 'film' && !ready && <p className="film-loading" role="status">Carregando o relevo e os dados…</p>}
         {mode === 'film' && caption[chapter] && <div className="caption" aria-live="off">{caption[chapter]}</div>}
         {mode === 'film' && <nav className="film-bar" aria-label="Percurso">

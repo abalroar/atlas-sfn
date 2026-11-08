@@ -76,15 +76,11 @@
 .territory .balances dd { margin: 2px 0 0; font-size: 18px; font-weight: 550; font-variant-numeric: tabular-nums; }
 .territory .unit .analyze { display: inline-block; margin-top: 12px; }
 
-/* Palco: mapa com relevo, grão de papel, véu e cena SVG do site */
+/* Palco: mapa com relevo, grão de papel e camadas SVG (relevo da poupança, hastes da inadimplência) */
 .territory .stage { position: relative; min-height: 0; }
-.territory .map, .territory .veil, .territory .scene-layer, .territory .grain { position: absolute; inset: 0 0 40px 0; }
-.territory .veil { background: var(--paper); pointer-events: none; opacity: 0; }
+.territory .map, .territory .grain { position: absolute; inset: 0 0 40px 0; }
 .territory .grain { pointer-events: none; mix-blend-mode: multiply; opacity: .18; z-index: 1;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .42 0 0 0 0 .36 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-.territory .veil { z-index: 2; } .territory .scene-layer { z-index: 3; visibility: hidden; }
-.territory .scene-layer > .atlas-scene { position: absolute; inset: 0; width: 100%; height: 100%; }
-.territory .scene-layer .atlas-scene-camera { display: none; }
 .territory .stage .map-zoom { position: absolute; right: 10px; bottom: 52px; display: flex; gap: 7px; z-index: 4; }
 .territory .stage > .atlas-source { position: absolute; left: 0; right: 0; bottom: 0; height: 40px; padding: 0; border-top: 1px solid var(--line); }
 .territory .stage > .atlas-source svg { width: 15px; height: 15px; }
@@ -97,7 +93,7 @@
   .territory .body { grid-template-columns: 1fr; grid-template-rows: 50% 1fr; gap: 0; }
   .territory .stage { grid-row: 1; }
   .territory .column { grid-row: 2; border-top: 1px solid var(--line); }
-  .territory .map, .territory .veil, .territory .scene-layer, .territory .grain { bottom: 32px; }
+  .territory .map, .territory .grain { bottom: 32px; }
   .territory .stage > .atlas-source { height: 32px; }
   .territory .column .atlas-reading { flex-direction: row; align-items: baseline; gap: 8px; }
   .territory .column .atlas-reading strong { font-size: 30px; }
@@ -109,45 +105,60 @@
 .territory.mode-film .body { grid-template-columns: 0 1fr; gap: 0; }
 .territory.mode-film .column { overflow: hidden; visibility: hidden; }
 .territory .column { transition: visibility 0s linear 0s; }
-.territory .caption { position: absolute; left: 32px; bottom: 96px; z-index: 5; max-width: 380px; color: #f6f5ef; text-shadow: 0 1px 2px rgba(10,30,40,.55), 0 0 18px rgba(10,30,40,.45); pointer-events: none; }
-.territory .caption h2 { margin: 0 0 4px; font-size: 26px; font-weight: 650; letter-spacing: -.02em; }
-.territory .caption p { margin: 6px 0 0; font-size: 15px; line-height: 1.45; }
-.territory .caption .atlas-reading { margin: 2px 0 8px; }
-.territory .caption .atlas-reading strong { font-size: 34px; }
-.territory .caption .atlas-reading span { color: #f6f5ef; }
-.territory .caption .atlas-rate-legend { max-width: 240px; text-shadow: none; }
-.territory .caption .src { color: #d9e6e8; max-width: 46ch; }
-.territory .network-now { font-size: 20px !important; font-weight: 600; }
-.territory .network-now i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; vertical-align: 0; box-shadow: 0 0 0 2px rgba(255,255,255,.8); }
-.territory .network-now span { font-weight: 400; font-size: 15px; color: #d9e6e8; margin-left: 6px; }
+/* No filme, o mapa é uma prancha; a legenda fica no papel, abaixo dela, em tinta. */
+.territory { --band: 172px; }
+.territory .caption { position: absolute; left: 32px; right: 32px; bottom: 66px; height: calc(var(--band) - 84px); z-index: 5; color: var(--ink); pointer-events: none;
+  display: grid; grid-template-columns: minmax(240px, max-content) minmax(0, 60ch); grid-auto-flow: row dense; column-gap: 56px; align-content: start; }
+.territory .caption > * { grid-column: 1; }
+.territory .caption > .src, .territory .caption > .note, .territory .caption > .atlas-rate-legend { grid-column: 2; }
+.territory .caption h2 { margin: 0; font-size: 24px; font-weight: 650; letter-spacing: -.02em; line-height: 1.2; }
+.territory .caption p { margin: 0 0 4px; font-size: 14px; line-height: 1.45; }
+.territory .caption .atlas-reading { margin: 0; display: flex; flex-direction: row; flex-wrap: nowrap; align-items: baseline; justify-content: flex-start; gap: 8px; }
+.territory .caption .atlas-reading > span { width: auto; }
+.territory .caption .atlas-reading strong { font-size: 30px; }
+.territory .caption .atlas-reading span { color: var(--muted); }
+.territory .caption .atlas-rate-legend { max-width: 260px; margin: 2px 0 8px; }
+.territory .caption .src { color: var(--muted); }
+.territory .network-now { font-size: 19px !important; font-weight: 600; margin-top: 4px !important; }
+.territory .network-now i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; vertical-align: 0; box-shadow: 0 0 0 1.5px var(--paper), 0 0 0 2.5px rgba(22,50,63,.25); }
+.territory .network-now span { font-weight: 400; font-size: 14px; color: var(--muted); margin-left: 6px; }
 .territory .film-bar { position: absolute; left: 32px; right: 32px; bottom: 26px; z-index: 6; display: flex; align-items: center; gap: 16px; }
 .territory .film-bar ol { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; flex: 1; }
 .territory .film-bar ol button { display: block; width: 100%; text-align: left; }
-.territory .film-bar .track { display: block; height: 2px; margin: 0; background: rgba(246,245,239,.3); }
-.territory .film-bar .track span { display: block; height: 2px; background: #f6f5ef; }
-.territory .film-bar .label { display: block; margin-top: 7px; font-size: 12px; color: #f6f5ef; opacity: .72; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px rgba(10,30,40,.6); }
+.territory .film-bar .track { display: block; height: 2px; margin: 0; background: rgba(22,50,63,.16); }
+.territory .film-bar .track span { display: block; height: 2px; background: var(--ink); }
+.territory .film-bar .label { display: block; margin-top: 7px; font-size: 12px; color: var(--ink); opacity: .62; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .territory .film-bar [aria-current] .label { opacity: 1; font-weight: 650; }
-.territory .film-bar .atlas-play { background: rgba(243,242,236,.85); }
-.territory .film-bar .skip { font-size: 13px; color: #f6f5ef; text-decoration: underline; text-underline-offset: 4px; text-shadow: 0 1px 2px rgba(10,30,40,.6); }
+.territory .film-bar .skip { font-size: 13px; color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
 .territory .ridges { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; visibility: hidden; overflow: visible; }
 .territory .ridge-fill { fill: rgba(243,242,236,.88); stroke: none; }
-.territory .ridge-line { fill: none; stroke: var(--ink); stroke-width: .9; stroke-linejoin: round; }
-.territory.mode-film .map, .territory.mode-film .veil, .territory.mode-film .scene-layer, .territory.mode-film .grain { bottom: 0; }
+.territory .ridge-line { fill: none; stroke: var(--ink); stroke-width: .85; stroke-opacity: .82; stroke-linejoin: round; }
+.territory.mode-film .map, .territory.mode-film .grain, .territory.mode-film .veil { bottom: var(--band); }
+.territory.mode-film .map { border-bottom: 1px solid var(--line); }
+.territory .veil { position: absolute; inset: 0; z-index: 2; background: var(--paper); opacity: 0; pointer-events: none; }
+.territory .chart { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; visibility: hidden; overflow: visible; }
+.territory .chart-base { stroke: var(--ink); stroke-width: 1; }
+.territory .chart-grid { stroke: rgba(22,50,63,.14); stroke-width: 1; }
+.territory .chart-tick { font: 400 12px 'Hanken Grotesk Variable', 'Hanken Grotesk', sans-serif; fill: var(--muted); }
+.territory .chart-national { stroke: var(--ink); stroke-width: 1.8; }
+.territory .chart-legend { font: 600 12.5px 'Hanken Grotesk Variable', 'Hanken Grotesk', sans-serif; }
+.territory .chart-national-label { font: 700 13px 'Hanken Grotesk Variable', 'Hanken Grotesk', sans-serif; fill: var(--ink); }
+.territory .chart-stem { stroke-width: 1.4; }
+.territory .chart-shape { stroke: #f6f5ef; stroke-width: .8; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.territory .chart-label { font: 600 13px 'Hanken Grotesk Variable', 'Hanken Grotesk', sans-serif; fill: var(--ink); paint-order: stroke; stroke: rgba(246,245,239,.92); stroke-width: 3.5px; stroke-linejoin: round; }
+.territory .chart-label tspan { font-weight: 400; }
 .territory .inst-detail .src { margin-top: 6px !important; }
 .territory .replay { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--line); display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 4px 12px; font-size: 13px; color: var(--muted); }
 .territory .replay ol { grid-column: 1 / -1; list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .territory .replay ol button { font-size: 13px; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line); }
 @media (max-width: 760px) {
   .territory.mode-film .body { grid-template-columns: 1fr; grid-template-rows: 1fr 0; }
-  .territory .caption { left: 14px; right: 14px; bottom: 74px; max-width: none; }
+  .territory { --band: 236px; }
+  .territory .caption { left: 14px; right: 14px; bottom: 62px; height: calc(var(--band) - 76px); grid-template-columns: 1fr; }
+  .territory .caption > .src, .territory .caption > .note, .territory .caption > .atlas-rate-legend { grid-column: 1; }
   .territory .caption h2 { font-size: 21px; }
   .territory .film-bar { left: 14px; right: 14px; bottom: 16px; gap: 10px; }
   .territory .film-bar .label { display: none; }
 }
 
-.territory .caption .atlas-rate-legend span { color: #e7eef0; }
-/* Sobre o papel (capítulo da cena por renda e carregamento), a legenda volta à tinta escura. */
-.territory.on-paper .caption, .territory.on-paper .caption .atlas-reading span, .territory.on-paper .film-bar .label, .territory.on-paper .film-bar .skip { color: var(--ink); text-shadow: none; }
-.territory.on-paper .caption .src, .territory.on-paper .network-now span, .territory.on-paper .caption .atlas-rate-legend span { color: var(--muted); }
-.territory.on-paper .film-bar .track { background: rgba(22,50,63,.2); } .territory.on-paper .film-bar .track span { background: var(--ink); }
 .territory .film-loading { position: absolute; left: 32px; top: 24px; margin: 0; z-index: 5; font-size: 13px; color: var(--muted); }

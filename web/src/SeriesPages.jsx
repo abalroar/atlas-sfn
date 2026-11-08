@@ -2,7 +2,7 @@ import React, {useEffect, useId, useMemo, useState} from 'react';
 import {ChartPanel, ExportMenu} from './Chart.jsx';
 import {defaultInterval, sectionLabel, seriesCollections, seriesSections} from './series-data.js';
 
-const TITLES = {sfn: 'Estatísticas de crédito', imob: 'Mercado imobiliário', payments: 'Pagamentos'};
+const TITLES = {sfn: 'Estatísticas de crédito', imob: 'Mercado imobiliário', payments: 'Estatísticas de pagamentos'};
 
 export function PeriodFilters({window, setWindow, start, setStart, end, setEnd}) {
   return <>
