@@ -1,6 +1,7 @@
 import React,{useId,useMemo,useRef,useState} from 'react';
 import {Search} from 'lucide-react';
 import {groupName,searchInstitutions} from './landing-data.js';
+import './institution-search.css';
 
 const quarterLabel=period=>{const [year,quarter]=String(period||'').split('-Q');return quarter?`${['mar','jun','set','dez'][+quarter-1]}/${year}`:period||'N/D';};
 

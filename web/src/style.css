@@ -9,7 +9,7 @@ a{color:inherit;text-underline-offset:4px}
 input,select{max-width:100%;caret-color:#315f78}
 button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid #315f78;outline-offset:3px}
 ::selection{background:#315f78;color:#fff}
-.tc-boot{min-height:70vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:28px;text-align:center;background:#e7eff1}
+.tc-boot{min-height:70vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:28px;text-align:center;background:#f3f2ec}
 .tc-boot strong{font-size:30px;font-weight:650;letter-spacing:-.035em}
 .tc-boot p{font-size:13px;color:#506a76;line-height:1.6;max-width:60ch;margin:0}
 .tc-boot button{font-size:13px;text-decoration:underline;text-underline-offset:4px;padding:10px}

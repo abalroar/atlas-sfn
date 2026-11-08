@@ -5,8 +5,8 @@
 .statements-tabs button[aria-selected=true]{font-weight:600;border-bottom-color:#315f78}
 .statements-selection{display:flex;justify-content:space-between;gap:28px;align-items:center;margin-bottom:20px}
 .statements-selection>.institution-search{width:440px;max-width:100%;min-width:0}
-.statements-selection .institution-search__results{position:absolute;top:100%;left:0;right:0;z-index:30;background:#edf3f4;padding:4px 12px;border:1px solid #bdced3}
-.statements-identity{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:15px 18px;background:#edf3f4;font-size:12px;margin-bottom:23px}
+.statements-selection .institution-search__results{position:absolute;top:100%;left:0;right:0;z-index:30}
+.statements-identity{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:12px 0;border-top:1px solid #d3d9d4;border-bottom:1px solid #d3d9d4;font-size:12px;margin-bottom:23px}
 .statements-identity strong{font-weight:600}
 .statements-identity p{font-size:11px;color:#506a76;margin:3px 0 0;line-height:1.6}
 .statements-identity>span{font-size:11px;color:#506a76}
@@ -29,9 +29,9 @@
 .institution-page .statements-table td,.institution-page .statements-table tbody th{padding:9px 8px;border-bottom:1px solid #e0e8eb;vertical-align:top}
 .institution-page .statements-table td{white-space:normal;overflow-wrap:anywhere}
 .institution-page .statements-table tbody th{font-weight:400}
-.institution-page .statements-table .statements-section{background:#f4f7f8}
+.institution-page .statements-table .statements-section{background:rgba(22,50,63,.035)}
 .institution-page .statements-table .statements-section th,.institution-page .statements-table .statements-bold th{font-weight:600}
-.institution-page .statements-table .statements-key{background:#e7eff1}
+.institution-page .statements-table .statements-key{background:rgba(22,50,63,.07)}
 .institution-page .statements-table .statements-key th,.institution-page .statements-table .statements-key td{font-weight:600}
 .institution-page .statements-table .statements-indent th{padding-left:20px}
 .institution-page .statements-table .statements-detail th{padding-left:28px}

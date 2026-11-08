@@ -22,7 +22,7 @@ export default function AppShell({page, onNavigate, header, children}) {
   return <div className="tc-workspace">
     <header className="tc-app-nav">
       <a className="tc-app-wordmark" href={BASE} onClick={event => navigate(event, 'overview')}><Wordmark subtitle={false}/></a>
-      <button className="tc-app-menu" type="button" aria-expanded={menuOpen} aria-controls="tc-app-navigation" onClick={() => setMenuOpen(!menuOpen)}>Menu</button>
+      <button className="tc-app-menu" type="button" aria-expanded={menuOpen} aria-controls="tc-app-navigation" aria-label="Menu" onClick={() => setMenuOpen(!menuOpen)}><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6h14M3 10h14M3 14h14" /></svg></button>
       <nav id="tc-app-navigation" className={menuOpen ? 'is-open' : ''} aria-label="Navegação principal">
         {APP_NAVIGATION.map(([id, label]) => <a key={id} href={`${BASE}?view=${id}`} aria-current={navigationSection(page) === id ? 'page' : undefined} onClick={event => navigate(event, id)}>{label}</a>)}
       </nav>

@@ -1,10 +1,10 @@
 .institution-page{color:#213e50;min-width:0}
-.institution-header{background:#e7eff1;padding-top:22px;padding-bottom:0}
+.institution-header{background:#f3f2ec;padding-top:22px;padding-bottom:0;border-bottom:1px solid #d3d9d4}
 .institution-identity{display:flex;align-items:center;justify-content:space-between;gap:32px}
 .institution-identity h1{font-size:42px;line-height:1.15;font-weight:600;letter-spacing:-.03em;margin:0;overflow-wrap:anywhere;max-width:22ch}
 .institution-identity p{font-size:13px;color:#506a76;margin:8px 0 0}
 .institution-identity>.institution-search{width:280px;max-width:100%;flex-shrink:0}
-.institution-header .institution-search__results,.institution-comparison .institution-search__results{position:absolute;left:0;right:0;top:100%;z-index:30;background:#edf3f4;padding:4px 12px;border:1px solid #bdced3}
+.institution-header .institution-search__results,.institution-comparison .institution-search__results{position:absolute;left:0;right:0;top:100%;z-index:30}
 .institution-header .institution-search__field{padding:6px 0}
 .institution-toolbar{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:24px 0 18px;min-height:76px}
 .institution-filters{display:flex;align-items:center;gap:20px;flex-wrap:wrap;min-width:0}
@@ -23,7 +23,7 @@
 .institution-page table tbody th{font-weight:400;text-align:left}
 .institution-page table td{text-align:right;white-space:nowrap}
 .institution-page table th:first-child{padding-right:12px}
-.institution-metrics td,.institution-metrics tbody th{padding:7px 0;vertical-align:top;border-bottom:1px solid #e4ebed}
+.institution-metrics td,.institution-metrics tbody th{padding:7px 0;vertical-align:middle;border-bottom:1px solid #e1e3dc}
 .institution-metrics td{min-width:74px}
 .institution-metrics .institution-unit-group th{font-size:11px;font-weight:400;color:#506a76;padding:7px 0 3px;border-bottom:0}
 .institution-metrics button{text-align:left;line-height:1.35;font-size:13px}
@@ -68,12 +68,12 @@
 .institution-ranking table td:first-child{color:#506a76;text-align:left;min-width:35px;padding-right:10px}
 .institution-ranking table th button{text-align:left;font-size:13px;line-height:1.5}
 .institution-ranking table th button:hover{text-decoration:underline;text-underline-offset:3px}
-.institution-ranking .is-current{background:#edf3f4}
+.institution-ranking .is-current{background:rgba(236,112,0,.09)}
 .institution-ranking .institution-unit{display:block;margin:3px 0 0}
 .institution-data table th:first-child{max-width:65ch;padding-right:20px}
 .institution-data table td.institution-data-unit,.institution-data table thead th:last-child{color:#506a76;font-size:11px;padding-left:20px;width:65px}
 .institution-export{margin-left:auto;position:relative;font-size:13px}
-.institution-export summary{list-style:none;padding:7px 12px;border:1px solid #99b2bd;border-radius:2px;cursor:pointer}
+.institution-export summary{list-style:none;padding:7px 0;cursor:pointer;text-decoration:underline;text-decoration-color:#a4b7bf;text-underline-offset:5px}
 .institution-export summary::-webkit-details-marker{display:none}
 .institution-export>div{position:absolute;right:0;top:calc(100% + 8px);z-index:35;background:#fff;border:1px solid #bdced3;padding:8px 12px;width:220px;max-width:calc(100vw - 40px)}
 .institution-export>div button{padding:8px 0;text-align:left;width:100%;font-size:12px}

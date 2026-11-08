@@ -17,7 +17,7 @@ export default function Chart({chart, height = 280, colors, compact = false, sho
     const ink = '#213e50', muted = '#506a76';
     option.color = colors || chart.colors || WEB_CHART_COLORS;
     option.textStyle = {...option.textStyle, color: ink, fontSize: 11};
-    option.legend = {...option.legend, show: showLegend, textStyle: {...option.legend.textStyle, color: muted, fontFamily: 'Hanken Grotesk Variable, Hanken Grotesk, Arial, sans-serif'}};
+    option.legend = {...option.legend, show: showLegend, pageIconColor: ink, pageIconInactiveColor: '#b8c4c6', pageIconSize: 10, pageTextStyle: {color: muted, fontSize: 11}, textStyle: {...option.legend.textStyle, color: muted, fontFamily: 'Hanken Grotesk Variable, Hanken Grotesk, Arial, sans-serif'}};
     option.tooltip = {...option.tooltip, backgroundColor: '#fff', borderColor: '#bdced3', textStyle: {color: ink, fontFamily: 'Hanken Grotesk Variable, Hanken Grotesk, Arial, sans-serif', fontSize: 12}};
     option.xAxis = {...option.xAxis, axisLabel: {...option.xAxis.axisLabel, color: muted, fontSize: 11, showMinLabel:true,showMaxLabel:true}, axisLine: {lineStyle: {color: '#ccdadd'}}};
     option.yAxis = option.yAxis.map((axis, index) => ({...axis, scale:chart.series.some(series=>series.type==='bar'&&seriesAxis(chart,series)===index)?false:axis.scale, nameTextStyle: {...axis.nameTextStyle, color: muted}, axisLabel: {...axis.axisLabel, color: muted, fontSize: 11, formatter: value => chartTick(value)}, splitLine: {...axis.splitLine, lineStyle: {color: '#e0e8eb'}}}));
