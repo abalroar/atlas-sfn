@@ -20,11 +20,11 @@ const CONCEPTS = [
   [/^Cartão de Crédito$|^Cartões$/, 'card'], [/^Cartão de Débito$/, 'debit'], [/^Telefone Celular$/, 'pix'], [/^Internet Banking$/, 'ted'], [/^Agências$/, 'boleto'], [/^ATM$/, 'cheque'],
   [/^SF público$|^Bancos públicos$|^Público$/, 'public'], [/^SF privado nacional$|^Privado nacional$/, 'national'], [/^SF privado estrangeiro$|^Privado estrangeiro$|^Estrangeiro$/, 'foreign'],
 ];
-// Paleta do Atlas: PF na família ocre, PJ na família azul-petróleo (as tintas do relevo e do mar do filme),
+// Paleta do Atlas: PF na família terracota, PJ na família azul-petróleo (as tintas do relevo e do mar do filme),
 // totais em tinta escura. Site e PPTX usam as mesmas cores.
-const ATLAS = {pfFree: '#B07A1F', pfDirected: '#D9B77A', pfTotal: '#7A5214', pjFree: '#2C657F', pjDirected: '#8FB3C4', pjTotal: '#47869F', total: '#16323F', muted: '#9AA9AE', reference: '#8A7560',
-  pix: '#B07A1F', boleto: '#2C657F', ted: '#6BA5BD', cheque: '#7A5214', retired: '#C9D1D0', card: '#47869F', debit: '#D9B77A', public: '#B07A1F', national: '#2C657F', foreign: '#9AC4D4'};
-const ATLAS_SERIES = ['#2C657F', '#B07A1F', '#6BA5BD', '#7A5214', '#16323F', '#D9B77A', '#9AC4D4', '#8A7560', '#47869F', '#E3D3AF'];
+const ATLAS = {pfFree: '#B4553A', pfDirected: '#E3A48C', pfTotal: '#7C3522', pjFree: '#2C657F', pjDirected: '#8FB3C4', pjTotal: '#47869F', total: '#16323F', muted: '#9AA9AE', reference: '#9A8A80',
+  pix: '#B4553A', boleto: '#2C657F', ted: '#6BA5BD', cheque: '#7C3522', retired: '#C9D1D0', card: '#47869F', debit: '#E3A48C', public: '#B4553A', national: '#2C657F', foreign: '#9AC4D4'};
+const ATLAS_SERIES = ['#2C657F', '#B4553A', '#6BA5BD', '#7C3522', '#16323F', '#E3A48C', '#9AC4D4', '#9A8A80', '#47869F', '#F1D3C7'];
 const bare = color => color.slice(1);
 export const CONCEPT_INK = {web: ATLAS, pptx: Object.fromEntries(Object.entries(ATLAS).map(([key, color]) => [key, bare(color)]))};
 const FALLBACK = {web: ATLAS_SERIES, pptx: ATLAS_SERIES.map(bare)};

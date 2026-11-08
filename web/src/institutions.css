@@ -86,6 +86,6 @@
 .institution-rulers svg{display:block;width:100%;height:22px;overflow:visible}
 .institution-ruler-axis{stroke:#cfd8d6;stroke-width:1;vector-effect:non-scaling-stroke}
 .institution-ruler-tick{stroke:#506a76;stroke-opacity:.28;stroke-width:1;vector-effect:non-scaling-stroke}
-.institution-ruler-own{position:absolute;top:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;background:#b07a1f;box-shadow:0 0 0 2px #f3f2ec}
+.institution-ruler-own{position:absolute;top:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;background:#b4553a;box-shadow:0 0 0 2px #f3f2ec}
 .institution-ruler-foot{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#506a76;font-variant-numeric:tabular-nums}
 .institution-ruler-foot span:nth-child(2){color:#213e50;text-align:center}

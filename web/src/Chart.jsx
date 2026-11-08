@@ -101,7 +101,7 @@ function splitOption(chart, {colors}) {
 
 function dumbbellOption(chart, {colors}) {
   const {rows, label, earlierLabel} = dumbbellRows(chart), unit = axisUnits(chart)[0], ordered = rows.slice().reverse();
-  const accent = '#B07A1F';
+  const accent = '#B4553A';
   return {animation: false, textStyle: {fontFamily: FONT, color: INK, fontSize: 11},
     tooltip: {trigger: 'axis', axisPointer: {type: 'shadow'}, confine: true, backgroundColor: '#fff', borderColor: '#bdced3', textStyle: {color: INK, fontFamily: FONT, fontSize: 12}},
     legend: {bottom: 0, data: [label, earlierLabel], textStyle: {color: MUTED, fontSize: 11, fontFamily: FONT}, itemWidth: 10, itemHeight: 10},

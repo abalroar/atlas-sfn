@@ -1,7 +1,7 @@
 import {dateLabel,periodOf,chartCategories,axisUnits,seriesAxis,percentAxis,download} from './data.js';
 import {displayScale,monthLabel,quantity,readable,retiredSeries,seriesColors,sourceLine} from './editorial.js';
 import {dumbbellRows,ufTiles} from './chart-views.js';
-const ATLAS_FALLBACK=['2C657F','B07A1F','6BA5BD','7A5214','16323F','D9B77A','9AC4D4','8A7560'];
+const ATLAS_FALLBACK=['2C657F','B4553A','6BA5BD','7C3522','16323F','E3A48C','9AC4D4','9A8A80'];
 
 const xmlText=value=>value.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,'&');
 const xmlAttribute=(tag,name)=>xmlText(tag.match(new RegExp(`\\b${name}="([^"]*)"`))?.[1]||'');
@@ -136,8 +136,8 @@ export function chartTitleForPptx(c){const title=c.title.replace(/<[^>]*>/g,'');
 
 // Slide 16:9 de 13,33 × 7,5 pol. Margens de 0,45 pol.; Calibri; fundo branco; laranja Itaú BBA.
 const W=13.333,M=.45,BODY=W-2*M;
-// Paleta do Atlas: ocre como acento, tinta azul-petróleo escura no texto.
-const ORANGE='B07A1F',INK='16323F',GREY='4A6670',SOFT='8A9AA2';
+// Paleta do Atlas: terracota como acento, tinta azul-petróleo escura no texto.
+const ORANGE='B4553A',INK='16323F',GREY='4A6670',SOFT='8A9AA2';
 const font={fontFace:'Calibri'};
 const plain=value=>String(value??'').replace(/<[^>]*>/g,'').replaceAll('&amp;','&');
 const isLevel=unit=>!/%|Δ|variação|meses|p\.p\./i.test(unit||'');
