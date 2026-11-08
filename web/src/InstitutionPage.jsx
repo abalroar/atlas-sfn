@@ -50,7 +50,7 @@ function PositionRulers({rows,bank,period,name}){
   if(!rows.length)return null;
   const at=(index%rows.length+rows.length)%rows.length,row=rows[at],move=step=>setIndex(value=>value+step);
   return <section className="institution-rulers" aria-labelledby="institution-rulers-title" aria-roledescription="carrossel">
-    <div className="institution-rulers-head"><h2 id="institution-rulers-title">Como o {name} se compara</h2><span>entre os {PEERS[bank.perimeter]||'demais do perímetro '+bank.perimeter} · {row.periodLabel}{period!==row.period?' (última competência)':''}</span></div>
+    <div className="institution-rulers-head"><h2 id="institution-rulers-title">{name} entre os pares</h2><span>entre os {PEERS[bank.perimeter]||'demais do perímetro '+bank.perimeter} · {row.periodLabel}{period!==row.period?' (última competência)':''}</span></div>
     <div className="institution-ruler-card" tabIndex={0} onKeyDown={event=>{if(event.key==='ArrowRight'){event.preventDefault();move(1);}if(event.key==='ArrowLeft'){event.preventDefault();move(-1);}}}>
       <button type="button" className="institution-ruler-arrow" aria-label="Indicador anterior" onClick={()=>move(-1)}><ChevronLeft size={22} strokeWidth={1.6}/></button>
       <div className="institution-ruler-figure" aria-live="polite">

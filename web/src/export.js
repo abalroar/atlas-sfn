@@ -308,7 +308,7 @@ export function buildPptx(charts,title,PptxGenJS,deck={}){
   if(page.type==='profile'){
    // Ficha: régua de cada indicador contra o perímetro, em formas nativas editáveis.
    const slide=add(),{rows,perimeter}=deck.profile;
-   heading(slide,{kicker:perimeter==='Prudencial'?'Entre os conglomerados prudenciais':`Perímetro ${perimeter}`,title:`Como o ${deck.profile.title} se compara`,subtitle:`${rows[0].periodLabel} · cada traço é uma instituição com dado na competência; o ponto laranja é ${deck.profile.title}`});
+   heading(slide,{kicker:perimeter==='Prudencial'?'Entre os conglomerados prudenciais':`Perímetro ${perimeter}`,title:`${deck.profile.title} entre os pares`,subtitle:`${rows[0].periodLabel} · cada traço é uma instituição com dado na competência; o ponto laranja é ${deck.profile.title}`});
    const cols=rows.length>4?2:1,per=Math.ceil(rows.length/cols),cw=(BODY-.7*(cols-1))/cols,rh=Math.min(1.25,5.1/per);
    rows.forEach((row,index)=>{
     const x=M+Math.floor(index/per)*(cw+.7),y=1.95+(index%per)*rh,track=y+.48;
