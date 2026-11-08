@@ -50,13 +50,25 @@ function metricSeries(payload,period,window,key,metrics){
   return result;
 }
 
+/**
+ * Até duas unidades por gráfico: a segunda vai para o eixo direito. Numa só unidade, o eixo direito
+ * recebe os indicadores mais de seis vezes menores que o maior (mesma regra dos gráficos de séries).
+ */
 export function institutionChart({bank,payload,metrics,keys,period,window='all',id}){
   validateInstitutionHistory(bank,payload);
-  const units=new Set(keys.map(key=>metrics[key]?.unit));if(units.size!==1)throw Error('Escolha indicadores com a mesma unidade para este gráfico.');
+  const units=[...new Set(keys.map(key=>metrics[key]?.unit))];if(units.length>2)throw Error('Escolha indicadores de no máximo duas unidades para este gráfico.');
+  const series=keys.map(key=>({key,name:keys.length===1?bank.name:chartMetricLabel(key,metrics),type:'line',data:metricSeries(payload,period,window,key,metrics)}));
+  let right=new Set();
+  if(units.length===2)right=new Set(series.filter(entry=>metrics[entry.key]?.unit===units[1]).map(entry=>entry.key));
+  else if(series.length>1){
+    const last=entry=>{const point=entry.data.filter(([,value])=>finite(value)).at(-1);return point?Math.abs(point[1]):0;},top=Math.max(...series.map(last));
+    right=new Set(series.filter(entry=>last(entry)>0&&last(entry)<top/6).map(entry=>entry.key));
+  }
+  const axisUnit=key=>metricUnit(key,metrics),leftKey=keys.find(key=>!right.has(key))||keys[0],rightKey=keys.find(key=>right.has(key));
   return {id:id||'institution-'+keys.join('-'),title:keys.map(key=>metrics[key]?.label||key).join(' · '),section:bank.name,
-    unit:metricUnit(keys[0],metrics),percent:metrics[keys[0]]?.unit==='%',source:'BCB / IFData · '+bank.perimeter,
+    unit:axisUnit(leftKey),percent:metrics[leftKey]?.unit==='%',...(rightKey?{axes:[axisUnit(leftKey),axisUnit(rightKey)]}:{}),source:'BCB / IFData · '+bank.perimeter,
     note:keys.map(key=>metricNote(key,metrics)).filter(Boolean).join(' '),
-    series:keys.map(key=>({name:keys.length===1?bank.name:chartMetricLabel(key,metrics),type:'line',data:metricSeries(payload,period,window,key,metrics)}))};
+    series:series.map(({key,...entry})=>right.has(key)?{...entry,axis:1,name:entry.name+' (dir.)',dash:true}:entry)};
 }
 
 /** Start at the first observed value; internal gaps and observed zero stay intact. */

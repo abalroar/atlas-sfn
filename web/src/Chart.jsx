@@ -19,7 +19,7 @@ const isLevelUnit = unit => !/%|Δ|variação|meses|p\.p\./i.test(unit || '');
 export function shownUnits(chart) {
   return axisUnits(chart).map((unit, axis) => displayScale(unit, chart.series.filter(series => seriesAxis(chart, series) === axis).flatMap(series => series.data.map(point => point[1]))).unit);
 }
-const unitCaption = chart => chart.view === 'matrix' ? `% do total de transações do produto · ${chart.matrix.label}` : chart.view === 'dumbbell' ? `${shownUnits(chart)[0]} · ${dumbbellRows(chart).label} contra 12 meses antes` : [...new Set(shownUnits(chart))].join(' / ');
+const unitCaption = chart => chart.view === 'matrix' ? (chart.matrix.kind === 'rate' ? `% da carteira · ${chart.matrix.label}` : `% do total de transações do produto · ${chart.matrix.label}`) : chart.view === 'dumbbell' ? `${shownUnits(chart)[0]} · ${dumbbellRows(chart).label} contra 12 meses antes` : [...new Set(shownUnits(chart))].join(' / ');
 
 export default function Chart(props) {
   const {chart} = props;
@@ -55,7 +55,7 @@ function standardOption(chart, {colors, compact, showLegend, width}) {
   });
   option.series = option.series.map((series, index) => ({...series, itemStyle: {color: colors[index % colors.length]}, label: {...series.label, show: false},
     tooltip: {...series.tooltip, valueFormatter: value => quantity(value, seriesUnit(chart, chart.series[index]))},
-    ...(series.type === 'line' ? {lineStyle: {...series.lineStyle, width: index === 0 || chart.series.length < 4 ? 2.6 : 2, color: colors[index % colors.length], type: chart.series[index].name === 'CDI' ? 'dashed' : 'solid'}} : {})}));
+    ...(series.type === 'line' ? {lineStyle: {...series.lineStyle, width: chart.series.length < 4 ? 2.6 : 2, color: colors[index % colors.length], type: chart.series[index].dash || chart.series[index].name === 'CDI' ? [5, 3] : 'solid'}} : {})}));
   // Rótulo direto no fim da linha quando há poucas séries e espaço.
   const dates = dateCategories(chart), lines = chart.series.every(series => (series.type || 'line') === 'line');
   const names = chart.series.map(series => series.name);
@@ -160,8 +160,7 @@ function StandardChart({chart, height = 280, colors, compact = false, showLegend
     resize.observe(host);
     return () => {resize.disconnect(); instance.dispose();};
   }, [chart, palette.join(), compact, showLegend, valueLabels]);
-  const rows = chart.view === 'dumbbell' && !compact ? dumbbellRows(chart).rows.length : 0;
-  return <div className="tc-chart" style={{height: rows ? Math.max(height, 46 + rows * 30) : height}} ref={node} role="img" aria-label={`${plainText(chart.title)}. ${shownUnits(chart).join(' / ')}. ${periodOf(chart)}.`}/>;
+  return <div className="tc-chart" style={{height}} ref={node} role="img" aria-label={`${plainText(chart.title)}. ${shownUnits(chart).join(' / ')}. ${periodOf(chart)}.`}/>;
 }
 
 /* ---------- Grade de UFs ---------- */
@@ -184,32 +183,49 @@ function UfTiles({chart}) {
 /* ---------- Matriz produto × canal ---------- */
 
 function ChannelMatrix({chart}) {
-  const {matrix} = chart;
-  const shade = value => value == null ? 'transparent' : `rgba(44,101,127,${Math.min(1, .06 + value / 100 * .94).toFixed(3)})`;
+  const {matrix} = chart, rate = matrix.kind === 'rate';
+  const values = matrix.rows.flatMap(row => matrix.columns.map(column => row.values[column])).filter(finite);
+  const low = Math.min(...values), high = Math.max(...values);
+  const level = value => rate ? (value - low) / (high - low || 1) : value / 100;
+  const shade = value => value == null ? 'transparent' : `rgba(44,101,127,${Math.min(1, .06 + level(value) * .94).toFixed(3)})`;
+  const text = value => value == null ? 'N/D' : rate ? readable(value) + '%' : value < .5 && value > 0 ? '<1%' : `${Math.round(value)}%`;
   return <div className="tc-matrix-scroll"><table className="tc-matrix">
-    <thead><tr><th scope="col">Produto</th>{matrix.channels.map(channel => <th scope="col" key={channel}>{matrix.short[channel] || channel}</th>)}<th scope="col">Total no trimestre</th></tr></thead>
-    <tbody>{matrix.rows.map(row => <tr key={row.id}><th scope="row">{row.product}</th>{matrix.channels.map(channel => {
-      const value = row.shares[channel];
-      return <td key={channel} style={{background: shade(value), color: value != null && value >= 55 ? '#fff' : INK}}>{value == null ? 'N/D' : value < .5 && value > 0 ? '<1%' : `${Math.round(value)}%`}</td>;
-    })}<td className="tc-matrix-total">{quantity(row.total, matrix.unit)}</td></tr>)}</tbody>
-  </table></div>;
+    <thead><tr><th scope="col">{matrix.head}</th>{matrix.columns.map(column => <th scope="col" key={column}>{matrix.short[column] || column}</th>)}{matrix.totalLabel && <th scope="col">{matrix.totalLabel}</th>}</tr></thead>
+    <tbody>{matrix.rows.map(row => <tr key={row.id}><th scope="row">{row.label}</th>{matrix.columns.map(column => {
+      const value = row.values[column];
+      return <td key={column} style={{background: shade(value), color: value != null && level(value) >= .55 ? '#fff' : INK}}>{text(value)}</td>;
+    })}{matrix.totalLabel && <td className="tc-matrix-total">{quantity(row.total, matrix.unit)}</td>}</tr>)}</tbody>
+  </table>{matrix.columnNote && <p className="tc-matrix-note">Colunas: {matrix.columnNote}.</p>}</div>;
 }
 
 /* ---------- Painel ---------- */
 
-export function ChartPanel({chart, showNotes = true, lead = false}) {
+/** Painel em largura total: guia do assunto, halteres longos e matrizes. Os demais têm altura fixa e alinham em pares. */
+export const panelWide = chart => {
+  const shown = chart.alternatives?.[0]?.chart || chart;
+  return shown.view === 'matrix' || (shown.view === 'dumbbell' && dumbbellRows(shown).rows.length > 9) || (chart.alternatives || []).some(option => option.chart.view === 'dumbbell' && dumbbellRows(option.chart).rows.length > 9);
+};
+
+export function ChartPanel({chart: group, showNotes = true, lead = false, stretch = false}) {
+  const [choice, setChoice] = useState(0);
   const [mode, setMode] = useState('chart');
-  useEffect(() => setMode('chart'), [chart.id]);
+  useEffect(() => {setMode('chart'); setChoice(0);}, [group.id]);
+  const options = group.alternatives || null, chart = options ? options[Math.min(choice, options.length - 1)].chart : group;
   const hasValues = chart.series.some(series => series.data.some(point => point[1] != null && Number.isFinite(Number(point[1]))));
-  const title = plainText(chart.title), reading = chart.reading?.text;
+  const title = plainText(group.alternatives ? group.title : chart.title), reading = chart.reading?.text;
   const original = chart.view === 'dumbbell' ? {...chart, view: undefined, smallMultiples: false} : null;
   const period = chart.view === 'matrix' ? chart.matrix.label : periodOf(chart);
-  return <article className={'tc-chart-panel' + (lead ? ' is-lead' : '')}>
+  const wide = lead || stretch || panelWide(group), rows = chart.view === 'dumbbell' && mode !== 'series' ? dumbbellRows(chart).rows.length : 0;
+  const height = lead ? 340 : wide && rows ? Math.max(300, 50 + rows * 28) : 300;
+  return <article className={'tc-chart-panel' + (wide ? ' is-wide' : '') + (lead ? ' is-lead' : '')}>
     <header className="tc-chart-panel-heading">
       <div>{reading ? <><p className="tc-chart-kicker">{title}</p><h2>{reading}</h2></> : <h2>{title}</h2>}<p>{unitCaption(chart)}{chart.smallMultiples ? ' · escala própria por série' : ''}{chart.view === 'matrix' ? '' : ` · ${period}`}{chart.historical ? ' · série encerrada' : ''}</p></div>
-      {original && <div className="tc-chart-modes"><button type="button" className="tc-text-action" aria-pressed={mode === 'series'} onClick={() => setMode(mode === 'series' ? 'chart' : 'series')}>{mode === 'series' ? 'Comparação' : 'Série'}</button></div>}
+      {(options || original) && <div className="tc-chart-modes">
+        {options && <div className="tc-chart-choice" role="group" aria-label={`Ver ${title} por`}>{options.map((option, index) => <button type="button" key={option.label} aria-pressed={index === choice} onClick={() => {setChoice(index); setMode('chart');}}>{option.label}</button>)}</div>}
+        {original && <button type="button" className="tc-text-action" aria-pressed={mode === 'series'} onClick={() => setMode(mode === 'series' ? 'chart' : 'series')}>{mode === 'series' ? 'Comparação' : 'Série'}</button>}
+      </div>}
     </header>
-    {hasValues ? <Chart chart={mode === 'series' && original ? original : chart} height={lead ? 340 : 280}/> : <p className="tc-empty">Sem observações neste intervalo. Escolha outro período para consultar a série.</p>}
+    {hasValues ? <Chart chart={mode === 'series' && original ? original : chart} height={height} fixed={!wide}/> : <p className="tc-empty">Sem observações neste intervalo. Escolha outro período para consultar a série.</p>}
     {showNotes && chart.note && <details className="tc-chart-note"><summary>Notas</summary><p>{plainText(chart.note)}</p></details>}
   </article>;
 }
@@ -260,7 +276,7 @@ export function ExportMenu({charts = [], title, allCharts, collection, collectio
     } finally {setBusy(false);}
   }
   function csv() {
-    try {csvDownload(charts, title); setStatus('CSV preparado.');} catch (error) {setStatus(error.message); onError?.(error.message);}
+    try {csvDownload(charts.flatMap(chart => chart.csvSources || [chart]), title); setStatus('CSV preparado.');} catch (error) {setStatus(error.message); onError?.(error.message);}
   }
   return <details ref={node} className="tc-export-menu">
     <summary>Exportar</summary>

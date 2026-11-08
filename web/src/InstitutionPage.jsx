@@ -30,12 +30,13 @@ function Analysis({bank,payload,metrics,period,window}){
   const current=observationAt(payload,period),previous=previousObservation(payload,period);
   return <div className="institution-dashboard">{ANALYSIS_GROUPS.map(group=>{
     const keys=selected[group.id],composition=group.id==='capital'&&keys.length===2&&keys.includes('cet1')&&keys.includes('basel'),chart=trimChartStart(composition?capitalCompositionChart({bank,payload,metrics,period,window}):institutionChart({bank,payload,metrics,keys,period,window,id:'bank-'+group.id})),hasData=chart.series.some(series=>series.data.some(point=>point[1]!=null));
-    const onSelect=key=>setSelected(value=>({...value,[group.id]:[key]}));
+    // Clicar soma o indicador ao gráfico (até quatro); clicar de novo retira.
+    const onSelect=key=>setSelected(value=>{const current=value[group.id];const next=current.includes(key)?(current.length>1?current.filter(entry=>entry!==key):current):[...current,key].slice(-4);return {...value,[group.id]:next};});
     return <section className="institution-block" key={group.id} aria-labelledby={'institution-'+group.id}>
       <h2 id={'institution-'+group.id}>{group.title}</h2>
       <MetricTable keys={group.metrics} {...{group,current,previous,period,metrics,onSelect}} selected={keys}/>
       {hasData?<Chart chart={chart} height={210} compact showLegend={keys.length>1}/>:<p className="institution-chart-empty">Sem observações neste recorte.</p>}
-      <p className="institution-chart-note">{composition?chart.note:keys.length===1?metricNote(keys[0],metrics)||group.note:group.note}</p>
+      <p className="institution-chart-note">{composition?chart.note:keys.length===1?metricNote(keys[0],metrics)||group.note:`Clique nos indicadores para somá-los ao gráfico; com grandezas ou unidades diferentes, o eixo direito entra. ${group.note}`.trim()}</p>
       {group.more.length>0&&<details className="institution-more"><summary>Outros indicadores</summary><MetricTable keys={group.more} {...{group,current,previous,period,metrics,onSelect}} selected={keys} head={false}/></details>}
     </section>;
   })}</div>;
@@ -131,7 +132,7 @@ export default function InstitutionPage({catalog,bankId,onSelect,onStatementSele
   useEffect(()=>{const back=()=>{const context=parseContext();setTab(context.tab);setAsOf(context.period);setWindow(context.window);};globalThis.addEventListener('popstate',back);return()=>globalThis.removeEventListener('popstate',back);},[]);
 
   const ready=payload?.id===bank.id&&payload?.perimeter===bank.perimeter;
-  const exportCharts=useMemo(()=>ready?institutionDeckCharts(institutionExportCharts({bank,payload,metrics:catalog.metrics,period,window})):[],[ready,bank,payload,catalog.metrics,period,window]);
+  const exportCharts=useMemo(()=>ready?institutionDeckCharts({bank,payload,metrics:catalog.metrics,period,window}):[],[ready,bank,payload,catalog.metrics,period,window]);
   const snapshotCharts=useMemo(()=>ready?institutionSnapshotCharts({bank,payload,metrics:catalog.metrics,period}):[],[ready,bank,payload,catalog.metrics,period]);
   const rulers=useMemo(()=>positionRulers(catalog,bank),[catalog,bank]);
   const compare=useMemo(()=>comparisonChart({banks:peers,histories:peerHistories,metrics:catalog.metrics,key:metric,period,window,perimeter:bank.perimeter}),[peers,peerHistories,catalog.metrics,metric,period,window,bank.perimeter]);

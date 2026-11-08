@@ -72,10 +72,12 @@ export function channelMatrix(charts) {
   const rows = sources.map(chart => {
     const values = Object.fromEntries(chart.series.map(series => [series.name, series.data.find(point => point[0] === date)?.[1]]).filter(([, value]) => finite(value)));
     const total = Object.values(values).reduce((sum, value) => sum + value, 0);
-    return {product: chart.title.replace(/ por canal de acesso$/, ''), id: chart.id, total, shares: Object.fromEntries(CHANNEL_ORDER.map(channel => [channel, channel in values && total > 0 ? values[channel] / total * 100 : null]))};
+    const product = chart.title.replace(/ por canal de acesso$/, '');
+    return {product, label: product, id: chart.id, total, shares: Object.fromEntries(CHANNEL_ORDER.map(channel => [channel, channel in values && total > 0 ? values[channel] / total * 100 : null]))};
   }).filter(row => row.total > 0).sort((a, b) => b.total - a.total);
   const channels = CHANNEL_ORDER.filter(channel => rows.some(row => row.shares[channel] != null));
-  return {date, label: monthLabel(date), unit: sources[0].unit, channels, short: CHANNEL_SHORT, rows, source: sources[0].source};
+  for (const row of rows) row.values = row.shares;
+  return {kind: 'share', head: 'Produto', totalLabel: 'Total no trimestre', date, label: monthLabel(date), unit: sources[0].unit, channels, columns: channels, short: CHANNEL_SHORT, rows, source: sources[0].source};
 }
 
 /** Gráfico sintético que carrega a matriz: as séries citam as participações para CSV e tabela. */

@@ -143,7 +143,7 @@ const plain=value=>String(value??'').replace(/<[^>]*>/g,'').replaceAll('&amp;','
 const isLevel=unit=>!/%|Δ|variação|meses|p\.p\./i.test(unit||'');
 
 function chartUnits(chart){
- if(chart.view==='matrix')return `% do total de transações do produto · ${chart.matrix.label}`;
+ if(chart.view==='matrix')return chart.matrix.kind==='rate'?`% da carteira · ${chart.matrix.label}`:`% do total de transações do produto · ${chart.matrix.label}`;
  const units=axisUnits(chart).map((unit,axis)=>displayScale(unit,chart.series.filter(s=>seriesAxis(chart,s)===axis).flatMap(s=>s.data.map(p=>p[1]))).unit);
  if(chart.view==='dumbbell'){const rows=dumbbellRows(chart);return `${units[0]} · ${rows.label} contra ${rows.earlierLabel}`;}
  return units.length>1?`${units[0]} (esq.) / ${units[1]} (dir.)`:units[0];
@@ -201,11 +201,16 @@ function tileMap(slide,chart,box){
 }
 
 function matrixTable(slide,chart,box){
- const {matrix}=chart,shade=value=>{if(value==null)return 'FFFFFF';const t=Math.min(1,.06+value/100*.94),mix=(a,b)=>Math.round(a+(b-a)*t).toString(16).padStart(2,'0');return mix(255,44)+mix(255,101)+mix(255,127);};
- const head=[{text:'Produto',options:{bold:true,color:GREY}},...matrix.channels.map(c=>({text:matrix.short[c]||c,options:{color:GREY,align:'center'}})),{text:'Total no trimestre',options:{color:GREY,align:'right'}}];
- const body=matrix.rows.map(row=>[{text:row.product,options:{color:INK}},...matrix.channels.map(c=>{const v=row.shares[c];return {text:v==null?'N/D':v>0&&v<.5?'<1%':`${Math.round(v)}%`,options:{align:'center',fill:{color:shade(v)},color:v!=null&&v>=55?'FFFFFF':INK}};}),{text:quantity(row.total,matrix.unit),options:{align:'right',color:GREY}}]);
- const first=2.6,rest=(box.w-first-1.9)/matrix.channels.length;
- slide.addTable([head,...body],{...font,x:box.x,y:box.y,w:box.w,colW:[first,...matrix.channels.map(()=>rest),1.9],fontSize:10,rowH:Math.min(.42,box.h/(body.length+1)),border:{type:'solid',pt:1,color:'FFFFFF'},margin:.04,valign:'middle'});
+ const {matrix}=chart,rate=matrix.kind==='rate',columns=matrix.columns||matrix.channels;
+ const values=matrix.rows.flatMap(row=>columns.map(c=>row.values[c])).filter(v=>typeof v==='number'&&Number.isFinite(v)),low=Math.min(...values),high=Math.max(...values);
+ const level=v=>rate?(v-low)/(high-low||1):v/100;
+ const shade=value=>{if(value==null)return 'FFFFFF';const t=Math.min(1,.06+level(value)*.94),mix=(a,b)=>Math.round(a+(b-a)*t).toString(16).padStart(2,'0');return mix(255,44)+mix(255,101)+mix(255,127);};
+ const text=v=>v==null?'N/D':rate?readable(v)+'%':v>0&&v<.5?'<1%':`${Math.round(v)}%`;
+ const head=[{text:matrix.head||'',options:{bold:true,color:GREY}},...columns.map(c=>({text:matrix.short?.[c]||c,options:{color:GREY,align:'center'}})),...(matrix.totalLabel?[{text:matrix.totalLabel,options:{color:GREY,align:'right'}}]:[])];
+ const body=matrix.rows.map(row=>[{text:row.label,options:{color:INK}},...columns.map(c=>{const v=row.values[c];return {text:text(v),options:{align:'center',fill:{color:shade(v)},color:v!=null&&level(v)>=.55?'FFFFFF':INK}};}),...(matrix.totalLabel?[{text:quantity(row.total,matrix.unit),options:{align:'right',color:GREY}}]:[])]);
+ const total=matrix.totalLabel?1.9:0,first=2.6,rest=(box.w-first-total)/columns.length;
+ slide.addTable([head,...body],{...font,x:box.x,y:box.y,w:box.w,colW:[first,...columns.map(()=>rest),...(total?[total]:[])],fontSize:10,rowH:Math.min(.42,box.h/(body.length+1)),border:{type:'solid',pt:1,color:'FFFFFF'},margin:.04,valign:'middle'});
+ if(matrix.columnNote)slide.addText(`Colunas: ${matrix.columnNote}.`,{...font,x:box.x,y:box.y+Math.min(.42,box.h/(body.length+1))*(body.length+1)+.1,w:box.w,h:.25,fontSize:9,color:SOFT,margin:0});
 }
 
 function multiplesChart(slide,p,chart,box){
@@ -280,6 +285,8 @@ function heading(slide,{kicker,title,subtitle,size=22}){
 }
 
 export function buildPptx(charts,title,PptxGenJS,deck={}){
+ // Alternâncias do site (quantidade/valor, R$/%, PF/PJ) viram páginas próprias no arquivo.
+ charts=charts.flatMap(chart=>chart.alternatives?chart.alternatives.map(option=>({...option.chart,title:`${plain(chart.title)} · ${option.label}`,topic:chart.topic,topicLabel:chart.topicLabel})):[chart]);
  const coverage=coverageForCharts(charts),ready=coverage.ready;if(!ready.length)throw new Error('Nenhum gráfico possui dados no intervalo selecionado.');
  const p=new PptxGenJS();p.layout='LAYOUT_WIDE';p.author='Atlas';p.subject='Dados oficiais do Banco Central';p.title=title;p.company='Atlas';p.lang='pt-BR';p.theme={headFontFace:'Calibri',bodyFontFace:'Calibri',lang:'pt-BR'};
  const figures=deck.figures||{},plan=deckPlan(ready,{figures,profile:deck.profile});

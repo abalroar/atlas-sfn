@@ -32,6 +32,12 @@ export const conceptOf = name => CONCEPTS.find(([pattern]) => pattern.test(Strin
 
 /** Uma cor por série: conceito conhecido primeiro, depois a paleta na ordem, sem repetir. */
 export function seriesColors(chart, medium = 'web') {
+  // Séries com a mesma chave de cor (a mesma categoria em duas medidas) dividem a tinta.
+  const keys = chart.series.map(series => series.colorKey || series.name), unique = [...new Set(keys)];
+  if (unique.length < keys.length) {
+    const colors = seriesColors({series: unique.map(name => ({name}))}, medium), byKey = new Map(unique.map((key, index) => [key, colors[index]]));
+    return keys.map(key => byKey.get(key));
+  }
   const ink = CONCEPT_INK[medium], out = [];
   const concepts = chart.series.map(series => conceptOf(series.name));
   // Um conceito só fica com a sua tinta quando ela ainda não foi usada no mesmo gráfico.

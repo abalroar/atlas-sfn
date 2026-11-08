@@ -54,11 +54,17 @@ test('competence and calendar-quarter windows exclude future observations and pr
   assert.equal(last(chart(['assets'], {payload: missingLatest, period: '2026-Q2', window: '4'})), null);
 });
 
-test('late responses, duplicate competences and mixed financial units are rejected', () => {
+test('late responses and duplicate competences are rejected; two units share a chart on two axes', () => {
   assert.throws(() => validateInstitutionHistory(itau, bradescoHistory), /instituição e ao perímetro/);
   assert.throws(() => validateInstitutionHistory(itau, {...itauHistory, perimeter: 'Individual'}), /instituição e ao perímetro/);
   assert.throws(() => validateInstitutionHistory(itau, {...itauHistory, history: [itauHistory.history[0], itauHistory.history[0]]}), /duplicada/);
-  assert.throws(() => chart(['assets', 'roe']), /mesma unidade/);
+  const mixed = chart(['assets', 'roe']);
+  assert.deepEqual(mixed.axes, ['R$ bilhões', '%']);
+  assert.equal(mixed.series[1].axis, 1);assert.match(mixed.series[1].name, /\(dir\.\)$/);
+  assert.deepEqual(mixed.series[1].data, chart(['roe']).series[0].data, 'the right axis keeps the published values');
+  const volumes = chart(['assets', 'equity']);
+  assert.equal(volumes.series.find(series => series.axis === 1)?.name, 'Patrimônio líquido (dir.)', 'a sixfold smaller volume moves to the right axis');
+  assert.throws(() => chart(['assets', 'roe', 'other'], {metrics: {...metrics, other: {label: 'Outra', unit: 'meses'}}}), /duas unidades/);
 });
 
 test('real Afinz losses keep their accounting signs, unavailable stage 2 remains missing, and zero is observed', () => {
