@@ -43,21 +43,25 @@ function Analysis({bank,payload,metrics,period,window}){
   })}</div>;
 }
 
-// Um indicador por vez: valor, posição e a régua com todas as instituições do perímetro.
-function PositionRulers({rows,bank,period}){
+// Um indicador por vez: valor e posição à esquerda; à direita, a régua com todas as instituições do perímetro.
+const PEERS={Prudencial:'conglomerados prudenciais'};
+function PositionRulers({rows,bank,period,name}){
   const [index,setIndex]=useState(0);
   if(!rows.length)return null;
   const at=(index%rows.length+rows.length)%rows.length,row=rows[at],move=step=>setIndex(value=>value+step);
   return <section className="institution-rulers" aria-labelledby="institution-rulers-title" aria-roledescription="carrossel">
-    <div className="institution-rulers-head"><h2 id="institution-rulers-title">Posição no perímetro {bank.perimeter}</h2><span>{row.periodLabel}{period!==row.period?' · última competência':''}</span></div>
+    <div className="institution-rulers-head"><h2 id="institution-rulers-title">Como o {name} se compara</h2><span>entre os {PEERS[bank.perimeter]||'demais do perímetro '+bank.perimeter} · {row.periodLabel}{period!==row.period?' (última competência)':''}</span></div>
     <div className="institution-ruler-card" tabIndex={0} onKeyDown={event=>{if(event.key==='ArrowRight'){event.preventDefault();move(1);}if(event.key==='ArrowLeft'){event.preventDefault();move(-1);}}}>
       <button type="button" className="institution-ruler-arrow" aria-label="Indicador anterior" onClick={()=>move(-1)}><ChevronLeft size={22} strokeWidth={1.6}/></button>
-      <div className="institution-ruler-body" aria-live="polite">
-        <div className="institution-ruler-title"><span>{row.label} <small>{row.unit}</small></span><span className="institution-ruler-rank">{row.rank?`${row.rank}º de ${row.count}`:'Sem dado'}</span></div>
+      <div className="institution-ruler-figure" aria-live="polite">
+        <span className="institution-ruler-label">{row.label} <small>{row.unit}</small></span>
         <strong className="institution-ruler-value">{row.valueText}</strong>
+        <span className="institution-ruler-rank">{row.rank?`${row.rank}º de ${row.count}`:'Sem dado nesta competência'}</span>
+      </div>
+      <div className="institution-ruler-scale">
         <div className="institution-ruler-track" role="img" aria-label={`${row.label}: ${row.valueText}. ${row.rank?row.rank+'º de '+row.count:'Sem dado'}. Mediana ${row.medianText}.`}>
-          <svg viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true">
-            {row.positions.map((position,i)=><line key={i} x1={position*300} x2={position*300} y1="6" y2="34" className="institution-ruler-tick"/>)}
+          <svg viewBox="0 0 300 44" preserveAspectRatio="none" aria-hidden="true">
+            {row.positions.map((position,i)=><line key={i} x1={position*300} x2={position*300} y1="6" y2="38" className="institution-ruler-tick"/>)}
           </svg>
           {row.position!=null&&<span className="institution-ruler-own" style={{left:`${row.position*100}%`}}/>}
         </div>
@@ -166,7 +170,7 @@ export default function InstitutionPage({catalog,bankId,onSelect,onStatementSele
     <div className="tc-page-content institution-content" role="tabpanel" id={`${tabPrefix}-panel`} aria-labelledby={`${tabPrefix}-${tab}`}>
       {statementActive?<Statements index={statementIndex} {...{catalog,bank}} onContextChange={statementContext} onRetryIndex={onRetryStatements}/>:<>
         {error&&ready&&<p className="institution-inline-error" role="alert">{error}</p>}
-        {tab==='analysis'&&ready&&<PositionRulers rows={rulers} bank={bank} period={period}/>}
+        {tab==='analysis'&&ready&&<PositionRulers rows={rulers} bank={bank} period={period} name={title}/>}
         {tab==='analysis'&&(ready?<Analysis {...{bank,payload,period,window}} metrics={catalog.metrics}/>:<HistoryMessage error={error} onRetry={()=>setRetry(value=>value+1)}/>)}
         {tab==='compare'&&<Comparison {...{catalog,metric,setMetric,period,window}} banks={peers} histories={peerHistories} perimeter={bank.perimeter} onAdd={entry=>setPeerIds(ids=>ids.length<4&&!ids.includes(entry.id)?[...ids,entry.id]:ids)} onRemove={id=>setPeerIds(ids=>ids.filter(value=>value!==id))} loading={peerLoading} error={peerError}/>}
         {tab==='ranking'&&<Ranking {...{catalog,bank,metric,setMetric}} onSelect={choose}/>}
