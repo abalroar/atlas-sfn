@@ -107,6 +107,12 @@ function creditCombos(charts) {
   out.push({sources: ['credito_produto-2', 'credito_produto-3'], chart: mergeCharts('cred-produtos-variacao', 'Variação real por produto, PF e PJ', [{chart: get('credito_produto-2')}, {chart: get('credito_produto-3')}], {unit: 'Δ YoY real (%)', view: 'dumbbell'})});
   out.push({sources: ['credito_produto-4', 'credito_produto-5'], chart: mergeCharts('cred-cartao-direcionados', 'Crescimento do cartão e dos direcionados', [{chart: get('credito_produto-4')}, {chart: get('credito_produto-5'), dash: true}], {unit: 'Δ YoY real (%)'})});
   out.push({sources: ['credito_empresa-0', 'credito_empresa-1'], chart: alternatives('cred-empresa', 'Carteira PJ por porte', [{label: 'R$', chart: get('credito_empresa-0')}, {label: '%', chart: get('credito_empresa-1')}])});
+  // Comprometimento e endividamento usam a mesma unidade e cabem num eixo só.
+  const income = get('situacao-0');
+  if (income) {
+    const {right} = splitAxes(income.series);
+    if (!right.length) out.push({sources: ['situacao-0'], chart: {...income, axes: undefined, unit: income.axes?.[0] || income.unit, combined: true, series: income.series.map(series => ({...series, axis: 0, name: series.name.replace(/ \(dir\.\)$/, '')})), csvSources: [income]}});
+  }
   const unemployment = get('situacao-1');
   if (unemployment) out.push({sources: ['situacao-1'], chart: {...unemployment, axes: ['%', 'p.p.'], unit: '%', series: unemployment.series.map(series => /Variação/.test(series.name) ? {...series, axis: 1, name: series.name + RIGHT, dash: true} : series), csvSources: [unemployment]}});
   const npl2 = get('npl_pre_inad-2'), npl4 = get('npl_pre_inad-4');
@@ -170,7 +176,6 @@ function paymentCombos(charts) {
 
 function housingCombos(charts) {
   const get = id => pickChart(charts, id), out = [];
-  const pfpj = (id, title, base) => out.push({sources: [`${base}_pf`, `${base}_pj`], chart: mergeCharts(id, title, [{chart: get(`${base}_pf`), rename: name => `${name} · PF`, keepColor: true}, {chart: get(`${base}_pj`), rename: name => `${name} · PJ`, dash: true, keepColor: true}])});
   const toggle = (id, base, title) => out.push({sources: [`${base}_pf`, `${base}_pj`], chart: alternatives(id, title, [{label: 'PF', chart: get(`${base}_pf`)}, {label: 'PJ', chart: get(`${base}_pj`)}])});
   const stackWithTotal = (id, title, base, unit) => {
     const pf = get(`${base}_pf`), pj = get(`${base}_pj`);
@@ -180,11 +185,11 @@ function housingCombos(charts) {
   };
   stackWithTotal('imob-valor', 'Valor contratado, PF e PJ', 'contratacao_valor', 'R$ milhões');
   toggle('imob-indexador-contratacao', 'contratacao_indexador', 'Indexadores nas contratações');
-  pfpj('imob-taxa', 'Taxa de contratação, PF e PJ', 'contratacao_taxa');
+  toggle('imob-taxa', 'contratacao_taxa', 'Taxa de contratação');
   stackWithTotal('imob-carteira', 'Carteira de crédito imobiliário, PF e PJ', 'estoque_carteira', 'R$ bilhões');
   toggle('imob-indexador-carteira', 'estoque_indexador', 'Indexadores na carteira');
   toggle('imob-risco', 'estoque_risco', 'Risco da operação');
-  pfpj('imob-inadimplencia', 'Inadimplência, PF e PJ', 'estoque_inadimplencia');
+  toggle('imob-inadimplencia', 'estoque_inadimplencia', 'Inadimplência');
   toggle('imob-problematicos', 'estoque_problematico', 'Ativos problemáticos');
   out.push({sources: ['imoveis_tipo', 'imoveis_dormitorio', 'imoveis_implantacao', 'imoveis_garantia'], chart: alternatives('imob-perfil', 'Perfil dos imóveis financiados',
     [['Tipo', 'imoveis_tipo'], ['Dormitórios', 'imoveis_dormitorio'], ['Implantação', 'imoveis_implantacao'], ['Garantia', 'imoveis_garantia']].map(([label, id]) => ({label, chart: get(id)})))});
@@ -201,11 +206,14 @@ const COMBOS = {sfn: creditCombos, payments: paymentCombos, imob: housingCombos}
 export function combineCharts(page, charts) {
   const combos = (COMBOS[page]?.(charts) || []).filter(entry => entry.chart);
   const consumed = new Set(combos.flatMap(entry => entry.sources));
-  const anchor = entry => (entry.after && charts.some(chart => chart.id === entry.after) ? entry.after : null) || entry.sources.find(id => charts.some(chart => chart.id === id)) || entry.after;
+  // Com `after`, o combinado entra logo depois do gráfico indicado; sem ele, no lugar da primeira fonte.
   const result = [], placed = new Set();
+  const emit = list => list.forEach(entry => {if (!placed.has(entry)) {result.push(entry.chart); placed.add(entry);}});
   for (const chart of charts) {
-    for (const entry of combos) if (!placed.has(entry) && (anchor(entry) === chart.id)) {result.push(entry.chart); placed.add(entry);}
+    emit(combos.filter(entry => !entry.after && entry.sources.find(id => charts.some(item => item.id === id)) === chart.id));
     if (!consumed.has(chart.id)) result.push(chart);
+    emit(combos.filter(entry => entry.after === chart.id));
   }
+  emit(combos);
   return result;
 }

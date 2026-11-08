@@ -66,6 +66,8 @@ export default function SeriesPages({page: requested, manifest, sfn = [], extra 
   }), [topics, presented, fullPresented, page]);
   const charts = ordered.filter(chart => chart.topic === selected?.id);
   const inHousing = housingTopic(selected?.id);
+  const quotedIds = new Set((figures[selected?.id] || []).map(figure => figure.chart));
+  const quoted = chart => quotedIds.has(chart.id) || (chart.csvSources || []).some(source => quotedIds.has(source.id));
   // Um painel de meia largura sem par na linha ocupa a largura toda.
   const alone = useMemo(() => {
     const result = new Set();let run = [];
@@ -93,7 +95,7 @@ export default function SeriesPages({page: requested, manifest, sfn = [], extra 
       {window === 'interval' && start && end && start > end && <p className="tc-inline-message" role="alert">A data inicial está depois da final. Ajuste o intervalo para consultar as séries.</p>}
       {inHousing && housingError && <div className="tc-app-error" role="alert"><span>{housingError}</span>{onHousingRetry && <button type="button" onClick={onHousingRetry}>Tentar novamente</button>}</div>}
       {!loadingHousing && <KeyFigures figures={figures[selected?.id]}/>}
-      {loadingHousing ? <div className="tc-loading" role="status">Carregando dados para {uf === 'br' ? 'Brasil' : uf.toUpperCase()}…</div> : charts.length ? <div className="tc-series-grid">{charts.map((chart, index) => <ChartPanel chart={chart} key={chart.id} showNotes={false} lead={index === 0 && !inHousing} stretch={alone.has(chart.id)}/>)}</div> : <p className="tc-empty">Nenhum gráfico disponível neste assunto.</p>}
+      {loadingHousing ? <div className="tc-loading" role="status">Carregando dados para {uf === 'br' ? 'Brasil' : uf.toUpperCase()}…</div> : charts.length ? <div className="tc-series-grid">{charts.map((chart, index) => <ChartPanel chart={chart} key={chart.id} showNotes={false} lead={index === 0 && !inHousing} stretch={alone.has(chart.id)} quiet={index === 0 && quoted(chart)}/>)}</div> : <p className="tc-empty">Nenhum gráfico disponível neste assunto.</p>}
       {!loadingHousing && charts.length > 0 && <footer className="tc-series-sources">
         <p>Fonte: {sourceLine(charts)}. Unidade e período em cada gráfico; N/D indica ausência de dado publicado.</p>
         {notes.length > 0 && <details className="tc-series-notes"><summary>Notas dos dados</summary><dl>{notes.map(note => <div key={note.text}><dt>{note.charts.join(' · ')}</dt><dd>{note.text}</dd></div>)}</dl></details>}

@@ -4,7 +4,7 @@ import {axisUnits, chartOption, csvDownload, dateLabel, periodOf, seriesUnit, se
 import {exportPptx} from './export.js';
 import {chartLabel, chartTick, chartValue, showInnerLabel} from './chart-format.js';
 import {WEB_CHART_COLORS} from './chart-palette.js';
-import {displayScale, quantity, readable, recessionsIn, seriesColors} from './editorial.js';
+import {displayScale, monthLabel, quantity, readable, recessionsIn, seriesColors} from './editorial.js';
 import {bandCategories, dateCategories, dumbbellRows, ufTiles} from './chart-views.js';
 import SmallMultiples from './SmallMultiples.jsx';
 
@@ -37,12 +37,32 @@ function axisLabel(chart, axis) {
   return {scale, formatter: value => chartTick(value / scale.factor)};
 }
 
+const escapeHtml = text => String(text).replace(/[&<>"]/g, char => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[char]);
+/** Dica com a data por extenso (jan/2026) e os valores na unidade de cada série. */
+function axisTooltip(unitOf) {
+  return params => {
+    const list = (Array.isArray(params) ? params : [params]).filter(item => item.seriesType !== 'custom' && item.value != null && item.value !== '');
+    if (!list.length) return '';
+    const head = monthLabel(String(list[0].axisValue ?? list[0].name ?? ''));
+    return `<div style="font-weight:600;margin-bottom:4px">${escapeHtml(head)}</div>` + list.map(item => `<div style="display:flex;justify-content:space-between;gap:18px"><span>${item.marker}${escapeHtml(item.seriesName)}</span><strong>${escapeHtml(quantity(Number(item.value), unitOf(item)))}</strong></div>`).join('');
+  };
+}
+/** Legenda sem paginação: quebra em linhas e o gráfico cede a altura necessária. */
+function wrappedLegend(option, names, width) {
+  const usable = Math.max(240, (width || 600) - 16), widths = names.map(name => 26 + String(name).length * 6.3);
+  let rows = 1, line = 0;
+  for (const item of widths) {if (line + item > usable && line > 0) {rows += 1; line = 0;} line += item;}
+  option.legend = {...option.legend, type: 'plain', left: 0, right: 0, bottom: 0, itemGap: 12};
+  option.grid = {...option.grid, bottom: 30 + rows * 19};
+}
+
 function standardOption(chart, {colors, compact, showLegend, width}) {
   const option = chartOption(chart);
   option.color = colors;
   option.textStyle = {...option.textStyle, color: INK, fontSize: 11};
   option.legend = {...option.legend, show: showLegend, pageIconColor: INK, pageIconInactiveColor: '#b8c4c6', pageIconSize: 10, pageTextStyle: {color: MUTED, fontSize: 11}, textStyle: {...option.legend.textStyle, color: MUTED, fontFamily: FONT}};
-  option.tooltip = {...option.tooltip, backgroundColor: '#fff', borderColor: '#bdced3', textStyle: {color: INK, fontFamily: FONT, fontSize: 12}};
+  option.tooltip = {...option.tooltip, backgroundColor: '#fff', borderColor: '#bdced3', textStyle: {color: INK, fontFamily: FONT, fontSize: 12}, formatter: axisTooltip(item => seriesUnit(chart, chart.series[item.seriesIndex] || chart.series[0]))};
+  if (!compact && showLegend) wrappedLegend(option, chart.series.map(series => series.name), width);
   option.xAxis = {...option.xAxis, axisLabel: {...option.xAxis.axisLabel, color: MUTED, fontSize: 11, showMinLabel: true, showMaxLabel: true}, axisLine: {lineStyle: {color: '#ccdadd'}}};
   const shown = shownUnits(chart);
   option.yAxis = option.yAxis.map((axis, index) => {
@@ -75,13 +95,14 @@ function standardOption(chart, {colors, compact, showLegend, width}) {
 }
 
 function areaOption(chart, context) {
-  const option = standardOption({...chart, series: chart.series.map(series => ({...series, type: 'line'}))}, {...context, width: 0});
+  const option = standardOption({...chart, series: chart.series.map(series => ({...series, type: 'line'}))}, {...context, width: 0, showLegend: false});
   const share = chart.view === 'area-share';
   option.series = option.series.map((series, index) => ({...series, stack: 'area', areaStyle: {color: context.colors[index % context.colors.length], opacity: .92}, lineStyle: {width: .6, color: '#fff'}, symbol: 'none', showSymbol: false, emphasis: {focus: 'series'}, endLabel: undefined}));
   option.yAxis = option.yAxis.map(axis => ({...axis, scale: false, ...(share ? {max: 100, min: 0} : {})}));
   option.tooltip = {...option.tooltip, order: 'seriesDesc'};
   option.legend = {...option.legend, show: true};
-  option.grid = {...option.grid, bottom: 65, right: 20};
+  option.grid = {...option.grid, right: 20};
+  wrappedLegend(option, chart.series.map(series => series.name), context.width);
   return option;
 }
 
@@ -90,7 +111,7 @@ function splitOption(chart, {colors}) {
   const units = axisUnits(chart), at = series => dates.map(date => series.data.find(point => point[0] === date)?.[1] ?? null);
   const label = {color: MUTED, fontSize: 11, fontFamily: FONT};
   return {animation: false, textStyle: {fontFamily: FONT, color: INK, fontSize: 11}, color: colors,
-    tooltip: {trigger: 'axis', confine: true, backgroundColor: '#fff', borderColor: '#bdced3', textStyle: {color: INK, fontFamily: FONT, fontSize: 12}},
+    tooltip: {trigger: 'axis', confine: true, backgroundColor: '#fff', borderColor: '#bdced3', textStyle: {color: INK, fontFamily: FONT, fontSize: 12}, formatter: axisTooltip(item => units[item.seriesIndex < bars.length ? 0 : 1])},
     axisPointer: {link: [{xAxisIndex: 'all'}]},
     grid: [{left: 62, right: 20, top: 26, height: '48%'}, {left: 62, right: 20, top: '68%', bottom: 30}],
     xAxis: [0, 1].map(gridIndex => ({type: 'category', gridIndex, data: dates, axisTick: {show: false}, axisLine: {lineStyle: {color: '#ccdadd'}}, axisLabel: {...label, show: gridIndex === 1, formatter: dateLabel, hideOverlap: true, showMinLabel: true, showMaxLabel: true}})),
@@ -103,7 +124,7 @@ function dumbbellOption(chart, {colors}) {
   const {rows, label, earlierLabel} = dumbbellRows(chart), unit = axisUnits(chart)[0], ordered = rows.slice().reverse();
   const accent = '#B4553A';
   return {animation: false, textStyle: {fontFamily: FONT, color: INK, fontSize: 11},
-    tooltip: {trigger: 'axis', axisPointer: {type: 'shadow'}, confine: true, backgroundColor: '#fff', borderColor: '#bdced3', textStyle: {color: INK, fontFamily: FONT, fontSize: 12}},
+    tooltip: {trigger: 'axis', axisPointer: {type: 'shadow'}, confine: true, backgroundColor: '#fff', borderColor: '#bdced3', textStyle: {color: INK, fontFamily: FONT, fontSize: 12}, formatter: axisTooltip(() => unit)},
     legend: {bottom: 0, data: [label, earlierLabel], textStyle: {color: MUTED, fontSize: 11, fontFamily: FONT}, itemWidth: 10, itemHeight: 10},
     grid: {left: 8, right: 54, top: 8, bottom: 36, containLabel: true},
     xAxis: {type: 'value', scale: true, axisLabel: {color: MUTED, fontSize: 11, formatter: value => chartTick(value) + (/%/.test(unit) ? '%' : '')}, splitLine: {lineStyle: {color: RULE}}},
@@ -114,8 +135,10 @@ function dumbbellOption(chart, {colors}) {
         return {type: 'line', shape: {x1: a[0], y1: a[1], x2: b[0], y2: b[1]}, style: {stroke: '#b8c4c6', lineWidth: 2}};
       }, encode: {x: [1, 2], y: 0}, data: ordered.map((row, index) => [index, row.before ?? row.now, row.now]), z: 1},
       {name: earlierLabel, type: 'scatter', symbolSize: 9, itemStyle: {color: '#fff', borderColor: '#8a9aa2', borderWidth: 1.5}, data: ordered.map(row => row.before), tooltip: {valueFormatter: value => quantity(value, unit)}, z: 2},
-      {name: label, type: 'scatter', symbolSize: 10, itemStyle: {color: accent}, data: ordered.map(row => row.now), z: 3, tooltip: {valueFormatter: value => quantity(value, unit)},
-        label: {show: true, position: 'right', color: INK, fontSize: 11, fontFamily: FONT, formatter: params => readable(params.value) + (/%/.test(unit) ? '%' : '')}},
+      // O rótulo fica do lado oposto ao ponto de 12 meses antes, fora da linha.
+      {name: label, type: 'scatter', symbolSize: 10, itemStyle: {color: accent}, z: 3, tooltip: {valueFormatter: value => quantity(value, unit)},
+        data: ordered.map(row => ({value: row.now, label: {position: row.before != null && row.before > row.now ? 'left' : 'right'}})),
+        label: {show: true, color: INK, fontSize: 11, fontFamily: FONT, distance: 7, formatter: params => readable(params.value) + (/%/.test(unit) ? '%' : '')}},
     ]};
 }
 
@@ -206,13 +229,14 @@ export const panelWide = chart => {
   return shown.view === 'matrix' || (shown.view === 'dumbbell' && dumbbellRows(shown).rows.length > 9) || (chart.alternatives || []).some(option => option.chart.view === 'dumbbell' && dumbbellRows(option.chart).rows.length > 9);
 };
 
-export function ChartPanel({chart: group, showNotes = true, lead = false, stretch = false}) {
+export function ChartPanel({chart: group, showNotes = true, lead = false, stretch = false, quiet = false}) {
   const [choice, setChoice] = useState(0);
   const [mode, setMode] = useState('chart');
   useEffect(() => {setMode('chart'); setChoice(0);}, [group.id]);
   const options = group.alternatives || null, chart = options ? options[Math.min(choice, options.length - 1)].chart : group;
   const hasValues = chart.series.some(series => series.data.some(point => point[1] != null && Number.isFinite(Number(point[1]))));
-  const title = plainText(group.alternatives ? group.title : chart.title), reading = chart.reading?.text;
+  // `quiet`: os números-chave já citam este gráfico; o título descreve e a leitura não se repete.
+  const title = plainText(group.alternatives ? group.title : chart.title), reading = quiet ? null : chart.reading?.text;
   const original = chart.view === 'dumbbell' ? {...chart, view: undefined, smallMultiples: false} : null;
   const period = chart.view === 'matrix' ? chart.matrix.label : periodOf(chart);
   const wide = lead || stretch || panelWide(group), rows = chart.view === 'dumbbell' && mode !== 'series' ? dumbbellRows(chart).rows.length : 0;

@@ -25,6 +25,9 @@ export function rulerScale(values, unit) {
   return {kind: 'linear', min: lo, max: hi, at: value => finite(value) ? Math.max(0, Math.min(1, (value - lo) / (hi - lo || 1))) : null, clipped: sorted[0] < lo || sorted.at(-1) > hi};
 }
 
+// Pontas da régua: valores ínfimos aparecem como "< 0,01" no lugar de uma fila de zeros.
+const endText = (value, key, metrics) => finite(value) && value !== 0 && Math.abs(metricNumber(value, key, metrics).replace(/\./g, '').replace(',', '.')) < .01 ? (value < 0 ? '> −0,01' : '< 0,01') : metricNumber(value, key, metrics);
+
 export function positionRulers(catalog, bank, keys = PROFILE_KEYS) {
   const period = catalog.latestPeriod;
   return keys.filter(key => catalog.metrics[key]).map(key => {
@@ -38,6 +41,6 @@ export function positionRulers(catalog, bank, keys = PROFILE_KEYS) {
       count: ranking.length, rank: own?.rank ?? null, value, valueText: metricNumber(value, key, catalog.metrics), medianText: metricNumber(median, key, catalog.metrics),
       scale: scale?.kind || null, clipped: !!scale?.clipped,
       positions: scale ? values.map(scale.at).filter(position => position != null) : [], position: scale && finite(value) ? scale.at(value) : null,
-      minText: scale ? metricNumber(scale.min, key, catalog.metrics) : 'N/D', maxText: scale ? metricNumber(scale.max, key, catalog.metrics) : 'N/D'};
+      minText: scale ? endText(scale.min, key, catalog.metrics) : 'N/D', maxText: scale ? endText(scale.max, key, catalog.metrics) : 'N/D'};
   });
 }
