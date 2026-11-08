@@ -233,7 +233,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
     let m;
     try {
       maplibregl.setWorkerUrl(new URL(workerUrl, location.href).href);
-      m = new maplibregl.Map({ container: host.current, style: baseStyle(states, municipalities), center: [-26, -24], zoom: 2.9, minZoom: 2.4, maxZoom: 18, dragRotate: false, pitchWithRotate: false, touchPitch: false, renderWorldCopies: false, attributionControl: false, fadeDuration: 0 });
+      m = new maplibregl.Map({ container: host.current, style: baseStyle(states, municipalities), center: [-26, -24], zoom: 2.9, minZoom: 1.8, maxZoom: 18, dragRotate: false, pitchWithRotate: false, touchPitch: false, renderWorldCopies: false, attributionControl: false, fadeDuration: 0 });
     } catch (e) { setFailure('O mapa não pôde ser aberto neste navegador.'); return; }
     map.current = m;
     // Começa quando o estilo está pronto; as telhas de relevo chegam com o filme já em curso.
@@ -256,7 +256,9 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
       });
       computeCameras(); setReady(true);
       // O filme começa ao carregar, inclusive com movimento reduzido; um gesto no mapa interrompe o percurso.
-      clock.current.playing = true; clock.current.last = 0; setPlaying(true);
+      // Se a pessoa já foi para a exploração antes de o mapa ficar pronto, aplica a exploração no lugar do filme.
+      if (modeRef.current === 'explore') { lastData.current.look = null; applyLook(EXPLORE); cancelAnim(); const b = m.cameraForBounds(BR_BOUNDS, { padding: PAD }); m.jumpTo({ center: b.center, zoom: b.zoom }); updateView(); }
+      else { clock.current.playing = true; clock.current.last = 0; setPlaying(true); }
     };
     m.on('style.load', init); m.on('styledata', init); m.on('load', init);
     const poll = setInterval(() => { init(); if (started) clearInterval(poll); }, 100);
@@ -544,7 +546,8 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
 
   // Legenda de cada capítulo, sobre o mapa: leitura, no máximo uma frase e a fonte.
   const caption = [
-    null,
+    // No celular o subtítulo some do cabeçalho; a abertura o traz de volta na legenda.
+    <><h2 className="narrow-only">Atlas do dinheiro e patrimônio no território brasileiro</h2><p className="src narrow-only">Dados públicos do Banco Central e do IBGE.</p></>,
     <><h2>Agências</h2><p className="network-now">{networkStep >= 0 && <><i style={{ background: networkNames[networkStep].color }} />{networkNames[networkStep].name} <span>{nf(networkCounts[networkStep])} unidades</span></>}</p>
       <p className="src">{nf(c.kinds.agencia)} agências e {nf(c.units - c.kinds.agencia)} postos no endereço cadastrado. BCB, 05/11/2026; CNEFE 2022 (IBGE).</p></>,
     <><h2>Pix</h2><div className="atlas-reading"><strong>{pixPct(pix.national[pixMonth])}</strong><span>da população pagou em {ym(pix.months[pixMonth])}</span></div>

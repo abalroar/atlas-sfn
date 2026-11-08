@@ -98,7 +98,23 @@
   .territory .column .atlas-reading { flex-direction: row; align-items: baseline; gap: 8px; }
   .territory .column .atlas-reading strong { font-size: 30px; }
   .territory .stage > .atlas-source span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Exploração no celular: a página rola inteira (sem rolagem dentro da coluna), o mapa ocupa a maior parte da tela
+     e o zoom fica com o gesto de pinça. */
+  .territory.mode-explore { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .territory.mode-explore .body { display: flex; flex-direction: column; flex: none; }
+  .territory.mode-explore .stage { order: -1; flex: none; }
+  .territory .credit-block .atlas-segment-ticks { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px 2px; }
+  .territory .credit-block .atlas-segment-ticks button { min-width: 0; }
+  .territory.mode-explore .stage { height: 66svh; min-height: 360px; }
+  .territory.mode-explore .column { overflow: visible; border-top: 0; padding-bottom: 48px; }
+  .territory.mode-explore .column-head { top: 0; padding: 12px 0 10px; }
+  .territory .stage .map-zoom { display: none; }
+  .territory .insts button { padding-right: 2px; }
+  .territory .replay ol { gap: 6px 16px; }
+  .territory .replay ol button { padding: 4px 0; }
 }
+.territory .narrow-only { display: none; }
+@media (max-width: 760px) { .territory .caption .narrow-only { display: block; } }
 
 /* Filme: mapa em tela cheia; ao convergir, a coluna de busca entra pela esquerda. */
 .territory .body { transition: grid-template-columns 700ms cubic-bezier(.2,.7,.2,1), gap 700ms cubic-bezier(.2,.7,.2,1); }
