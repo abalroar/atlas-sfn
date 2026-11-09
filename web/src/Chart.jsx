@@ -154,11 +154,33 @@ function dumbbellOption(chart, {colors}) {
     ]};
 }
 
+// Monta o gráfico só quando ele chega perto da tela, um por quadro: trocar de assunto não trava a página.
+let initQueue = Promise.resolve();
+const nextFrame = () => new Promise(resolve => (globalThis.requestAnimationFrame || (fn => setTimeout(fn, 16)))(() => resolve()));
+export function useNearViewport(ref, margin = '300px') {
+  const [near, setNear] = useState(() => typeof IntersectionObserver !== 'function');
+  useEffect(() => {
+    if (near || !ref.current) return undefined;
+    const observer = new IntersectionObserver(entries => {if (entries.some(entry => entry.isIntersecting)) {setNear(true); observer.disconnect();}}, {rootMargin: margin});
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [near, ref, margin]);
+  return near;
+}
+
 function StandardChart({chart, height = 280, colors, compact = false, showLegend = true, valueLabels}) {
   const node = useRef(null);
+  const near = useNearViewport(node);
+  const [turn, setTurn] = useState(false);
+  useEffect(() => {
+    if (!near || turn) return undefined;
+    let live = true;
+    initQueue = initQueue.then(nextFrame).then(() => {if (live) setTurn(true);});
+    return () => {live = false;};
+  }, [near, turn]);
   const palette = colors || chart.colors || seriesColors(chart, 'web');
   useEffect(() => {
-    if (!node.current) return;
+    if (!node.current || !turn) return;
     const host = node.current, instance = echarts.init(host, null, {renderer: 'svg'});
     const labelSettings = valueLabels === undefined ? chart.valueLabels : valueLabels;
     function build() {
@@ -194,7 +216,7 @@ function StandardChart({chart, height = 280, colors, compact = false, showLegend
     });
     resize.observe(host);
     return () => {resize.disconnect(); instance.dispose();};
-  }, [chart, palette.join(), compact, showLegend, valueLabels]);
+  }, [chart, palette.join(), compact, showLegend, valueLabels, turn]);
   return <div className="tc-chart" style={{height}} ref={node} role="img" aria-label={`${plainText(chart.title)}. ${shownUnits(chart).join(' / ')}. ${periodOf(chart)}.`}/>;
 }
 
