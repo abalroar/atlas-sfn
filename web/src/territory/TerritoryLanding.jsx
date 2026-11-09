@@ -377,6 +377,8 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
 
   // Gráfico da inadimplência, redesenhado a cada quadro. Contornos próximos se afastam só na horizontal;
   // a altura de cada um segue a taxa. Posições amortecidas entre quadros para que nada salte.
+  // Atributo igual não é regravado: o navegador só redesenha o SVG quando algo de fato se move.
+  const set = (el, name, value) => { if (el.getAttribute(name) !== value) el.setAttribute(name, value); };
   function drawChart(id, p, dt) {
     const svg = chart.current, m = map.current, S = chartRef.current; if (!svg || !m || !S) return;
     const st = chartState(S, id, p), W = m.getCanvas().clientWidth, Hs = m.getCanvas().clientHeight, narrow = W < 760;
@@ -405,7 +407,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
       X.forEach((x, j) => { X[j] = clamp(x, F.l + 8, F.r - 8); });
     }
     const N = chartNodes(svg, S), fx = v => v.toFixed(1), out = [];
-    N.axis.setAttribute('opacity', travel.toFixed(3)); N.axis.style.display = travel > .01 ? '' : 'none';
+    set(N.axis, 'opacity', travel.toFixed(3)); N.axis.style.display = travel > .01 ? '' : 'none';
     if (travel > .01) {
       // Grade em 1, 5 e 10 pontos; cada nível aparece quando há espaço entre as linhas.
       const per = (F.b - F.t) / Y.yMax;
@@ -418,7 +420,8 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
       const legend = narrow ? [[1, 2, 5], [3, 4]] : [[1, 2, 5, 3, 4]];
       legend.forEach((line, n) => out.push(`<text x="${fx(narrow ? 14 : F.l)}" y="${fx(F.t - (narrow ? 38 : 26) + n * 17)}" class="chart-legend">${line.map((r, i) => `<tspan ${i ? 'dx="18"' : ''} fill="${REGION[r][1]}">● ${REGION[r][0]}</tspan>`).join('')}</text>`));
       if (Y.national != null) out.push(`<line x1="${fx(F.l)}" x2="${fx(F.r)}" y1="${fx(y(Y.national))}" y2="${fx(y(Y.national))}" class="chart-national"/><text x="${fx(F.r + 10)}" y="${fx(y(Y.national) - 3)}" class="chart-national-label">Brasil</text><text x="${fx(F.r + 10)}" y="${fx(y(Y.national) + 13)}" class="chart-national-label">${percent(st.national)}</text>`);
-      N.axis.innerHTML = out.join('');
+      // Só reescreve o eixo quando ele muda; um SVG intacto não volta a ser rasterizado.
+      const html = out.join(''); if (N.axis.dataset.html !== html) { N.axis.innerHTML = html; N.axis.dataset.html = html; }
     }
     let hi = -1, lo = -1; st.rates.forEach((v, j) => { if (v == null || !S.shapes[j]) return; if (hi < 0 || v > st.rates[hi]) hi = j; if (lo < 0 || v < st.rates[lo]) lo = j; });
     const stem = smooth(clamp((travel - .75) / .25)), shown = [];
@@ -426,15 +429,15 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
       const it = N.items[j]; if (!it) return;
       const on = ys[j] != null; it.g.style.display = on ? '' : 'none'; if (!on) return;
       const q = m.project(sh.center), x = lerp(q.x, X[j], travel), yy = lerp(q.y, ys[j], travel);
-      it.stem.setAttribute('x1', fx(x)); it.stem.setAttribute('x2', fx(x)); it.stem.setAttribute('y1', fx(F.b)); it.stem.setAttribute('y2', fx(yy)); it.stem.setAttribute('opacity', (stem * .55).toFixed(3));
-      it.dot.setAttribute('cx', fx(x)); it.dot.setAttribute('cy', fx(yy)); it.dot.setAttribute('r', (3.4 * (1 - morph)).toFixed(2));
-      it.shape.setAttribute('transform', `translate(${fx(x)} ${fx(yy)}) scale(${(morph * (narrow ? .78 : 1)).toFixed(3)}) translate(${fx(-sh.cx)} ${fx(-sh.cy)})`);
+      set(it.stem, 'x1', fx(x)); set(it.stem, 'x2', fx(x)); set(it.stem, 'y1', fx(F.b)); set(it.stem, 'y2', fx(yy)); set(it.stem, 'opacity', (stem * .55).toFixed(3));
+      set(it.dot, 'cx', fx(x)); set(it.dot, 'cy', fx(yy)); set(it.dot, 'r', (3.4 * (1 - morph)).toFixed(2));
+      set(it.shape, 'transform', `translate(${fx(x)} ${fx(yy)}) scale(${(morph * (narrow ? .78 : 1)).toFixed(3)}) translate(${fx(-sh.cx)} ${fx(-sh.cy)})`);
       if (travel > .97 && (j === hi || j === lo)) shown.push([j, x, yy]);
     });
     N.labels.forEach((t, k) => {
       const hit = shown[k]; t.style.display = hit ? '' : 'none'; if (!hit) return;
       const [j, x, yy] = hit, end = x > F.r - 170;
-      t.setAttribute('x', fx(end ? x - 17 : x + 17)); t.setAttribute('y', fx(yy + 4)); t.setAttribute('text-anchor', end ? 'end' : 'start');
+      set(t, 'x', fx(end ? x - 17 : x + 17)); set(t, 'y', fx(yy + 4)); set(t, 'text-anchor', end ? 'end' : 'start');
       const html = `${S.shapes[j].name} <tspan>${percent(st.rates[j])}</tspan>`; if (t.dataset.html !== html) { t.innerHTML = html; t.dataset.html = html; }
     });
   }
