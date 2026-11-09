@@ -145,7 +145,6 @@
 .tc-workspace .tc-topic-tabs button{padding:6px 0 9px;border-bottom:2px solid transparent;font-size:15px;color:var(--tc-muted)}
 .tc-workspace .tc-topic-tabs button[aria-selected=true]{color:var(--tc-ink);font-weight:600;border-color:var(--tc-petrol)}
 @media(hover:hover){.tc-workspace .tc-topic-tabs button:hover{color:var(--tc-ink)}}
-@media(max-width:760px){.tc-topic-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-right:-20px;padding-right:20px}.tc-workspace .tc-topic-tabs button{white-space:nowrap;flex-shrink:0}}
 .tc-series-grid{align-items:stretch}
 .tc-series-grid>.tc-chart-panel{display:grid;grid-template-rows:subgrid;grid-row:span 3;row-gap:0;align-content:start}
 .tc-series-grid>.tc-chart-panel>.tc-chart-panel-heading{align-self:start}
@@ -153,16 +152,15 @@
 .tc-workspace .tc-chart-choice button{font-size:13px;color:var(--tc-muted);padding:2px 0;border-bottom:1.5px solid transparent}
 .tc-workspace .tc-chart-choice button[aria-pressed=true]{color:var(--tc-ink);border-color:var(--tc-petrol);font-weight:600}
 .tc-matrix-note{font-size:11px;color:var(--tc-muted);margin-top:8px}
-/* Abas do topo e navegação: o item ativo é preenchido em azul-petróleo, com texto na cor do papel.
-   Controles internos (alternâncias, indicadores da tabela, abas das demonstrações) ficam em texto: o ativo em negrito. */
-.tc-workspace .tc-topic-tabs,.tc-workspace .institution-tabs{gap:6px!important}
-.tc-workspace .tc-topic-tabs button,.tc-workspace .institution-tabs button{border:1px solid transparent!important;border-radius:999px;padding:6px 14px!important;color:var(--tc-ink);font-weight:500!important;line-height:1.2;font-size:14px!important}
-.tc-workspace .tc-topic-tabs button[aria-selected=true],.tc-workspace .institution-tabs button[aria-selected=true]{background:var(--tc-petrol);border-color:var(--tc-petrol)!important;color:var(--tc-paper)!important;font-weight:600!important}
-@media(hover:hover){.tc-workspace .tc-topic-tabs button:not([aria-selected=true]):hover,.tc-workspace .institution-tabs button:not([aria-selected=true]):hover{border-color:#a4bdc4!important}}
-.tc-workspace .tc-topic-tabs,.tc-workspace .institution-tabs{margin-left:-14px}
-.tc-workspace .institution-tabs{padding:10px 0 14px}
-.tc-app-nav nav a[aria-current=page]{text-decoration:none;background:var(--tc-petrol);color:var(--tc-paper);border-radius:999px;padding:5px 12px;margin:-5px -12px}
-.tc-workspace .statements-tabs button,.tc-workspace .tc-chart-choice button,.tc-workspace .tc-chart-modes .tc-text-action{border:0!important;text-decoration:none!important;color:var(--tc-muted);padding:2px 0!important;font-weight:500}
+/* Abas e navegação: texto; o item ativo em negrito com um traço azul-petróleo embaixo. No celular as abas quebram em linhas,
+   todas visíveis, sem rolagem lateral. Controles internos (alternâncias, indicadores) ficam em texto, o ativo em negrito. */
+.tc-workspace .tc-topic-tabs,.tc-workspace .institution-tabs{display:flex;flex-wrap:wrap;gap:4px 24px!important;margin-left:0;overflow:visible}
+.tc-workspace .tc-topic-tabs button,.tc-workspace .institution-tabs button{border:0!important;border-bottom:2px solid transparent!important;border-radius:0;padding:6px 0 7px!important;color:var(--tc-muted);font-weight:500!important;font-size:15px!important;line-height:1.3;white-space:nowrap;background:none}
+.tc-workspace .tc-topic-tabs button[aria-selected=true],.tc-workspace .institution-tabs button[aria-selected=true]{color:var(--tc-ink)!important;font-weight:650!important;border-bottom-color:var(--tc-petrol)!important;background:none}
+@media(hover:hover){.tc-workspace .tc-topic-tabs button:hover,.tc-workspace .institution-tabs button:hover{color:var(--tc-ink)}}
+.tc-workspace .institution-tabs{padding:8px 0 14px}
+.tc-app-nav nav a[aria-current=page]{text-decoration:underline;text-decoration-color:var(--tc-petrol);text-decoration-thickness:2px;text-underline-offset:7px;color:var(--tc-ink)}
+.tc-workspace .statements-tabs button,.tc-workspace .tc-chart-choice button,.tc-workspace .tc-chart-modes .tc-text-action{border:0!important;text-decoration:none!important;color:var(--tc-muted);padding:2px 0!important;font-weight:500;background:none}
 .tc-workspace .statements-tabs button[aria-selected=true],.tc-workspace .tc-chart-choice button[aria-pressed=true],.tc-workspace .tc-chart-modes .tc-text-action[aria-pressed=true]{color:var(--tc-ink);font-weight:700}
 @media(hover:hover){.tc-workspace .statements-tabs button:hover,.tc-workspace .tc-chart-choice button:hover,.tc-workspace .tc-chart-modes .tc-text-action:hover{color:var(--tc-ink)}}
 .tc-workspace .tc-chart-choice{gap:14px}
@@ -172,4 +170,38 @@
 .institution-metrics button[aria-pressed=true]:before{content:none!important}
 .institution-metrics button{color:var(--tc-muted)}
 .institution-metrics button[aria-pressed=true]{color:var(--tc-ink);font-weight:700}
-@media(max-width:760px){.tc-workspace .tc-topic-tabs{margin-left:0}.tc-app-nav nav a[aria-current=page]{margin:0;align-self:flex-start}}
+@media(max-width:760px){.tc-workspace .tc-topic-tabs,.tc-workspace .institution-tabs{gap:2px 18px!important}.tc-workspace .tc-topic-tabs button,.tc-workspace .institution-tabs button{font-size:14px!important;min-height:38px}}
+/* Celular: listas no lugar de halteres e matrizes */
+.tc-dumbbell-list ol,.tc-share-list ol,.tc-rate-list ol{list-style:none;margin:0;padding:0}
+.tc-dumbbell-list li,.tc-share-list li{padding:9px 0}
+.tc-dumbbell-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:13px;color:var(--tc-ink)}
+.tc-dumbbell-head strong{font-variant-numeric:tabular-nums;font-weight:650}
+.tc-dumbbell-head small{font-size:11px;color:var(--tc-muted);white-space:nowrap}
+.tc-dumbbell-track{position:relative;height:14px;margin:6px 6px 0;background:linear-gradient(var(--tc-line),var(--tc-line)) center/100% 1px no-repeat}
+.tc-dumbbell-track i{position:absolute;top:50%}
+.tc-dumbbell-zero{width:1px;height:14px;margin-top:-7px;background:#8a9aa2}
+.tc-dumbbell-span{height:2px;margin-top:-1px;background:#b8c4c6}
+.tc-dumbbell-dot{width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%}
+.tc-dumbbell-dot.is-now{background:#b4553a}
+.tc-dumbbell-dot.is-before{background:var(--tc-paper);border:1.5px solid #8a9aa2;box-sizing:border-box}
+.tc-dumbbell-legend,.tc-share-legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:12px;color:var(--tc-muted);margin:0 0 6px}
+.tc-dumbbell-legend span{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:-8px}
+.tc-dumbbell-legend .is-now{background:#b4553a}.tc-dumbbell-legend .is-before{border:1.5px solid #8a9aa2}
+.tc-share-legend span{display:inline-flex;align-items:center;gap:5px}.tc-share-legend i{width:10px;height:10px;display:inline-block}
+.tc-share-bar{display:flex;height:22px;margin-top:6px;background:#e5e9e6;overflow:hidden}
+.tc-share-bar i{display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;color:#fff;font-variant-numeric:tabular-nums;min-width:0}
+.tc-rate-list{font-size:12px}
+.tc-rate-cells{display:grid;grid-template-columns:repeat(var(--columns),minmax(0,1fr));gap:2px}
+.tc-rate-cells span{text-align:center;padding:7px 0;font-variant-numeric:tabular-nums}
+.tc-rate-head span{font-size:11px;color:var(--tc-muted);padding:0 0 4px}
+.tc-rate-list li{padding:8px 0 4px}
+.tc-rate-label{display:block;font-size:13px;color:var(--tc-ink);margin-bottom:5px}
+/* Celular: números-chave em linhas compactas, sem minigráfico */
+@media(max-width:760px){
+.tc-key-figures{grid-template-columns:minmax(0,1fr)!important;gap:0!important;margin-bottom:30px}
+.tc-key-figures>div{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;column-gap:14px;padding:9px 0}
+.tc-key-figures dt{grid-row:1/3;font-size:13px!important}
+.tc-key-figures .tc-key-value{font-size:20px!important;margin:0!important;text-align:right}
+.tc-key-figures .tc-key-context{grid-column:2;font-size:11px!important;text-align:right;margin:2px 0 0!important}
+.tc-key-figures dd:last-child{display:none}
+}

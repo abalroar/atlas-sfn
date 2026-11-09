@@ -101,3 +101,16 @@
 .institution-ruler-dots button{width:8px;height:8px;min-height:0!important;border-radius:50%;background:#c7d2d0;padding:0}
 .institution-ruler-dots button[aria-pressed=true]{background:#315f78;width:22px;border-radius:999px}
 @media(max-width:860px){.institution-ruler-card{grid-template-columns:32px minmax(0,1fr) 32px;gap:12px 8px;padding:18px 8px}.institution-ruler-figure{grid-column:2}.institution-ruler-scale{grid-column:2;grid-row:2}.institution-ruler-arrow{width:32px;height:32px;grid-row:1/3}.institution-ruler-arrow:last-child{grid-column:3}.institution-ruler-value{font-size:32px}}
+/* Celular: filtros em grade (rótulo em cima, campo embaixo), Exportar na mesma faixa */
+@media(max-width:680px){
+.institution-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px;padding:16px 0 6px;min-height:0}
+.institution-filters{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 14px!important}
+.institution-filters label{flex-direction:column;align-items:flex-start!important;gap:2px!important;font-size:11px}
+.institution-filters label:first-child{grid-column:1/-1;flex-basis:auto}
+.institution-filters select{width:100%;font-size:14px}
+.institution-toolbar>.tc-export-menu{align-self:end}
+.institution-identity h1{font-size:32px}
+.institution-identity{gap:12px}
+}
+@media(max-width:680px){.institution-metrics td,.institution-metrics tbody th{padding:0!important}.institution-metrics button{min-height:38px!important;padding:0!important;margin:0!important}.institution-metrics td{line-height:38px}}
+.institution-ranking td,.institution-ranking tbody th{vertical-align:middle}

@@ -7,6 +7,7 @@ import {WEB_CHART_COLORS} from './chart-palette.js';
 import {displayScale, monthLabel, quantity, readable, recessionsIn, seriesColors} from './editorial.js';
 import {bandCategories, dateCategories, dumbbellRows, ufTiles} from './chart-views.js';
 import SmallMultiples from './SmallMultiples.jsx';
+import {useNarrow} from './use-narrow.js';
 
 export {WEB_CHART_COLORS};
 export const plainText = value => String(value ?? '').replace(/<[^>]*>/g, '').replaceAll('&amp;', '&');
@@ -22,7 +23,10 @@ export function shownUnits(chart) {
 const unitCaption = chart => chart.view === 'matrix' ? (chart.matrix.kind === 'rate' ? `% da carteira · ${chart.matrix.label}` : `% do total de transações do produto · ${chart.matrix.label}`) : chart.view === 'dumbbell' ? `${shownUnits(chart)[0]} · ${dumbbellRows(chart).label} contra 12 meses antes` : [...new Set(shownUnits(chart))].join(' / ');
 
 export default function Chart(props) {
-  const {chart} = props;
+  const {chart} = props, narrow = useNarrow();
+  // No celular, halteres e matrizes viram listas: o nome em cima, o dado embaixo, na largura toda.
+  if (narrow && chart.view === 'matrix') return chart.matrix.kind === 'rate' ? <RateList chart={chart}/> : <ShareList chart={chart}/>;
+  if (narrow && chart.view === 'dumbbell' && !props.compact) return <DumbbellList chart={chart}/>;
   if (chart.view === 'matrix') return <ChannelMatrix chart={chart}/>;
   if (chart.view === 'tiles' && !props.compact) return <UfTiles chart={chart}/>;
   if (chart.smallMultiples) return <SmallMultiples chart={chart}/>;
@@ -56,7 +60,7 @@ function wrappedLegend(option, names, width) {
   option.grid = {...option.grid, bottom: 30 + rows * 19};
 }
 
-function standardOption(chart, {colors, compact, showLegend, width}) {
+function standardOption(chart, {colors, compact, showLegend, width, endLabels = true}) {
   const option = chartOption(chart);
   option.color = colors;
   option.textStyle = {...option.textStyle, color: INK, fontSize: 11};
@@ -79,7 +83,7 @@ function standardOption(chart, {colors, compact, showLegend, width}) {
   // Rótulo direto no fim da linha quando há poucas séries e espaço.
   const dates = dateCategories(chart), lines = chart.series.every(series => (series.type || 'line') === 'line');
   const names = chart.series.map(series => series.name);
-  if (!compact && lines && dates.length && axisUnits(chart).length === 1 && chart.series.length > 1 && chart.series.length <= 5 && width >= 520 && Math.max(...names.map(name => name.length)) <= 26) {
+  if (endLabels && !compact && lines && dates.length && axisUnits(chart).length === 1 && chart.series.length > 1 && chart.series.length <= 5 && width >= 520 && Math.max(...names.map(name => name.length)) <= 26) {
     option.legend = {...option.legend, show: false};
     option.grid = {...option.grid, bottom: 32, right: Math.min(190, 18 + 6.4 * Math.max(...names.map(name => name.length)))};
     option.series = option.series.map((series, index) => ({...series, endLabel: {show: true, formatter: '{a}', color: colors[index % colors.length], fontFamily: FONT, fontSize: 11, fontWeight: 500, distance: 6}, labelLayout: {moveOverlap: 'shiftY'}}));
@@ -87,6 +91,13 @@ function standardOption(chart, {colors, compact, showLegend, width}) {
   // Faixas de recessão (CODACE/FGV) ao fundo de séries mensais e trimestrais.
   const bands = dates.length ? bandCategories(recessionsIn(dates), dates) : [];
   if (bands.length && option.series[0]) option.series[0] = {...option.series[0], markArea: {silent: true, itemStyle: {color: 'rgba(80,106,118,.09)'}, label: {show: true, position: 'insideTop', color: MUTED, fontSize: 10, fontFamily: FONT, formatter: 'recessão'}, data: bands.map(band => [{xAxis: band.start}, {xAxis: band.end}])}};
+  // Celular: menos margem, fonte menor e sem o nome da unidade no eixo (ela está sob o título).
+  if (!compact && width && width < 520) {
+    option.grid = {...option.grid, left: 42, right: option.yAxis.length > 1 ? 40 : 10, top: 12};
+    option.yAxis = option.yAxis.map(axis => ({...axis, name: '', axisLabel: {...axis.axisLabel, fontSize: 10}}));
+    option.xAxis = {...option.xAxis, axisLabel: {...option.xAxis.axisLabel, fontSize: 10}};
+    option.legend = {...option.legend, textStyle: {...option.legend.textStyle, fontSize: 11}, itemGap: 10};
+  }
   if (compact) {
     option.legend = {...option.legend, bottom: undefined, top: 0, left: 0};
     option.grid = {...option.grid, left: 48, right: option.yAxis.length > 1 ? 48 : 12, top: showLegend ? 46 : 28, bottom: 28};
@@ -95,7 +106,7 @@ function standardOption(chart, {colors, compact, showLegend, width}) {
 }
 
 function areaOption(chart, context) {
-  const option = standardOption({...chart, series: chart.series.map(series => ({...series, type: 'line'}))}, {...context, width: 0, showLegend: false});
+  const option = standardOption({...chart, series: chart.series.map(series => ({...series, type: 'line'}))}, {...context, showLegend: false, endLabels: false});
   const share = chart.view === 'area-share';
   option.series = option.series.map((series, index) => ({...series, stack: 'area', areaStyle: {color: context.colors[index % context.colors.length], opacity: .92}, lineStyle: {width: .6, color: '#fff'}, symbol: 'none', showSymbol: false, emphasis: {focus: 'series'}, endLabel: undefined}));
   option.yAxis = option.yAxis.map(axis => ({...axis, scale: false, ...(share ? {max: 100, min: 0} : {})}));
@@ -106,14 +117,14 @@ function areaOption(chart, context) {
   return option;
 }
 
-function splitOption(chart, {colors}) {
+function splitOption(chart, {colors, width = 600}) {
   const dates = dateCategories(chart), bars = chart.series.filter(series => seriesAxis(chart, series) === 0), lines = chart.series.filter(series => seriesAxis(chart, series) === 1);
   const units = axisUnits(chart), at = series => dates.map(date => series.data.find(point => point[0] === date)?.[1] ?? null);
   const label = {color: MUTED, fontSize: 11, fontFamily: FONT};
   return {animation: false, textStyle: {fontFamily: FONT, color: INK, fontSize: 11}, color: colors,
     tooltip: {trigger: 'axis', confine: true, backgroundColor: '#fff', borderColor: '#bdced3', textStyle: {color: INK, fontFamily: FONT, fontSize: 12}, formatter: axisTooltip(item => units[item.seriesIndex < bars.length ? 0 : 1])},
     axisPointer: {link: [{xAxisIndex: 'all'}]},
-    grid: [{left: 62, right: 20, top: 26, height: '48%'}, {left: 62, right: 20, top: '68%', bottom: 30}],
+    grid: [{left: width < 520 ? 44 : 62, right: 14, top: 26, height: '48%'}, {left: width < 520 ? 44 : 62, right: 14, top: '68%', bottom: 30}],
     xAxis: [0, 1].map(gridIndex => ({type: 'category', gridIndex, data: dates, axisTick: {show: false}, axisLine: {lineStyle: {color: '#ccdadd'}}, axisLabel: {...label, show: gridIndex === 1, formatter: dateLabel, hideOverlap: true, showMinLabel: true, showMaxLabel: true}})),
     yAxis: [0, 1].map(gridIndex => ({type: 'value', gridIndex, name: units[gridIndex], nameTextStyle: {color: MUTED, fontSize: 10, align: 'left'}, scale: gridIndex === 1, splitNumber: gridIndex ? 2 : 4, axisLabel: {...label, formatter: value => chartTick(value)}, splitLine: {lineStyle: {color: RULE}}})),
     series: [...bars.map((series, index) => ({name: series.name, type: 'bar', xAxisIndex: 0, yAxisIndex: 0, data: at(series), barMaxWidth: 18, itemStyle: {color: colors[index]}, tooltip: {valueFormatter: value => quantity(value, units[0])}})),
@@ -219,6 +230,55 @@ function ChannelMatrix({chart}) {
       return <td key={column} style={{background: shade(value), color: value != null && level(value) >= .55 ? '#fff' : INK}}>{text(value)}</td>;
     })}{matrix.totalLabel && <td className="tc-matrix-total">{quantity(row.total, matrix.unit)}</td>}</tr>)}</tbody>
   </table>{matrix.columnNote && <p className="tc-matrix-note">Colunas: {matrix.columnNote}.</p>}</div>;
+}
+
+/* ---------- Versões para celular ---------- */
+
+function DumbbellList({chart}) {
+  const {rows, label, earlierLabel} = dumbbellRows(chart), unit = axisUnits(chart)[0], pct = /%/.test(unit);
+  const values = rows.flatMap(row => [row.now, row.before]).filter(finite);
+  const low = Math.min(0, ...values), high = Math.max(0, ...values), at = value => ((value - low) / (high - low || 1)) * 100;
+  const text = value => readable(value) + (pct ? '%' : '');
+  return <div className="tc-dumbbell-list">
+    <p className="tc-dumbbell-legend"><span className="is-now"/>{label}<span className="is-before"/>{earlierLabel}</p>
+    <ol>{rows.map(row => <li key={row.name}>
+      <div className="tc-dumbbell-head"><span>{row.name}</span><strong>{text(row.now)}</strong></div>
+      <div className="tc-dumbbell-track" role="img" aria-label={`${row.name}: ${text(row.now)} em ${label}${row.before != null ? `, ${text(row.before)} em ${earlierLabel}` : ''}.`}>
+        {low < 0 && high > 0 && <i className="tc-dumbbell-zero" style={{left: `${at(0)}%`}}/>}
+        {row.before != null && <i className="tc-dumbbell-span" style={{left: `${Math.min(at(row.before), at(row.now))}%`, width: `${Math.abs(at(row.now) - at(row.before))}%`}}/>}
+        {row.before != null && <i className="tc-dumbbell-dot is-before" style={{left: `${at(row.before)}%`}}/>}
+        <i className="tc-dumbbell-dot is-now" style={{left: `${at(row.now)}%`}}/>
+      </div>
+    </li>)}</ol>
+  </div>;
+}
+
+const SHARE_INK = ['#B4553A', '#2C657F', '#6BA5BD', '#7C3522', '#16323F', '#E3A48C', '#9AC4D4'];
+function ShareList({chart}) {
+  const {matrix} = chart, columns = matrix.columns || matrix.channels;
+  return <div className="tc-share-list">
+    <p className="tc-share-legend">{columns.map((column, index) => <span key={column}><i style={{background: SHARE_INK[index % SHARE_INK.length]}}/>{matrix.short[column] || column}</span>)}</p>
+    <ol>{matrix.rows.map(row => <li key={row.id}>
+      <div className="tc-dumbbell-head"><span>{row.label}</span><small>{quantity(row.total, matrix.unit)}</small></div>
+      <div className="tc-share-bar" role="img" aria-label={`${row.label}: ${columns.filter(column => row.values[column] != null).map(column => `${matrix.short[column] || column} ${Math.round(row.values[column])}%`).join(', ')}.`}>
+        {columns.map((column, index) => row.values[column] > 0 ? <i key={column} style={{width: `${row.values[column]}%`, background: SHARE_INK[index % SHARE_INK.length]}}>{row.values[column] >= 14 ? `${Math.round(row.values[column])}%` : ''}</i> : null)}
+      </div>
+    </li>)}</ol>
+  </div>;
+}
+
+function RateList({chart}) {
+  const {matrix} = chart, columns = matrix.columns;
+  const values = matrix.rows.flatMap(row => columns.map(column => row.values[column])).filter(finite), low = Math.min(...values), high = Math.max(...values);
+  const level = value => (value - low) / (high - low || 1);
+  return <div className="tc-rate-list" style={{'--columns': columns.length}}>
+    <div className="tc-rate-cells tc-rate-head">{columns.map(column => <span key={column}>{matrix.short[column] || column}</span>)}</div>
+    <ol>{matrix.rows.map(row => <li key={row.id}>
+      <span className="tc-rate-label">{row.label}</span>
+      <div className="tc-rate-cells">{columns.map(column => {const value = row.values[column]; return <span key={column} style={{background: value == null ? 'transparent' : `rgba(44,101,127,${(.08 + level(value) * .92).toFixed(3)})`, color: value != null && level(value) >= .55 ? '#fff' : INK}}>{value == null ? 'N/D' : readable(value)}</span>;})}</div>
+    </li>)}</ol>
+    {matrix.columnNote && <p className="tc-matrix-note">Colunas: {matrix.columnNote}. Valores em %.</p>}
+  </div>;
 }
 
 /* ---------- Painel ---------- */

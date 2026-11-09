@@ -37,7 +37,7 @@ function Analysis({bank,payload,metrics,period,window}){
       <h2 id={'institution-'+group.id}>{group.title}</h2>
       <MetricTable keys={group.metrics} {...{group,current,previous,period,metrics,onSelect}} selected={keys}/>
       {hasData?<Chart chart={chart} height={210} compact showLegend={keys.length>1}/>:<p className="institution-chart-empty">Sem observações neste recorte.</p>}
-      <p className="institution-chart-note">{composition?chart.note:keys.length===1?metricNote(keys[0],metrics)||group.note:`Clique nos indicadores para somá-los ao gráfico; com grandezas ou unidades diferentes, o eixo direito entra. ${group.note}`.trim()}</p>
+      <p className="institution-chart-note">{composition?chart.note:keys.length===1?metricNote(keys[0],metrics)||group.note:`Selecione indicadores para somá-los ao gráfico; com grandezas ou unidades diferentes, o eixo direito entra. ${group.note}`.trim()}</p>
       {group.more.length>0&&<details className="institution-more"><summary>Outros indicadores</summary><MetricTable keys={group.more} {...{group,current,previous,period,metrics,onSelect}} selected={keys} head={false}/></details>}
     </section>;
   })}</div>;
