@@ -52,3 +52,7 @@
 @media(max-width:680px){.statements-selection{gap:16px;align-items:stretch;flex-wrap:wrap}.statements-selection>.institution-search{width:100%;flex-basis:100%}.statements-period-picker{margin-left:auto}.statements-identity{padding:13px 14px}.statements-table-controls{gap:14px}.institution-page .statements-table{font-size:11px}.institution-page .statements-table td,.institution-page .statements-table tbody th,.institution-page .statements-table thead th{padding:8px 4px}.institution-page .statements-table .statements-indent th{padding-left:12px}.institution-page .statements-table .statements-detail th{padding-left:18px}}
 @media(pointer:coarse){.statements-tabs button,.statements-period-picker>summary,.statements-period-actions button,.statements-pagination button{min-height:44px}.statements-period-grid label{min-height:44px}.statements-period-grid input,.statements-table-controls input{min-height:0;font-size:inherit}.statements-table-controls label{min-height:44px}}
 @media(max-width:680px){.statements-toolbar>.statements-tabs{flex-basis:100%}.statements-toolbar>label{margin-left:0}.statements-toolbar>.tc-export-menu{margin-left:auto}}
+.statements-error-actions{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:6px}
+.statements-error-detail{margin-top:8px;font-size:11px;color:#506a76}
+.statements-error-detail summary{cursor:pointer;width:max-content}
+.statements-error-detail p{margin-top:4px;overflow-wrap:anywhere;font-family:ui-monospace,Menlo,monospace}

@@ -126,6 +126,8 @@ test('HTML and baseline data revalidate while hashed frontend assets are immutab
     ['/atlas-sfn/', 'text/html', 'public, max-age=0, must-revalidate'],
     ['/atlas-sfn/data/sfn.json', 'application/json', 'public, max-age=0, must-revalidate'],
     ['/atlas-sfn/assets/index-123.js', 'application/javascript', 'public, max-age=31536000, immutable'],
+    ['/atlas-sfn/pyodide/v0.29.3/full/pyodide.asm.wasm', 'application/wasm', 'public, max-age=31536000, immutable'],
+    ['/atlas-sfn/pyodide/v0.29.3/full/atlas-mirror.json', 'application/json', null],
   ]) {
     const response = await worker.fetch(new Request(origin + path), { ASSETS: { fetch() { return new Response('asset', { headers: { 'Content-Type': type } }); } } });
     assert.equal(response.headers.get('Cache-Control'), expected);

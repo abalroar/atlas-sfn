@@ -18,7 +18,8 @@ export function withHeaders(response, request) {
   if (response.status >= 400) {
     headers.set('Cache-Control', 'no-store');
     headers.set('X-Robots-Tag', 'noindex, nofollow');
-  } else if (pathname.startsWith(`${APP_ROOT}assets/`)) {
+  } else if (pathname.startsWith(`${APP_ROOT}assets/`) || (pathname.startsWith(`${APP_ROOT}pyodide/`) && !pathname.endsWith('/atlas-mirror.json'))) {
+    // Pyodide servido pelo site: pasta com a versão no nome, conteúdo imutável.
     headers.set('Cache-Control', 'public, max-age=31536000, immutable');
   } else if (headers.get('Content-Type')?.includes('text/html') || pathname.startsWith(`${APP_ROOT}data/`) || pathname === `${APP_ROOT}build.json`) {
     headers.set('Cache-Control', 'public, max-age=0, must-revalidate');

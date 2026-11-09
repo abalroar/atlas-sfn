@@ -97,6 +97,9 @@ export function createStatementRuntime({
         const error = new Error(message.error?.message || 'Não foi possível preparar a análise. Tente novamente.');
         error.details = message.error?.details || '';
         error.phase = message.error?.phase || '';
+        error.step = message.error?.step || '';
+        // Detalhe técnico no console, para diagnosticar falhas que só acontecem em algumas redes.
+        console.warn('[Atlas] Demonstrações:', error.phase, error.step || '-', error.details);
         remove(message.id).reject(error);
         if (error.phase === 'bootstrap') reset(new Error('Os recursos da análise precisam ser carregados novamente. Tente novamente.'));
         return;

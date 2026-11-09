@@ -1,5 +1,5 @@
 /* Python and its packages are loaded on demand, outside the interface thread. */
-import {datasetPath,validateDatasetRoot} from './data.js';
+import {BASE,datasetPath,validateDatasetRoot} from './data.js';
 const PYTHON_ROOT = '/tc-engine';
 let enginePromise;
 let nativePromise;
@@ -27,8 +27,8 @@ function validateJob(job) {
   activeBase = base;
 }
 
-async function response(url) {
-  const result = await fetch(url, {credentials: 'same-origin', signal: AbortSignal.timeout(45000)});
+async function response(url, timeout = 45000) {
+  const result = await fetch(url, {credentials: 'same-origin', signal: AbortSignal.timeout(timeout)});
   if (!result.ok) throw new Error(`Dados indisponíveis (${result.status}).`);
   return result;
 }
@@ -69,43 +69,106 @@ function validateManifest(manifest) {
   return manifest;
 }
 
+// Mensagens por etapa: dizem o que falhou para quem usa e ficam no detalhe técnico para diagnóstico.
+const STEP_MESSAGES = {
+  catalog: 'O catálogo da análise não pôde ser lido. Tente novamente em instantes.',
+  python: 'O Python do navegador não pôde ser carregado. Uma rede corporativa ou um bloqueador de conteúdo pode estar impedindo o download.',
+  packages: 'Os pacotes de análise (pandas) não puderam ser carregados. Verifique a conexão e tente novamente.',
+  modules: 'Os módulos da análise não conferem com a versão publicada. Recarregue a página e tente novamente.',
+  exportPackages: 'Os pacotes de exportação não puderam ser carregados. Verifique a conexão e tente novamente.',
+};
+async function step(name, run) {
+  try {return await run();}
+  catch (error) {
+    if (!error.step) {error.step = name; error.userMessage ||= STEP_MESSAGES[name];}
+    throw error;
+  }
+}
+
+/** Catálogo do motor: primeiro o da versão compartilhada; se ela não responder, a cópia publicada com o site (os hashes continuam conferidos). */
+export function engineBases(activeRoot, origin = globalThis.location?.href || 'http://localhost/') {
+  const shared = new URL('.', statementAssetUrl(activeRoot, 'data/statements/engine/manifest.json', origin)).href;
+  const published = new URL(`${BASE}data/statements/engine/`, origin).href;
+  return shared === published ? [shared] : [shared, published];
+}
+
+/** Python servido pelo próprio site; o CDN público fica como reserva. */
+export function pyodideIndexes(manifest, origin = globalThis.location?.href || 'http://localhost/') {
+  const local = new URL(`${BASE}pyodide/v${manifest.pyodide.version}/full/`, origin).href;
+  return [local, manifest.pyodide.indexURL];
+}
+
+async function readMirror(indexURL, version) {
+  try {
+    const result = await fetch(new URL('atlas-mirror.json', indexURL), {credentials: 'same-origin', signal: AbortSignal.timeout(10000)});
+    if (!result.ok) return null;
+    const mirror = await result.json();
+    return mirror?.pyodide === version && Array.isArray(mirror.files) ? mirror : null;
+  } catch {return null;}
+}
+
 async function engine(job) {
   if (!enginePromise) {
     enginePromise = (async () => {
       status(job, 'Carregando recursos da análise…');
-      const engineBase = new URL('.',statementAssetUrl(activeBase,'data/statements/engine/manifest.json',self.location.href));
-      const manifest = validateManifest(await (await response(new URL('manifest.json', engineBase))).json());
-      const runtimeUrl = `${manifest.pyodide.indexURL}pyodide.mjs`;
-      const {loadPyodide} = await import(/* @vite-ignore */ runtimeUrl);
-      const pyodide = await loadPyodide({indexURL: manifest.pyodide.indexURL});
-      await pyodide.loadPackage('pandas');
+      const {manifest, engineBase} = await step('catalog', async () => {
+        let last;
+        for (const base of engineBases(activeBase, self.location.href)) {
+          try {return {engineBase: new URL(base), manifest: validateManifest(await (await response(new URL('manifest.json', base), 15000)).json())};}
+          catch (error) {last = error;}
+        }
+        throw last;
+      });
+      const {pyodide, indexURL, mirror} = await step('python', async () => {
+        let last;
+        for (const indexURL of pyodideIndexes(manifest, self.location.href)) {
+          const mirror = indexURL === manifest.pyodide.indexURL ? null : await readMirror(indexURL, manifest.pyodide.version);
+          if (indexURL !== manifest.pyodide.indexURL && !mirror) continue;
+          try {
+            const {loadPyodide} = await import(/* @vite-ignore */ `${indexURL}pyodide.mjs`);
+            return {pyodide: await loadPyodide({indexURL}), indexURL, mirror};
+          } catch (error) {last = error;}
+        }
+        throw last || new Error('Nenhuma origem do Python disponível.');
+      });
+      await step('packages', () => pyodide.loadPackage('pandas'));
+      const modules = await step('modules', () => Promise.all(manifest.modules.map(async module => ({module, bytes: await verified(new URL(module.path, engineBase), module.sha256, module.size)}))));
       pyodide.FS.mkdirTree(`${PYTHON_ROOT}/utils`);
-      const modules = await Promise.all(manifest.modules.map(async module => ({module, bytes: await verified(new URL(module.path, engineBase), module.sha256, module.size)})));
       for (const {module, bytes} of modules) {
         pyodide.FS.writeFile(`${PYTHON_ROOT}/${module.path}`, bytes);
       }
       pyodide.runPython(`import sys\nsys.path.insert(0, '${PYTHON_ROOT}')`);
-      return {pyodide, manifest, engineBase, bridge: pyodide.pyimport('bridge')};
+      return {pyodide, manifest, engineBase, indexURL, mirror, bridge: pyodide.pyimport('bridge')};
     })().catch(error => {enginePromise = undefined; nativePromise = undefined; throw error;});
   }
   return enginePromise;
 }
 
+/** Pacotes de exportação: os do manifesto, se houver; senão a cópia do site, com hash conferido; o PyPI só como último recurso. */
+export function exportWheels(manifest, mirror) {
+  if (Array.isArray(manifest.packages.wheels) && manifest.packages.wheels.length) return {source: 'manifest', wheels: manifest.packages.wheels};
+  const local = mirror?.exportWheels || [];
+  const matched = manifest.packages.pip.map(requirement => local.find(entry => entry.requirement === requirement));
+  if (matched.length && matched.every(entry => entry && /^[a-f0-9]{64}$/.test(entry.sha256) && /^[A-Za-z0-9_.-]+\.whl$/.test(entry.file))) return {source: 'mirror', wheels: matched};
+  return {source: 'pypi', wheels: []};
+}
+
 async function native(engineState, job) {
   if (!nativePromise) {
-    nativePromise = (async () => {
+    nativePromise = step('exportPackages', async () => {
       status(job, 'Preparando exportações…');
-      const {pyodide, manifest, engineBase} = engineState;
+      const {pyodide, manifest, engineBase, indexURL, mirror} = engineState;
       await pyodide.loadPackage(manifest.packages.builtIn.filter(p => p !== 'pandas'));
-      const wheels = manifest.packages.wheels;
+      const plan = exportWheels(manifest, mirror);
       let requirements = manifest.packages.pip;
-      if (Array.isArray(wheels) && wheels.length) {
+      if (plan.source !== 'pypi') {
         pyodide.FS.mkdirTree(`${PYTHON_ROOT}/wheels`);
         requirements = [];
-        for (const wheel of wheels) {
-          if (!/^wheels\/[A-Za-z0-9_.-]+\.whl$/.test(wheel.path)) throw new Error('Pacote de exportação inválido.');
-          const bytes = await verified(new URL(wheel.path, engineBase), wheel.sha256, wheel.size);
-          const filename = wheel.path.split('/').at(-1);
+        for (const wheel of plan.wheels) {
+          const path = plan.source === 'manifest' ? wheel.path : wheel.file;
+          if (plan.source === 'manifest' && !/^wheels\/[A-Za-z0-9_.-]+\.whl$/.test(path)) throw new Error('Pacote de exportação inválido.');
+          const bytes = await verified(new URL(path, plan.source === 'manifest' ? engineBase : indexURL), wheel.sha256, wheel.size);
+          const filename = path.split('/').at(-1);
           pyodide.FS.writeFile(`${PYTHON_ROOT}/wheels/${filename}`, bytes);
           requirements.push(`emfs:${PYTHON_ROOT}/wheels/${filename}`);
         }
@@ -114,7 +177,7 @@ async function native(engineState, job) {
       const requested = pyodide.toPy(requirements);
       try {await micropip.install.callKwargs(requested, {deps: false});}
       finally {requested.destroy(); micropip.destroy();}
-    })().catch(error => {nativePromise = undefined; throw error;});
+    }).catch(error => {nativePromise = undefined; throw error;});
   }
   return nativePromise;
 }
@@ -176,7 +239,7 @@ async function process(job) {
   } catch (error) {
     if (!cancelled.has(job.id)) {
       const messages = {bootstrap: 'Não foi possível carregar os recursos da análise. Verifique a conexão e tente novamente.', input: 'Os dados desta instituição não puderam ser carregados. Tente novamente.', analysis: 'A análise não pôde ser preparada para as competências escolhidas.', export: 'O arquivo não pôde ser gerado. Tente novamente.'};
-      self.postMessage({type: 'error', id: job.id, context: job.entity ? context(job) : {}, error: {message: error?.userMessage || messages[phase], phase, details: String(error?.message || error)}});
+      self.postMessage({type: 'error', id: job.id, context: job.entity ? context(job) : {}, error: {message: error?.userMessage || messages[phase], phase, step: error?.step || '', details: String(error?.message || error)}});
     }
   } finally {cancelled.delete(job.id); knownJobs.delete(job.id);}
 }

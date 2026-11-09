@@ -56,7 +56,7 @@ function StatementTable({table,periods,detail,shares}){
 }
 
 export default function Statements({index,catalog,bank,onContextChange,onRetryIndex}){
-  const [crosswalk,setCrosswalk]=useState(null),[crosswalkReady,setCrosswalkReady]=useState(false),[entityId,setEntityId]=useState(''),[scope,setScope]=useState('prudential'),[periods,setPeriods]=useState([]),[periodNotice,setPeriodNotice]=useState(''),[tableName,setTableName]=useState('Balanço'),[packet,setPacket]=useState(null),[loading,setLoading]=useState(false),[status,setStatus]=useState(''),[error,setError]=useState(''),[retry,setRetry]=useState(0),[detail,setDetail]=useState(false),[shares,setShares]=useState(false),[page,setPage]=useState(0);
+  const [crosswalk,setCrosswalk]=useState(null),[crosswalkReady,setCrosswalkReady]=useState(false),[entityId,setEntityId]=useState(''),[scope,setScope]=useState('prudential'),[periods,setPeriods]=useState([]),[periodNotice,setPeriodNotice]=useState(''),[tableName,setTableName]=useState('Balanço'),[packet,setPacket]=useState(null),[loading,setLoading]=useState(false),[status,setStatus]=useState(''),[error,setError]=useState(''),[errorDetail,setErrorDetail]=useState(''),[retry,setRetry]=useState(0),[detail,setDetail]=useState(false),[shares,setShares]=useState(false),[page,setPage]=useState(0);
   const defaults=useRef(selectedFromUrl()),boundBank=useRef(''),remembered=useRef({}),snapshotCache=useRef(new Map()),small=useSmallTable(),id=useId();
   const entity=index?.institutions.find(entry=>entry.id===entityId)||null;
   const analysisBank=useMemo(()=>crosswalkReady?statementAnalysisBank(catalog,crosswalk,entity):null,[catalog,crosswalkReady,crosswalk,entity]);
@@ -79,7 +79,7 @@ export default function Statements({index,catalog,bank,onContextChange,onRetryIn
   useEffect(()=>{
     const abort=new AbortController();let active=true;
     if(!entity||!periods.length)return()=>abort.abort();
-    setLoading(true);setError('');setStatus('Carregando demonstrações…');setPage(0);
+    setLoading(true);setError('');setErrorDetail('');setStatus('Carregando demonstrações…');setPage(0);
     async function load(){
       try{
         let result;
@@ -90,7 +90,7 @@ export default function Statements({index,catalog,bank,onContextChange,onRetryIn
         }else result=await prepareStatement(entity,periods,message=>{if(active)setStatus(message);},{signal:abort.signal});
         validateStatementPacket(entity,periods,result);
         if(active){setPacket(result);setStatus('');}
-      }catch(reason){if(active&&reason.name!=='AbortError'){setError(reason.message);setStatus('');}}
+      }catch(reason){if(active&&reason.name!=='AbortError'){setError(reason.message);setErrorDetail(reason.details?`${reason.step||reason.phase||'análise'}: ${reason.details}`:'');setStatus('');}}
       finally{if(active)setLoading(false);}
     }
     load();return()=>{active=false;abort.abort();};
@@ -112,7 +112,12 @@ export default function Statements({index,catalog,bank,onContextChange,onRetryIn
       <div className="statements-identity"><div><strong>{entity.name}</strong><p>{scope==='individual'?`CNPJ-base ${entity.code} · COSIF 4010`:`Conglomerado ${entity.code} · COSIF 4060 / 4066`}</p></div><span>R$ milhões · índices em %</span></div>
       {periodNotice&&<p className="statements-footnote" role="status">{periodNotice}</p>}
       {crosswalkReady&&!analysisBank&&<p className="statements-footnote">Seleção contábil independente. Análise e comparação: {groupName(bank)} · {bank.perimeter}.</p>}
-      {error&&<div className="statements-error" role="alert"><p>{error}</p><button type="button" className="institution-text-action" onClick={retryAnalysis}>Tentar novamente</button></div>}
+      {error&&<div className="statements-error" role="alert"><p>{error}</p>
+        <div className="statements-error-actions"><button type="button" className="institution-text-action" onClick={retryAnalysis}>Tentar novamente</button>
+          {/* As últimas competências vêm do resumo pré-calculado, que não depende do motor de análise. */}
+          {entity&&Array.isArray(entity.defaultPeriods)&&entity.defaultPeriods.length>0&&!samePeriods(periods,entity.defaultPeriods)&&<button type="button" className="institution-text-action" onClick={()=>{setPeriodNotice('');setPeriods([...entity.defaultPeriods]);}}>Ver as últimas competências</button>}</div>
+        {errorDetail&&<details className="statements-error-detail"><summary>Detalhe técnico</summary><p>{errorDetail}</p></details>}
+      </div>}
       {!ready||loading?<p className="institution-empty" role="status">{error?'Selecione outra instituição ou tente novamente.':status||'Preparando demonstrativos…'}</p>:table&&<>
         <div className="institution-section-title"><h2 id={`${id}-heading`}>{table.name}</h2><div className="statements-table-controls"><label><input type="checkbox" checked={shares} onChange={event=>{setShares(event.target.checked);setPage(0);}}/>Composição (%)</label><button type="button" className="institution-text-action" onClick={()=>setDetail(value=>!value)}>{detail?'Recolher contas':'Detalhar contas'}</button></div></div>
         {totalPages>1&&<div className="statements-pagination"><span>{shown.map(period=>statementPeriodLabel(period)).join(' · ')}</span><div><button type="button" disabled={page<=0} onClick={()=>setPage(value=>Math.max(0,value-1))}>Anteriores</button><span>{Math.min(page,totalPages-1)+1} / {totalPages}</span><button type="button" disabled={page>=totalPages-1} onClick={()=>setPage(value=>Math.min(totalPages-1,value+1))}>Próximas</button></div></div>}
