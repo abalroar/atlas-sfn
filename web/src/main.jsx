@@ -1,6 +1,6 @@
 import React,{lazy,Suspense,useCallback,useEffect,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import {currentDataRevision,json} from './data.js';
+import {currentDataRevision,json,pinDataRevision} from './data.js';
 import Landing from './AtlasLanding.jsx';
 import AppShell from './AppShell.jsx';
 import {statementNavigationUrl} from './statement-data.js';
@@ -32,9 +32,13 @@ function App(){
 
   useEffect(()=>{let active=true;const controller=new AbortController();setError('');setPublicationReady(false);
     async function load(){
-      const published=await loadPublication({signal:controller.signal});if(!active)return;
+      // A base publicada no site abre mesmo se a versão compartilhada (D1/R2) não responder; o aviso fica visível.
+      let published,notice='';
+      try{published=await loadPublication({signal:controller.signal,timeoutMs:8000});}
+      catch(reason){if(!active||reason.name==='AbortError')throw reason;pinDataRevision(null);published={revision:null,publishedAt:null,summary:null,builtIn:true,configured:true,unavailable:true};notice='A versão compartilhada dos dados não respondeu. O site mostra a base publicada junto com ele.';}
+      if(!active)return;
       const [m,c,s,x]=await Promise.all([json('data/manifest.json'),json('data/institutions.json'),json('data/sfn.json'),json('data/extra.json')]);
-      if(!active)return;const selected=defaultBank(c,route().bank);setPublication(published);setManifest(m);setCatalog(c);setSfn(s);setExtra(x);setBankId(selected.id);setPublicationReady(true);
+      if(!active)return;const selected=defaultBank(c,route().bank);setPublication(published);setManifest(m);setCatalog(c);setSfn(s);setExtra(x);setBankId(selected.id);setPublicationReady(true);if(notice)setError(notice);
       if(route().page==='institutions'&&route().bank&&route().bank!==selected.id){const url=new URL(location.href);url.searchParams.set('bank',selected.id);history.replaceState({},'',url);}
     }
     load().catch(reason=>{if(active)setError(reason.message);});
