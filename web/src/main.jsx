@@ -5,6 +5,7 @@ import Landing from './AtlasLanding.jsx';
 import AppShell from './AppShell.jsx';
 import {statementNavigationUrl} from './statement-data.js';
 import {loadPublication} from './publication-data.js';
+import {startPerfOverlay} from './perf-overlay.js';
 import {housingStorageKey} from './update-data.js';
 import '@fontsource-variable/hanken-grotesk';
 import './style.css';
@@ -99,3 +100,4 @@ function App(){
 }
 
 createRoot(document.getElementById('root')).render(<App/>);
+startPerfOverlay();
