@@ -1,7 +1,8 @@
 // Formas de leitura derivadas dos gráficos publicados. Cada forma reorganiza os mesmos valores
 // (ordem, posição, cor); nenhuma recalcula as séries de origem. Usadas pelo site e pelo PPTX.
 import {chartCategories} from './data.js';
-import {latestDate, monthLabel, retiredSeries, yearAgo} from './editorial.js';
+import {latestDate, monthLabel, retiredSeries, seriesColors, yearAgo} from './editorial.js';
+import {axisUnits} from './data.js';
 
 const finite = value => typeof value === 'number' && Number.isFinite(value);
 
@@ -113,3 +114,27 @@ export const dateCategories = chart => {
   const dates = chartCategories(chart);
   return dates.every(date => /^\d{4}-\d{2}-\d{2}$/.test(date)) ? dates : [];
 };
+
+/* ---------- Celular: um eixo por vez ---------- */
+
+/**
+ * No celular, um gráfico de dois eixos com muitas séries vira dois gráficos de um eixo, com troca entre eles.
+ * Cada lado mantém as séries e a unidade publicadas.
+ */
+export function narrowSides(chart) {
+  const right = chart.series.filter(series => series.axis === 1), left = chart.series.filter(series => series.axis !== 1);
+  if (!right.length || !left.length || chart.series.length < 4 || chart.view) return null;
+  const units = axisUnits(chart), clean = name => name.replace(/ \(dir\.\)$/, '');
+  const label = list => list.length <= 2 ? list.map(series => clean(series.name)).join(' e ') : `${clean(list[0].name)} e mais ${list.length - 1}`;
+  const palette = chart.colors || seriesColors(chart, 'web');
+  // Cada série mantém a cor que tinha no gráfico de dois eixos.
+  const side = (list, unit) => ({...chart, axes: undefined, unit, percent: /%/.test(unit), colors: list.map(series => palette[chart.series.indexOf(series)]), series: list.map(series => ({...series, axis: 0, name: clean(series.name), dash: false}))});
+  return [{label: label(left), chart: side(left, units[0])}, {label: label(right), chart: side(right, units[1] || units[0])}];
+}
+
+/** Painel em largura total: guia do assunto, halteres longos e matrizes. Os demais têm altura fixa e alinham em pares. */
+export const panelWide = chart => {
+  const shown = chart.alternatives?.[0]?.chart || chart;
+  return shown.view === 'matrix' || (shown.view === 'dumbbell' && dumbbellRows(shown).rows.length > 9) || (chart.alternatives || []).some(option => option.chart.view === 'dumbbell' && dumbbellRows(option.chart).rows.length > 9);
+};
+

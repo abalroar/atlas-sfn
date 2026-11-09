@@ -77,3 +77,15 @@ test('the institution deck has eight charts and the CSV keeps every indicator',a
   const losses=charts.find(chart=>chart.title==='Estágios e perda esperada');
   assert.ok(losses.series.find(series=>/Perda esperada/.test(series.name)).data.some(([,value])=>value<0),'expected loss keeps its sign');
 });
+
+test('on phones a dense two-axis chart splits into one chart per axis with the same series, units and colors',async()=>{
+  const {narrowSides}=await import('../src/chart-views.js');
+  const rates=page('sfn',all.sfn).find(chart=>chart.id==='cred-taxas-pf');
+  const sides=narrowSides(rates);
+  assert.equal(sides.length,2);
+  assert.deepEqual(sides.map(side=>side.chart.unit),['% a.a.','% a.a.']);
+  assert.equal(sides[0].chart.series.length+sides[1].chart.series.length,rates.series.length);
+  assert.ok(sides.every(side=>side.chart.series.every(series=>!series.axis&&!/\(dir\.\)/.test(series.name))));
+  for(const series of sides[1].chart.series)assert.deepEqual(series.data,rates.series.find(entry=>entry.name.replace(/ \(dir\.\)$/,'')===series.name).data);
+  assert.equal(narrowSides({series:[{name:'a',data:[]},{name:'b',axis:1,data:[]}]}),null,'a light two-axis chart keeps both axes');
+});

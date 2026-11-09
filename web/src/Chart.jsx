@@ -5,7 +5,8 @@ import {exportPptx} from './export.js';
 import {chartLabel, chartTick, chartValue, showInnerLabel} from './chart-format.js';
 import {WEB_CHART_COLORS} from './chart-palette.js';
 import {displayScale, monthLabel, quantity, readable, recessionsIn, seriesColors} from './editorial.js';
-import {bandCategories, dateCategories, dumbbellRows, ufTiles} from './chart-views.js';
+import {bandCategories, dateCategories, dumbbellRows, narrowSides, panelWide, ufTiles} from './chart-views.js';
+export {panelWide};
 import SmallMultiples from './SmallMultiples.jsx';
 import {useNarrow} from './use-narrow.js';
 
@@ -283,17 +284,14 @@ function RateList({chart}) {
 
 /* ---------- Painel ---------- */
 
-/** Painel em largura total: guia do assunto, halteres longos e matrizes. Os demais têm altura fixa e alinham em pares. */
-export const panelWide = chart => {
-  const shown = chart.alternatives?.[0]?.chart || chart;
-  return shown.view === 'matrix' || (shown.view === 'dumbbell' && dumbbellRows(shown).rows.length > 9) || (chart.alternatives || []).some(option => option.chart.view === 'dumbbell' && dumbbellRows(option.chart).rows.length > 9);
-};
-
 export function ChartPanel({chart: group, showNotes = true, lead = false, stretch = false, quiet = false}) {
   const [choice, setChoice] = useState(0);
   const [mode, setMode] = useState('chart');
-  useEffect(() => {setMode('chart'); setChoice(0);}, [group.id]);
-  const options = group.alternatives || null, chart = options ? options[Math.min(choice, options.length - 1)].chart : group;
+  const [sideIndex, setSideIndex] = useState(0);
+  const narrow = useNarrow();
+  useEffect(() => {setMode('chart'); setChoice(0); setSideIndex(0);}, [group.id]);
+  const options = group.alternatives || null, picked = options ? options[Math.min(choice, options.length - 1)].chart : group;
+  const sides = narrow ? narrowSides(picked) : null, chart = sides ? {...sides[sideIndex].chart, reading: picked.reading} : picked;
   const hasValues = chart.series.some(series => series.data.some(point => point[1] != null && Number.isFinite(Number(point[1]))));
   // `quiet`: os números-chave já citam este gráfico; o título descreve e a leitura não se repete.
   const title = plainText(group.alternatives ? group.title : chart.title), reading = quiet ? null : chart.reading?.text;
@@ -309,6 +307,7 @@ export function ChartPanel({chart: group, showNotes = true, lead = false, stretc
         {original && <button type="button" className="tc-text-action" aria-pressed={mode === 'series'} onClick={() => setMode(mode === 'series' ? 'chart' : 'series')}>{mode === 'series' ? 'Comparação' : 'Série'}</button>}
       </div>}
     </header>
+    {sides && <div className="tc-chart-choice tc-chart-sides" role="group" aria-label="Grupo de séries">{sides.map((side, index) => <button type="button" key={side.label} aria-pressed={index === sideIndex} onClick={() => setSideIndex(index)}>{side.label}</button>)}</div>}
     {hasValues ? <Chart chart={mode === 'series' && original ? original : chart} height={height} fixed={!wide}/> : <p className="tc-empty">Sem observações neste intervalo. Escolha outro período para consultar a série.</p>}
     {showNotes && chart.note && <details className="tc-chart-note"><summary>Notas</summary><p>{plainText(chart.note)}</p></details>}
   </article>;

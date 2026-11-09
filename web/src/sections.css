@@ -205,3 +205,4 @@
 .tc-key-figures .tc-key-context{grid-column:2;font-size:11px!important;text-align:right;margin:2px 0 0!important}
 .tc-key-figures dd:last-child{display:none}
 }
+.tc-workspace .tc-chart-sides{flex-wrap:wrap;gap:4px 16px;margin:0 0 8px}
