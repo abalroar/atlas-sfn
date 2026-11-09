@@ -64,3 +64,19 @@ export function baseStyle(states, municipalities) {
     ],
   };
 }
+
+// Placas de vídeo fracas: sem relevo (as duas camadas leem telhas de elevação e calculam cada pixel),
+// sem textura por cima do mapa e um pixel de mapa por pixel CSS. Fica o mapa de papel, mar, divisas e pontos.
+export const RELIEF_LAYERS = ['hypso', 'shade'];
+export function liteStyle(style) {
+  const { dem, ...sources } = style.sources;
+  return { ...style, sources, layers: style.layers.filter(layer => !RELIEF_LAYERS.includes(layer.id)) };
+}
+export const softwareRenderer = renderer => /swiftshader|llvmpipe|softpipe|software|basic render/i.test(renderer || '');
+// Decide pelo filme em curso: com a mediana dos quadros acima de 28 ms (menos de ~35 quadros por segundo), o mapa fica leve.
+export const LITE_SAMPLE = 45;
+export function needsLite(frames) {
+  if (frames.length < LITE_SAMPLE) return false;
+  const sorted = [...frames].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)] > 28;
+}

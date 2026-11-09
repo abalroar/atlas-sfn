@@ -134,10 +134,12 @@
 }
 @keyframes atlas-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 
-/* O mapa aparece quando as telhas da primeira cena chegam. */
-.territory .map, .territory .grain { opacity: 0; transition: opacity 900ms ease; }
-.territory.is-revealed .map { opacity: 1; }
+/* O mapa aparece quando as telhas da primeira cena chegam. Uma folha de papel por cima se desfaz; o mapa em si
+   não muda de opacidade, o que poupa a placa de vídeo de recompor o canvas inteiro a cada quadro da passagem. */
+.territory .grain { opacity: 0; transition: opacity 900ms ease; }
 .territory.is-revealed .grain { opacity: .18; }
+.territory .map-cover { position: absolute; inset: 0; z-index: 1; background: var(--paper); pointer-events: none; transition: opacity 900ms ease, visibility 0s linear 900ms; }
+.territory.is-revealed .map-cover { opacity: 0; visibility: hidden; }
 /* Ao convergir, uma faixa de papel ocupa o lugar da legenda e desce, revelando o mapa que cresceu por baixo. */
 .territory .stage::after { content: ''; position: absolute; left: 0; right: 0; bottom: 40px; height: calc(var(--band) - 40px); z-index: 4; background: var(--paper); pointer-events: none;
   transform-origin: bottom; transform: scaleY(0); }
@@ -145,7 +147,7 @@
 @keyframes atlas-curtain { from { transform: scaleY(1); } to { transform: scaleY(0); } }
 @media (max-width: 760px) { .territory .stage::after { display: none; } }
 @media (prefers-reduced-motion: reduce) {
-  .territory .column, .territory.mode-explore .column, .territory .map, .territory .grain { transition: none !important; animation: none !important; }
+  .territory .column, .territory.mode-explore .column, .territory .map-cover, .territory .grain { transition: none !important; animation: none !important; }
   .territory.mode-explore .stage::after { animation: none; }
 }
 
@@ -221,3 +223,5 @@
 .territory .film-loading-bar { position: relative; display: block; width: 180px; height: 2px; background: rgba(22,50,63,.14); overflow: hidden; }
 .territory .film-loading-bar::after { content: ''; position: absolute; inset: 0; width: 40%; background: var(--ink); animation: atlas-loading 1.3s ease-in-out infinite; }
 @keyframes atlas-loading { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+/* Mapa leve (placas de vídeo fracas): sem a textura que se mistura ao mapa a cada quadro. */
+.territory.is-lite .grain { display: none; }

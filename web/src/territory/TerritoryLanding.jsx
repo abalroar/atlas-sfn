@@ -12,7 +12,7 @@ import { loadAtlasAsset } from '../atlas-publication.js';
 import { BASE, json } from '../data.js';
 import { APP_NAVIGATION } from '../AppShell.jsx';
 import Wordmark from '../Wordmark.jsx';
-import { baseStyle, PIX_STOPS } from './map-style.js';
+import { baseStyle, liteStyle, softwareRenderer, needsLite, LITE_SAMPLE, RELIEF_LAYERS, PIX_STOPS } from './map-style.js';
 import { toView, fromView, interpolateZoom, clamp, smooth, lerp } from './flight.js';
 
 const ANALYSIS = BASE + '?view=institutions&bank=';
@@ -32,6 +32,19 @@ const BR_BOUNDS = [[-73.9856, -33.7439], [-34.7932, 5.2673]];
 const PAD = { top: 24, bottom: 24, left: 22, right: 22 };
 const FILM_PAD = { top: 40, bottom: 40, left: 40, right: 40 };
 const VEIL = .84;
+// Mapa leve: forçado por ?gfx=lite|full, lembrado por uma semana depois que o filme pesou, ou já de saída com renderização por software.
+const LITE_KEY = 'atlas-map-lite', LITE_DAYS = 7;
+function startsLite() {
+  const forced = new URLSearchParams(location.search).get('gfx');
+  if (forced === 'lite') return true; if (forced === 'full') return false;
+  try { const at = +localStorage.getItem(LITE_KEY); if (at && Date.now() - at < LITE_DAYS * 864e5) return true; } catch { }
+  try {
+    const gl = document.createElement('canvas').getContext('webgl'); if (!gl) return false;
+    const info = gl.getExtension('WEBGL_debug_renderer_info'), renderer = gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER);
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
+    return softwareRenderer(renderer);
+  } catch { return false; }
+}
 
 const nf = (v, d = 0) => v == null || Number.isNaN(v) ? 'N/D' : v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
 const money = v => v == null ? 'N/D' : Math.abs(v) >= 1e9 ? 'R$ ' + nf(v / 1e9, 1) + ' bi' : Math.abs(v) >= 1e6 ? 'R$ ' + nf(v / 1e6, 0) + ' mi' : 'R$ ' + nf(v / 1e3, 0) + ' mil';
@@ -116,6 +129,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
   const go = (event, page) => { if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return; event.preventDefault(); setMenu(false); onNavigate(page); };
 
   const host = useRef(null), column = useRef(null), chart = useRef(null), veil = useRef(null), ridges = useRef(null), map = useRef(null), cams = useRef(null), raf = useRef(0), anim = useRef(null);
+  const [lite, setLite] = useState(startsLite), liteRef = useRef(lite), revealedRef = useRef(false), frames = useRef({ skip: 30, list: [] });
   const clock = useRef({ t: 0, playing: false, last: 0 }), lastData = useRef({}), lastUi = useRef(0), modeRef = useRef('film');
   const [ready, setReady] = useState(false), [revealed, setRevealed] = useState(false), [mode, setMode] = useState('film'), [t, setT] = useState(0), [playing, setPlaying] = useState(false), [view, setView] = useState(null);
   const [selected, setSelected] = useState(null), [inst, setInst] = useState(null);
@@ -235,7 +249,8 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
       maplibregl.setWorkerUrl(new URL(workerUrl, location.href).href);
       // Em máquinas com pouca memória ou poucos núcleos, menos pixels por quadro deixam o filme fluido.
       const modest = (navigator.deviceMemory && navigator.deviceMemory <= 4) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
-      m = new maplibregl.Map({ container: host.current, style: baseStyle(states, municipalities), pixelRatio: Math.min(devicePixelRatio || 1, modest ? 1.25 : 2), center: [-26, -24], zoom: 2.9, minZoom: 1.8, maxZoom: 18, dragRotate: false, pitchWithRotate: false, touchPitch: false, renderWorldCopies: false, attributionControl: false, fadeDuration: 0 });
+      const style = baseStyle(states, municipalities);
+      m = new maplibregl.Map({ container: host.current, style: liteRef.current ? liteStyle(style) : style, pixelRatio: Math.min(devicePixelRatio || 1, liteRef.current ? 1 : modest ? 1.25 : 2), center: [-26, -24], zoom: 2.9, minZoom: 1.8, maxZoom: 18, dragRotate: false, pitchWithRotate: false, touchPitch: false, renderWorldCopies: false, attributionControl: false, fadeDuration: 0 });
     } catch (e) { setFailure('O mapa não pôde ser aberto neste navegador.'); return; }
     map.current = m;
     // Começa quando o estilo está pronto; as telhas de relevo chegam com o filme já em curso.
@@ -262,11 +277,12 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
       // O mapa aparece (com fade) quando as telhas da primeira cena chegam, ou após 4,5 s; só então o filme anda.
       let shown = false;
       const reveal = () => {
-        if (shown || map.current !== m) return; shown = true; setRevealed(true);
+        if (shown || map.current !== m) return; shown = true; revealedRef.current = true; lastData.current.look = null; setRevealed(true);
         if (modeRef.current === 'explore') { lastData.current.look = null; applyLook(EXPLORE); cancelAnim(); m.setPadding(explorePadding()); const b = exploreCamera(); if (b) m.jumpTo(b); updateView(); }
         else { clock.current.playing = true; clock.current.last = 0; setPlaying(true); }
       };
-      m.once('idle', reveal); setTimeout(reveal, 4500);
+      // Depois do idle, dois quadros vazios deixam a placa de vídeo terminar o último desenho antes da passagem.
+      m.once('idle', () => requestAnimationFrame(() => requestAnimationFrame(reveal))); setTimeout(reveal, 4500);
     };
     m.on('style.load', init); m.on('styledata', init); m.on('load', init);
     const poll = setInterval(() => { init(); if (started) clearInterval(poll); }, 100);
@@ -334,11 +350,15 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
     m.setPaintProperty('muni-pix', 'fill-opacity', L.pix);
     m.setPaintProperty('pts-exact', 'circle-opacity', pts);
     m.setPaintProperty('pts-exact', 'circle-stroke-opacity', pts);
-    m.setPaintProperty('pts-loose', 'circle-opacity', ['interpolate', ['linear'], ['zoom'], 10.5, pts, 12.5, pts * .18]);
+    // Opacidade zero como constante: o MapLibre só deixa de desenhar a camada assim.
+    m.setPaintProperty('pts-loose', 'circle-opacity', pts ? ['interpolate', ['linear'], ['zoom'], 10.5, pts, 12.5, pts * .18] : 0);
     m.setPaintProperty('rural', 'circle-opacity', L.rural * .62);
     m.setPaintProperty('rural', 'circle-stroke-opacity', L.rural * .9);
   }
   const EXPLORE = { chart: 0, veil: 0, uf: 0, pts: 1, pix: 0, rural: 0, ridge: 0 };
+  // Sob a folha de papel, antes de o mapa aparecer, todas as camadas do filme desenham uma vez. A placa de vídeo
+  // prepara os programas de desenho ali, e não no meio do filme ou da passagem para a exploração.
+  const WARM = { chart: 0, veil: 0, uf: .6, pts: 1, pix: .85, rural: 1, ridge: 0 };
 
   // Relevo da poupança: linhas desenhadas sobre o mapa, projetadas a cada quadro do capítulo.
   function drawRidges(grow) {
@@ -433,6 +453,11 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
     if (!ready) return;
     const tick = now => {
       const c = clock.current, dt = c.last ? Math.min(100, now - c.last) : 16;
+      // Mede o filme já visível; se pesar, troca para o mapa leve uma vez.
+      if (!liteRef.current && c.playing && c.last && modeRef.current === 'film' && document.visibilityState === 'visible' && host.current?.closest('.is-revealed')) {
+        const F = frames.current;
+        if (F.skip > 0) F.skip--; else if (F.list.length < LITE_SAMPLE) { F.list.push(now - c.last); if (needsLite(F.list)) goLite(); }
+      }
       if (c.playing && modeRef.current === 'film') {
         c.t = Math.min(TOTAL, c.t + (c.last ? Math.min(400, now - c.last) : 0));
         if (c.t >= TOTAL) { c.playing = false; setPlaying(false); converge(true); }
@@ -442,7 +467,10 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
       if (modeRef.current === 'film' && !cams.current) computeCameras();
       if (modeRef.current === 'film' && cams.current) {
         const { i, p } = chapterAt(c.t), id = CHAPTERS[i].id;
-        map.current.jumpTo(cameraAt(i, p)); const L = lookAt(i, p); applyLook(L);
+        // Câmera parada não redesenha o mapa: só move quando o enquadramento muda.
+        const cam = cameraAt(i, p), camKey = cam.center[0].toFixed(5) + cam.center[1].toFixed(5) + cam.zoom.toFixed(4);
+        if (camKey !== lastData.current.cam) { lastData.current.cam = camKey; map.current.jumpTo(cam); }
+        const L = revealedRef.current ? lookAt(i, p) : WARM; applyLook(L);
         if (L.ridge > .01) drawRidges(id === 'poupanca' ? smooth(clamp((p - .3) / .5)) : 1);
         if (L.chart > .01) drawChart(id, p, dt);
         if (now - lastUi.current > 66) { lastUi.current = now; setT(c.t); }
@@ -453,16 +481,24 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
     return () => cancelAnimationFrame(raf.current);
   }, [ready, ridgeRows]);
 
+  function goLite() {
+    const m = map.current; if (!m || liteRef.current) return;
+    liteRef.current = true; setLite(true);
+    try { localStorage.setItem(LITE_KEY, String(Date.now())); } catch { }
+    for (const id of RELIEF_LAYERS) if (m.getLayer(id)) m.removeLayer(id);
+    if (m.getSource('dem')) m.removeSource('dem');
+    if ((devicePixelRatio || 1) > 1) m.setPixelRatio(1);
+  }
   function play() {
     const c = clock.current;
     if (c.playing) { c.playing = false; setPlaying(false); return; }
-    if (modeRef.current === 'explore') { modeRef.current = 'film'; setMode('film'); setManualSegment(null); clearInst(); clearPoint(); lastData.current.look = null; map.current?.setPadding({ top: 0, bottom: 0, left: 0, right: 0 }); requestAnimationFrame(computeCameras); c.t = 0; }
+    if (modeRef.current === 'explore') { modeRef.current = 'film'; setMode('film'); lastData.current.cam = null; setManualSegment(null); clearInst(); clearPoint(); lastData.current.look = null; map.current?.setPadding({ top: 0, bottom: 0, left: 0, right: 0 }); requestAnimationFrame(computeCameras); c.t = 0; }
     if (c.t >= TOTAL) c.t = 0;
     c.playing = true; c.last = 0; setPlaying(true);
   }
   function jump(i) {
     const c = clock.current; c.t = STARTS[i] + 1; c.last = 0; c.playing = true; setPlaying(true);
-    if (modeRef.current !== 'film') { modeRef.current = 'film'; setMode('film'); map.current?.setPadding({ top: 0, bottom: 0, left: 0, right: 0 }); requestAnimationFrame(computeCameras); }
+    if (modeRef.current !== 'film') { modeRef.current = 'film'; setMode('film'); lastData.current.cam = null; map.current?.setPadding({ top: 0, bottom: 0, left: 0, right: 0 }); requestAnimationFrame(computeCameras); }
     setManualSegment(null); clearInst(); clearPoint(); lastData.current.look = null; setT(c.t);
   }
   // Fim do percurso (ou qualquer gesto): o mapa abre espaço para a coluna e passa a mostrar as unidades.
@@ -605,7 +641,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
       <p className="src">Pelo município do empreendimento. BCB, SICOR; {nf(rural.coverage.operations * 100, 0)}% das operações e {nf(rural.coverage.value * 100, 0)}% do valor de 2025 trazem município.</p></>,
   ];
 
-  return <main className={'territory atlas-landing mode-' + mode + (revealed ? ' is-revealed' : '')}>
+  return <main className={'territory atlas-landing mode-' + mode + (revealed ? ' is-revealed' : '') + (lite ? ' is-lite' : '')}>
     {header}
     <div className="body">
       <aside className="column" ref={column} aria-hidden={mode === 'film'}>
@@ -652,6 +688,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
       <div className="stage">
         <div className="map" ref={host} />
         <div className="grain" aria-hidden="true" />
+        <div className="map-cover" aria-hidden="true" />
         <svg className="ridges" ref={ridges} aria-hidden="true" />
         <div className="veil" ref={veil} />
         <svg className="chart" ref={chart} aria-hidden="true" />
@@ -663,7 +700,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
           <button className="skip" onClick={() => { clock.current.playing = false; setPlaying(false); converge(true); }}>Explorar</button>
         </nav>}
         {mode === 'explore' && <div className="atlas-scene-camera map-zoom"><button aria-label="Aproximar" onClick={() => map.current?.zoomIn({ duration: 300 })}><svg viewBox="0 0 20 20"><path d="M4 10h12M10 4v12" /></svg></button><button aria-label="Afastar" onClick={() => map.current?.zoomOut({ duration: 300 })}><svg viewBox="0 0 20 20"><path d="M4 10h12" /></svg></button></div>}
-        {mode === 'explore' && <div className="atlas-source"><span>Relevo: Terrain Tiles (Mapzen) · base OpenFreeMap, © OpenStreetMap · malhas IBGE</span><button aria-label="Notas sobre os dados" aria-expanded={info} onClick={() => setInfo(v => !v)}><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5" /><path d="M10 9v5M10 6.2v.1" /></svg></button></div>}
+        {mode === 'explore' && <div className="atlas-source"><span>{lite ? '' : 'Relevo: Terrain Tiles (Mapzen) · '}base OpenFreeMap, © OpenStreetMap · malhas IBGE</span><button aria-label="Notas sobre os dados" aria-expanded={info} onClick={() => setInfo(v => !v)}><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5" /><path d="M10 9v5M10 6.2v.1" /></svg></button></div>}
         {info && <aside className="atlas-data-info"><button aria-label="Fechar" onClick={() => setInfo(false)}>×</button>
           <p>Agências e postos: {nf(100 * ((c.precision.numero || 0) + (c.precision.numero_aproximado || 0) + (c.precision.logradouro || 0)) / c.located, 0)}% localizados pelo número ou pela rua; os demais, por CEP, bairro ou município, quase somem na escala de rua. Cores dos cinco maiores bancos; cooperativas em verde; demais instituições em azul-petróleo.</p>
           <p>Pix: pessoas físicas pagadoras no mês divididas pela população estimada de 2025 em todos os meses; a razão pode passar de 100%. Mês corrente excluído por estar incompleto.</p>
