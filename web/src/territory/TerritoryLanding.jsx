@@ -115,9 +115,9 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
   };
   const go = (event, page) => { if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return; event.preventDefault(); setMenu(false); onNavigate(page); };
 
-  const host = useRef(null), chart = useRef(null), veil = useRef(null), ridges = useRef(null), map = useRef(null), cams = useRef(null), raf = useRef(0), anim = useRef(null);
+  const host = useRef(null), column = useRef(null), chart = useRef(null), veil = useRef(null), ridges = useRef(null), map = useRef(null), cams = useRef(null), raf = useRef(0), anim = useRef(null);
   const clock = useRef({ t: 0, playing: false, last: 0 }), lastData = useRef({}), lastUi = useRef(0), modeRef = useRef('film');
-  const [ready, setReady] = useState(false), [mode, setMode] = useState('film'), [t, setT] = useState(0), [playing, setPlaying] = useState(false), [view, setView] = useState(null);
+  const [ready, setReady] = useState(false), [revealed, setRevealed] = useState(false), [mode, setMode] = useState('film'), [t, setT] = useState(0), [playing, setPlaying] = useState(false), [view, setView] = useState(null);
   const [selected, setSelected] = useState(null), [inst, setInst] = useState(null);
   const [query, setQuery] = useState(''), [searchOpen, setSearchOpen] = useState(false), [active, setActive] = useState(0);
   const [person, setPerson] = useState('PF'), [manualSegment, setManualSegment] = useState(null), [info, setInfo] = useState(false);
@@ -233,7 +233,9 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
     let m;
     try {
       maplibregl.setWorkerUrl(new URL(workerUrl, location.href).href);
-      m = new maplibregl.Map({ container: host.current, style: baseStyle(states, municipalities), center: [-26, -24], zoom: 2.9, minZoom: 1.8, maxZoom: 18, dragRotate: false, pitchWithRotate: false, touchPitch: false, renderWorldCopies: false, attributionControl: false, fadeDuration: 0 });
+      // Em máquinas com pouca memória ou poucos núcleos, menos pixels por quadro deixam o filme fluido.
+      const modest = (navigator.deviceMemory && navigator.deviceMemory <= 4) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+      m = new maplibregl.Map({ container: host.current, style: baseStyle(states, municipalities), pixelRatio: Math.min(devicePixelRatio || 1, modest ? 1.25 : 2), center: [-26, -24], zoom: 2.9, minZoom: 1.8, maxZoom: 18, dragRotate: false, pitchWithRotate: false, touchPitch: false, renderWorldCopies: false, attributionControl: false, fadeDuration: 0 });
     } catch (e) { setFailure('O mapa não pôde ser aberto neste navegador.'); return; }
     map.current = m;
     // Começa quando o estilo está pronto; as telhas de relevo chegam com o filme já em curso.
@@ -257,8 +259,14 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
       computeCameras(); setReady(true);
       // O filme começa ao carregar, inclusive com movimento reduzido; um gesto no mapa interrompe o percurso.
       // Se a pessoa já foi para a exploração antes de o mapa ficar pronto, aplica a exploração no lugar do filme.
-      if (modeRef.current === 'explore') { lastData.current.look = null; applyLook(EXPLORE); cancelAnim(); const b = m.cameraForBounds(BR_BOUNDS, { padding: PAD }); if (b) m.jumpTo({ center: b.center, zoom: b.zoom }); updateView(); }
-      else { clock.current.playing = true; clock.current.last = 0; setPlaying(true); }
+      // O mapa aparece (com fade) quando as telhas da primeira cena chegam, ou após 4,5 s; só então o filme anda.
+      let shown = false;
+      const reveal = () => {
+        if (shown || map.current !== m) return; shown = true; setRevealed(true);
+        if (modeRef.current === 'explore') { lastData.current.look = null; applyLook(EXPLORE); cancelAnim(); m.setPadding(explorePadding()); const b = exploreCamera(); if (b) m.jumpTo(b); updateView(); }
+        else { clock.current.playing = true; clock.current.last = 0; setPlaying(true); }
+      };
+      m.once('idle', reveal); setTimeout(reveal, 4500);
     };
     m.on('style.load', init); m.on('styledata', init); m.on('load', init);
     const poll = setInterval(() => { init(); if (started) clearInterval(poll); }, 100);
@@ -270,6 +278,18 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
     const ro = new ResizeObserver(() => { m.resize(); computeCameras(); }); ro.observe(host.current);
     return () => { clearInterval(poll); ro.disconnect(); cancelAnimationFrame(raf.current); m.remove(); map.current = null; };
   }, [meta, rows, states, municipalities, places, cubes, pix, rural, ruralPoints, savings, regions]);
+
+  // Exploração no desktop: a coluna entra por cima do mapa, e a câmera ganha um recuo à esquerda do mesmo tamanho.
+  // Assim o canvas não muda de largura durante a transição (sem recalcular o mapa a cada quadro).
+  function explorePadding() {
+    const narrow = matchMedia('(max-width: 760px)').matches, width = narrow ? 0 : (column.current?.offsetWidth || 0);
+    return { top: 0, bottom: 0, right: 0, left: width };
+  }
+  function exploreCamera() {
+    const m = map.current; if (!m) return null;
+    const pad = explorePadding(), fit = m.cameraForBounds(BR_BOUNDS, { padding: { ...PAD, left: PAD.left + pad.left } }), mid = m.cameraForBounds(BR_BOUNDS, { padding: PAD });
+    return fit && mid ? { center: mid.center, zoom: fit.zoom, padding: pad } : null;
+  }
 
   // Câmeras no tamanho atual do mapa (tela cheia no filme, ao lado da coluna na exploração).
   function computeCameras() {
@@ -418,7 +438,9 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
         if (c.t >= TOTAL) { c.playing = false; setPlaying(false); converge(true); }
       }
       c.last = now;
-      if (modeRef.current === 'film') {
+      // Sem câmeras ainda (mapa sem área útil no primeiro quadro), tenta de novo no quadro seguinte.
+      if (modeRef.current === 'film' && !cams.current) computeCameras();
+      if (modeRef.current === 'film' && cams.current) {
         const { i, p } = chapterAt(c.t), id = CHAPTERS[i].id;
         map.current.jumpTo(cameraAt(i, p)); const L = lookAt(i, p); applyLook(L);
         if (L.ridge > .01) drawRidges(id === 'poupanca' ? smooth(clamp((p - .3) / .5)) : 1);
@@ -434,20 +456,26 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
   function play() {
     const c = clock.current;
     if (c.playing) { c.playing = false; setPlaying(false); return; }
-    if (modeRef.current === 'explore') { modeRef.current = 'film'; setMode('film'); setManualSegment(null); clearInst(); clearPoint(); lastData.current.look = null; requestAnimationFrame(computeCameras); c.t = 0; }
+    if (modeRef.current === 'explore') { modeRef.current = 'film'; setMode('film'); setManualSegment(null); clearInst(); clearPoint(); lastData.current.look = null; map.current?.setPadding({ top: 0, bottom: 0, left: 0, right: 0 }); requestAnimationFrame(computeCameras); c.t = 0; }
     if (c.t >= TOTAL) c.t = 0;
     c.playing = true; c.last = 0; setPlaying(true);
   }
   function jump(i) {
     const c = clock.current; c.t = STARTS[i] + 1; c.last = 0; c.playing = true; setPlaying(true);
-    if (modeRef.current !== 'film') { modeRef.current = 'film'; setMode('film'); requestAnimationFrame(computeCameras); }
+    if (modeRef.current !== 'film') { modeRef.current = 'film'; setMode('film'); map.current?.setPadding({ top: 0, bottom: 0, left: 0, right: 0 }); requestAnimationFrame(computeCameras); }
     setManualSegment(null); clearInst(); clearPoint(); lastData.current.look = null; setT(c.t);
   }
   // Fim do percurso (ou qualquer gesto): o mapa abre espaço para a coluna e passa a mostrar as unidades.
   function converge(recenter) {
     modeRef.current = 'explore'; setMode('explore'); lastData.current.look = null; applyLook(EXPLORE);
-    if (recenter) setTimeout(() => { const m = map.current; if (!m) return; const c = m.cameraForBounds(BR_BOUNDS, { padding: PAD }); if (c) flyTo({ center: [c.center.lng, c.center.lat], zoom: c.zoom }, true); }, 720);
-    setTimeout(updateView, 800);
+    // Espera um quadro para a coluna existir no layout; então a câmera desliza junto com ela, num único movimento.
+    requestAnimationFrame(() => {
+      const m = map.current; if (!m) return; cancelAnim();
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (recenter) { const target = exploreCamera(); if (target) m.easeTo({ ...target, duration: reduced ? 0 : 1100, easing: smooth }); }
+      else m.easeTo({ padding: explorePadding(), duration: reduced ? 0 : 650, easing: smooth });
+    });
+    setTimeout(updateView, 1150);
   }
   function takeControl() {
     cancelAnim();
@@ -530,7 +558,17 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
     <button className="atlas-menu" aria-label="Menu" aria-expanded={menu} aria-controls="territory-nav" onClick={() => setMenu(v => !v)}><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6h14M3 10h14M3 14h14" /></svg></button>
     <nav id="territory-nav" className={menu ? 'is-open' : ''} aria-label="Navegação principal">{APP_NAVIGATION.map(([k, l]) => <a key={k} href={BASE + '?view=' + k} onClick={e => go(e, k)}>{l}</a>)}</nav>
   </header>;
-  if (!meta || !rows || !places || !cubes || !states || !pix || !rural || !savings || !regions) return <main className="territory loading">{header}<p role={failure ? 'alert' : 'status'}>{failure || 'Carregando…'}</p>{failure && <button onClick={() => location.reload()}>Recarregar</button>}</main>;
+  if (!meta || !rows || !places || !cubes || !states || !pix || !rural || !savings || !regions) {
+    // Espera dos dados: o mesmo papel do palco, com o progresso real dos conjuntos já recebidos.
+    const parts = [meta, pointData, places, states, municipalities, pf, pj, pix, rural, savings, regions], done = parts.filter(Boolean).length;
+    return <main className="territory atlas-landing mode-film is-waiting">{header}
+      <div className="territory-wait" role={failure ? 'alert' : 'status'}>
+        {failure ? <><p>{failure}</p><button onClick={() => location.reload()}>Recarregar</button></> : <>
+          <span className="territory-wait-bar" aria-hidden="true"><span style={{ width: `${Math.max(6, done / parts.length * 100)}%` }} /></span>
+          <p>Carregando os dados do território · {done} de {parts.length}</p></>}
+      </div>
+    </main>;
+  }
   const c = meta.counts, instInfo = inst != null ? meta.institutions[inst] : null;
   const scope = segment < 0 ? (person === 'PF' ? 'Todas as faixas' : 'Todas as empresas') : ds.segments[segment];
   const viewIdx = mode === 'explore' ? ufIndex(view?.uf) : -1;
@@ -567,10 +605,10 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
       <p className="src">Pelo município do empreendimento. BCB, SICOR; {nf(rural.coverage.operations * 100, 0)}% das operações e {nf(rural.coverage.value * 100, 0)}% do valor de 2025 trazem município.</p></>,
   ];
 
-  return <main className={'territory atlas-landing mode-' + mode}>
+  return <main className={'territory atlas-landing mode-' + mode + (revealed ? ' is-revealed' : '')}>
     {header}
     <div className="body">
-      <aside className="column" aria-hidden={mode === 'film'}>
+      <aside className="column" ref={column} aria-hidden={mode === 'film'}>
         <div className="column-head">
           <div className="search">
             <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m13 13 4 4" /></svg>
@@ -617,7 +655,7 @@ export default function TerritoryLanding({ catalog, onNavigate, onOpenInstitutio
         <svg className="ridges" ref={ridges} aria-hidden="true" />
         <div className="veil" ref={veil} />
         <svg className="chart" ref={chart} aria-hidden="true" />
-        {mode === 'film' && !ready && <p className="film-loading" role="status">Carregando o relevo e os dados…</p>}
+        {mode === 'film' && !revealed && <p className="film-loading" role="status"><span className="film-loading-bar" aria-hidden="true" />Carregando o relevo…</p>}
         {mode === 'film' && caption[chapter] && <div className="caption" aria-live="off">{caption[chapter]}</div>}
         {mode === 'film' && <nav className="film-bar" aria-label="Percurso">
           <button className="atlas-play" onClick={play} aria-label={playing ? 'Pausar' : 'Reproduzir'}>{playing ? <svg viewBox="0 0 20 20"><path d="M7 5v10M13 5v10" /></svg> : <svg viewBox="0 0 20 20"><path d="M7 5l8 5-8 5z" /></svg>}</button>

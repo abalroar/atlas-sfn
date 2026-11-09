@@ -206,3 +206,9 @@
 .tc-key-figures dd:last-child{display:none}
 }
 .tc-workspace .tc-chart-sides{flex-wrap:wrap;gap:4px 16px;margin:0 0 8px}
+/* Troca de assunto ou de aba: o conteúdo entra com um fade curto, sem salto. Menus do celular deslizam ao abrir. */
+.tc-fade-in{animation:tc-fade-in 280ms ease both}
+@keyframes tc-fade-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes tc-drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media(max-width:760px){.tc-app-nav nav.is-open,.atlas-site-header nav.is-open{animation:tc-drop 200ms ease both}}
+@media(prefers-reduced-motion:reduce){.tc-fade-in,.tc-app-nav nav.is-open,.atlas-site-header nav.is-open{animation:none}}

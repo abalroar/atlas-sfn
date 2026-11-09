@@ -167,7 +167,7 @@ export default function InstitutionPage({catalog,bankId,onSelect,onStatementSele
       </div>}
       <div className="institution-tabs" role="tablist" aria-label="Análise da instituição">{TABS.map(([id,label])=><button type="button" id={`${tabPrefix}-${id}`} key={id} role="tab" aria-selected={tab===id} tabIndex={tab===id?0:-1} aria-controls={`${tabPrefix}-panel`} onKeyDown={tabNavigation} onClick={()=>{setTab(id);setError('');}}>{label}</button>)}</div>
     </header>
-    <div className="tc-page-content institution-content" role="tabpanel" id={`${tabPrefix}-panel`} aria-labelledby={`${tabPrefix}-${tab}`}>
+    <div className="tc-page-content institution-content tc-fade-in" key={tab} role="tabpanel" id={`${tabPrefix}-panel`} aria-labelledby={`${tabPrefix}-${tab}`}>
       {statementActive?<Statements index={statementIndex} {...{catalog,bank}} onContextChange={statementContext} onRetryIndex={onRetryStatements}/>:<>
         {error&&ready&&<p className="institution-inline-error" role="alert">{error}</p>}
         {tab==='analysis'&&ready&&<PositionRulers rows={rulers} bank={bank} period={period} name={title}/>}

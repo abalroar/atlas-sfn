@@ -116,11 +116,45 @@
 .territory .narrow-only { display: none; }
 @media (max-width: 760px) { .territory .caption .narrow-only { display: block; } }
 
-/* Filme: mapa em tela cheia; ao convergir, a coluna de busca entra pela esquerda. */
-.territory .body { transition: grid-template-columns 700ms cubic-bezier(.2,.7,.2,1), gap 700ms cubic-bezier(.2,.7,.2,1); }
-.territory.mode-film .body { grid-template-columns: 0 1fr; gap: 0; }
-.territory.mode-film .column { overflow: hidden; visibility: hidden; }
-.territory .column { transition: visibility 0s linear 0s; }
+/* Filme → exploração. No desktop a coluna entra por cima do mapa (transform e opacidade) e a câmera ganha um
+   recuo à esquerda: o canvas não muda de largura durante a transição. No celular a coluna vem abaixo do mapa. */
+@media (min-width: 761px) {
+  .territory .body { display: block; position: relative; }
+  .territory .stage { position: absolute; inset: 0; }
+  .territory .column { position: absolute; top: 0; left: 0; bottom: 0; width: calc(var(--col) + 28px); padding-right: 28px; box-sizing: border-box; z-index: 8; background: var(--paper);
+    transform: translateX(-32px); opacity: 0; visibility: hidden;
+    transition: transform 650ms cubic-bezier(.2,.7,.2,1), opacity 380ms ease, visibility 0s linear 650ms; }
+  .territory.mode-explore .column { transform: none; opacity: 1; visibility: visible; transition: transform 800ms cubic-bezier(.2,.7,.2,1) 80ms, opacity 520ms ease 80ms, visibility 0s; }
+  .territory .stage > .atlas-source, .territory .stage > .atlas-data-info { left: calc(var(--col) + 28px); }
+}
+.territory.mode-film .column { overflow: hidden; }
+@media (max-width: 760px) {
+  .territory.mode-film .column { visibility: hidden; }
+  .territory.mode-explore .column { animation: atlas-rise 520ms cubic-bezier(.2,.7,.2,1) both; }
+}
+@keyframes atlas-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+/* O mapa aparece quando as telhas da primeira cena chegam. */
+.territory .map, .territory .grain { opacity: 0; transition: opacity 900ms ease; }
+.territory.is-revealed .map { opacity: 1; }
+.territory.is-revealed .grain { opacity: .18; }
+/* Ao convergir, uma faixa de papel ocupa o lugar da legenda e desce, revelando o mapa que cresceu por baixo. */
+.territory .stage::after { content: ''; position: absolute; left: 0; right: 0; bottom: 40px; height: calc(var(--band) - 40px); z-index: 4; background: var(--paper); pointer-events: none;
+  transform-origin: bottom; transform: scaleY(0); }
+.territory.mode-explore .stage::after { animation: atlas-curtain 900ms cubic-bezier(.4,0,.2,1) both; }
+@keyframes atlas-curtain { from { transform: scaleY(1); } to { transform: scaleY(0); } }
+@media (max-width: 760px) { .territory .stage::after { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .territory .column, .territory.mode-explore .column, .territory .map, .territory .grain { transition: none !important; animation: none !important; }
+  .territory.mode-explore .stage::after { animation: none; }
+}
+
+/* Espera dos dados e do relevo */
+.territory-wait { flex: 1; display: grid; place-content: center; justify-items: center; gap: 14px; color: var(--muted); font-size: 13px; text-align: center; }
+.territory-wait p { margin: 0; }
+.territory-wait button { text-decoration: underline; color: var(--ink); }
+.territory-wait-bar { display: block; width: min(320px, 70vw); height: 2px; background: rgba(22,50,63,.14); overflow: hidden; }
+.territory-wait-bar span { display: block; height: 100%; background: var(--ink); transition: width 400ms ease; }
 /* No filme, o mapa é uma prancha; a legenda fica no papel, abaixo dela, em tinta. */
 .territory { --band: 172px; }
 .territory .caption { position: absolute; left: 32px; right: 32px; bottom: 66px; height: calc(var(--band) - 84px); z-index: 5; color: var(--ink); pointer-events: none;
@@ -183,4 +217,7 @@
 }
 @media (max-width: 380px) { .territory { --band: 260px; } .territory .caption { row-gap: 4px; } }
 
-.territory .film-loading { position: absolute; left: 32px; top: 24px; margin: 0; z-index: 5; font-size: 13px; color: var(--muted); }
+.territory .film-loading { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); margin: 0; z-index: 5; font-size: 13px; color: var(--muted); display: grid; justify-items: center; gap: 12px; }
+.territory .film-loading-bar { position: relative; display: block; width: 180px; height: 2px; background: rgba(22,50,63,.14); overflow: hidden; }
+.territory .film-loading-bar::after { content: ''; position: absolute; inset: 0; width: 40%; background: var(--ink); animation: atlas-loading 1.3s ease-in-out infinite; }
+@keyframes atlas-loading { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
